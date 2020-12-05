@@ -97,7 +97,7 @@ class SampleApp:
         self.delay = self.DEF_DELAY
 
         self.sound = []
-        self.sound_base = 30
+        self.sound_base = 40
 
         pygame.mixer.init()
 
