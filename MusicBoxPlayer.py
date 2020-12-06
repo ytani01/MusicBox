@@ -81,19 +81,23 @@ class SampleApp:
 
     _log = get_logger(__name__, False)
 
-    def __init__(self, paper_tape_file, debug=False):
+    def __init__(self, paper_tape_file, wav_mode=False, debug=False):
         """constructor
 
         Parameters
         ----------
         paper_tape_file: paper tape file name (path name)
             description
+        wav_mode: bool
+            wav file mode
         """
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('arg=%s, opt=%s')
+        self._log.debug('paper_tape_file=%s', paper_tape_file)
+        self._log.debug('wav_mode=%s', wav_mode)
 
         self.paper_tape_file = paper_tape_file
+        self.wav_mode = wav_mode
 
         self.delay = self.DEF_DELAY
 
@@ -123,11 +127,12 @@ class SampleApp:
             # play
             if ch_list is not None:
                 self._log.info('ch_list=%s', ch_list)
-                self.servo.tap(ch_list)
-                """
-                for ch in ch_list:
-                    self.sound[ch + self.sound_base].play()
-                """
+
+                if self.wav_mode:
+                    for ch in ch_list:
+                        self.ch2sound(ch).play()
+                else:
+                    self.servo.tap(ch_list)
 
 
             # delay
@@ -157,6 +162,19 @@ class SampleApp:
 
         self.sound = [pygame.mixer.Sound(f) for f in wav_files]
 
+    def ch2sound(self, ch):
+        """ chennel number to sound data
+        """
+        self._log.debug('ch=%s', ch)
+
+        offset = [ 0,  2,  4,  5,  7,
+                   9,  11, 12, 14, 16,
+                   17, 19, 21, 23, 24]
+
+        sound_idx = self.sound_base + offset[ch]
+
+        return self.sound[sound_idx]
+
 
 import click
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -166,15 +184,17 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 Description
 ''')
 @click.argument('paper_tape_file', type=click.Path(exists=True))
+@click.option('--wav', '-w', 'wav', is_flag=True, default=False,
+              help='wav file mode')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(paper_tape_file, debug):
+def main(paper_tape_file, wav, debug):
     """サンプル起動用メイン関数
     """
     _log = get_logger(__name__, debug)
-    _log.debug('paper_tape_file=%s', paper_tape_file)
+    _log.debug('paper_tape_file=%s, wav=%s', paper_tape_file, wav)
 
-    app = SampleApp(paper_tape_file, debug=debug)
+    app = SampleApp(paper_tape_file, wav, debug=debug)
     try:
         app.main()
     finally:
