@@ -9,6 +9,7 @@ __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
 
 from MusicBoxPaperTape import MusicBoxPaperTape
+from MusicBoxServo import MusicBoxServo
 import pygame
 import glob
 import time
@@ -104,6 +105,7 @@ class SampleApp:
         self.load_wav()
 
         self.parser = MusicBoxPaperTape(debug=self._dbg)
+        self.servo = MusicBoxServo(debug=self._dbg)
 
     def main(self):
         """main
@@ -120,8 +122,13 @@ class SampleApp:
             
             # play
             if ch_list is not None:
+                self._log.info('ch_list=%s', ch_list)
+                self.servo.tap(ch_list)
+                """
                 for ch in ch_list:
                     self.sound[ch + self.sound_base].play()
+                """
+
 
             # delay
             if delay is not None:
@@ -137,7 +144,7 @@ class SampleApp:
         Call at the end of program.
         """
         self._log.debug('doing ..')
-
+        self.servo.end()
         self._log.debug('done')
 
     def load_wav(self, dir="./wav"):
