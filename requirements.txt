@@ -1,3 +1,4 @@
+pygpio
 mido
 pygame
 click
