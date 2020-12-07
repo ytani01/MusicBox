@@ -95,7 +95,7 @@ class MusicBoxPaperTape:
             delay = int(word[-1])
             word.pop()
         except ValueError as e:
-            self._log.debug('%s:%s.', type(e), e)
+            self._log.debug('%s:%s.. ignored', type(e), e)
 
         self._log.debug('word=%s, delay=%s', word, delay)
 
