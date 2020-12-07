@@ -34,6 +34,13 @@ $ pip install -r requirements.txt
 $ . ~/env1/bin/activate
 (env1)$ cd ~/env1/MusicBox
 (env1)$ sudo pigpiod
+(env1)$ ./MusicBoxRotationMotor.py 5 6 12 25
+[0 <= speed <= 10 | NULL:end] 10
+````
+
+```bash
+$ . ~/env1/bin/activate
+(env1)$ cd ~/env1/MusicBox
 (env1)$ ./MusicBoxPlayer.py kaeruno-uta.txt
 ```
 
