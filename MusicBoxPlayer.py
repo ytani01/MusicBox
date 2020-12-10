@@ -298,13 +298,13 @@ class SampleApp:
         self._paper_tape_file = paper_tape_file
         self._wav_mode = wav_mode
 
-        self._cmd_q_servo = queue.Queue()
-        self._cmd_q_wav = queue.Queue()
-
         self._parser = MusicBoxPaperTape(debug=self._dbg)
 
+        self._cmd_q_servo = queue.Queue()
         self._player_servo = MusicBoxPlayerServo(self._cmd_q_servo,
                                                  debug=self._dbg)
+
+        self._cmd_q_wav = queue.Queue()
         self._player_wav = MusicBoxPlayerWavFile(self._cmd_q_wav,
                                                  debug=self._dbg)
 
