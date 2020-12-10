@@ -108,6 +108,8 @@ class MusicBoxPaperTape:
             if c in self.ON_CHR:
                 ch.append(i)
 
+        self._log.debug('ch=%s', ch)
+
         return dict(ch=ch, delay=delay)
 
     def parse(self, infile):
