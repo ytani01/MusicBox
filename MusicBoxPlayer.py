@@ -23,34 +23,28 @@ class MusicBoxPlayer(threading.Thread):
 
     Attributes
     ----------
+    active: bool
+        active flag
     """
     DEF_DELAY = 500
 
-    CMD_END = 'END_OF_DATA'
+    SOUND_END = 'END_OF_MUSIC'
 
     _log = get_logger(__name__, False)
 
-    def __init__(self, cmd_q, debug=False):
+    def __init__(self, debug=False):
         """ Constructor
-
-        Parameters
-        ----------
-        cmd_q: queue.Queue of {'ch':ch_list, 'delay':delay_msec}
-            command queue
-
-            ch_list: list of int
-                channel list
-            delay_msec: int
-                delay [msec]
         """
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('start')
+        self._log.debug('')
 
-        self._cmd_q = cmd_q
+        # public
+        self.active = False  # public
 
+        # private
         self._def_delay = self.DEF_DELAY
-        self._active = False
+        self._sound_q = queue.Queue()
 
         super().__init__(daemon=True)
 
@@ -61,60 +55,91 @@ class MusicBoxPlayer(threading.Thread):
         """
         self._log.debug('doing ..')
 
-        while not self._cmd_q.empty():
-            c = self._cmd_q.get()
+        while not self._sound_q.empty():
+            c = self._sound_q.get()
             self._log.debug('%s: ignored', c)
 
-        self._cmd_q.put(self.CMD_END)
-        self._active = False
+        self._sound_q.put(self.SOUND_END)
 
         self.join()
 
         self._log.debug('done')
 
-    def is_active(self):
-        return self._active
+    def play_and_sleep(self, ch_list=None, delay=None):
+        """ play: should be override
 
-    def play(self, ch_list, delay):
-        """ play
+        ch_list=[1,2,3], delay=100}:  play and sleep delay
+        ch_list=[1,2,3], delay=None}: play and sleep default delay
+        ch_list=[],      delay=None}: sleep default delay
+        ch_list=None,    delay=100}:  change default delay, don't sleep
+        ch_list=None,    delay=None}: do nothing (comment line?)
 
-        Parameters
-        ----------
-        ch_list: list of int
-            channel list
-        delay: int
-            delay msec
         """
         self._log.debug('ch_list=%s, delay=%s', ch_list, delay)
 
-        if ch_list is None and delay is not None:
-            self._def_delay = delay
+        if ch_list is None:
+            if delay is None:
+                self._log.debug('do nothing')
+            else:
+                self._def_delay = delay
+                self._log.debug('change default delay: %s',
+                                self._def_delay)
+
+            return
 
         if delay is None:
             delay = self._def_delay
-            self._log.debug('delay=%s', delay)
+            self._log.debug('delay=%s (default)', delay)
 
-        if delay is not None:
-            delay_sec = delay / 1000
-            self._log.debug('delay=%s ..', delay_sec)
-            time.sleep(delay_sec)
+        if len(ch_list) > 0:
+            self._log.debug('put queue(%s)', ch_list)
+            self._sound_q.put(ch_list)
+
+        self._log.debug('sleep %s msec', delay)
+        self.sleep(delay)
+
         self._log.debug('done')
+
+    def play(self, ch_list=[]):
+        """ play: should be override
+        """
+        self._log.debug('should be override')
+
+    def sleep(self, delay):
+        """ sleep
+
+        Parameters
+        ----------
+        delay: int
+            delay [msec]
+        """
+        self._log.debug('delay=%s', delay)
+
+        time.sleep(delay / 1000)
+
+        self._log.debug('done')
+
+    def end_music(self):
+        """ end_music
+        """
+        self._log.debug('')
+
+        self._sound_q.put(self.SOUND_END)
 
     def run(self):
         """ run
         """
         self._log.debug('')
 
-        self._active = True
-        while self._active:
-            cmd = self._cmd_q.get()
-            self._log.debug('cmd=%s', cmd)
-            if cmd == self.CMD_END:
-                self._active = False
+        self.active = True
+        while self.active:
+            ch_list = self._sound_q.get()
+            self._log.debug('ch_list=%s', ch_list)
+            if ch_list == self.SOUND_END:
+                self.active = False
                 break
 
-            self._log.debug('cmd=%s', cmd)
-            self.play(cmd['ch'], cmd['delay'])
+            self.play(ch_list)
 
         self._log.debug('done')
 
@@ -124,18 +149,13 @@ class MusicBoxPlayerServo(MusicBoxPlayer):
 
     Attributes
     ----------
-    servo: MusicBoxServo
-        servo motor object
+    ch_n: int
+        number of channels
     """
     _log = get_logger(__name__, False)
 
-    def __init__(self, cmd_q, debug=False):
+    def __init__(self, debug=False):
         """ Constructor
-
-        Parameters
-        ----------
-        debug: bool
-            debug flag
         """
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
@@ -143,7 +163,10 @@ class MusicBoxPlayerServo(MusicBoxPlayer):
 
         self._servo = MusicBoxServo(debug=self._dbg)
 
-        super().__init__(cmd_q, debug=self._dbg)
+        self.ch_n = self._servo.servo_n
+        self._log.debug('ch_n=%s', self.ch_n)
+
+        super().__init__(debug=self._dbg)
 
     def end(self):
         """ end
@@ -156,22 +179,26 @@ class MusicBoxPlayerServo(MusicBoxPlayer):
         self._servo.end()
         self._log.debug('done')
 
-    def play(self, ch_list, delay):
+    def play(self, ch_list):
         """ play
 
         Parameters
         ----------
         ch_list: list of int
             channel list
-        delay: int
-            delay msec
         """
         self._log.debug('ch_list=%s', ch_list)
 
-        if ch_list is not None:
-            self._servo.tap(ch_list)
+        if ch_list is None:
+            self._log.debug('do nothing')
+            return
 
-        super().play(ch_list, delay)
+        self._log.debug('tap channels: %s', ch_list)
+        try:
+            self._servo.tap(ch_list)
+        except ValueError as e:
+            self._log.warning('%s: %s', type(e), e)
+
         self._log.debug('done')
 
 
@@ -179,9 +206,6 @@ class MusicBoxPlayerWavFile(MusicBoxPlayer):
     """ MusicBoxPlayerWavFile
 
     Play wav_file insted of music box.
-
-    Attributes
-    ----------
     """
     _log = get_logger(__name__, False)
 
@@ -190,18 +214,15 @@ class MusicBoxPlayerWavFile(MusicBoxPlayer):
     WAV_FILE_PREFIX = 'ch'
     WAV_FILE_SUFFIX = 'wav'
 
-    DELAY_SERVO = 0.35
+    DELAY_SERVO = 350  # msec
 
-
-    def __init__(self, cmd_q, wav_dir=DEF_WAV_DIR, debug=False):
+    def __init__(self, wav_dir=DEF_WAV_DIR, debug=False):
         """ Constructor
 
         Parameters
         ----------
         wav_dir: str
             directory name
-        cmd_q:
-            command queue
         """
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
@@ -212,7 +233,10 @@ class MusicBoxPlayerWavFile(MusicBoxPlayer):
         pygame.mixer.init()
         self._sound = self.load_wav(self._wav_dir)
 
-        super().__init__(cmd_q, debug=self._dbg)
+        self.ch_n = len(self._sound)
+        self._log.debug('ch_n=%s', self.ch_n)
+
+        super().__init__(debug=self._dbg)
 
     def end(self):
         """ end
@@ -224,26 +248,35 @@ class MusicBoxPlayerWavFile(MusicBoxPlayer):
 
         self._log.debug('done')
 
-    def play(self, ch_list, delay):
+    def play(self, ch_list):
         """ play
 
         Parameters
         ----------
         ch_list: list of int
             channel list
-        delay: int
-            delay msec
         """
         self._log.debug('ch_list=%s', ch_list)
 
-        if ch_list is not None:
-            for ch in ch_list:
-                self._sound[ch].play()
+        if ch_list is None:
+            self._log.debug('do nothing')
+            return
 
-        self._log.debug('sleep %s sec', self.DELAY_SERVO)
-        time.sleep(self.DELAY_SERVO)  # simulate servo delay
+        self._log.debug('play sounds')
+        for ch in ch_list:
+            if ch < 0 or ch > self.ch_n - 1:
+                self._log.warning('ch=%s: invalid', ch)
+                continue
 
-        super().play(ch_list, delay)
+            self._sound[ch].play()
+
+        """
+        # simulate servo delay
+        self._log.debug('sleep %s sec (simulate servo delay)',
+                        self.DELAY_SERVO)
+        time.sleep(self.DELAY_SERVO / 1000)
+        """
+
         self._log.debug('done')
 
     def load_wav(self, wav_dir=DEF_WAV_DIR):
@@ -298,52 +331,87 @@ class SampleApp:
         self._paper_tape_file = paper_tape_file
         self._wav_mode = wav_mode
 
+        # parser object
         self._parser = MusicBoxPaperTape(debug=self._dbg)
 
-        self._cmd_q_servo = queue.Queue()
-        self._player_servo = MusicBoxPlayerServo(self._cmd_q_servo,
-                                                 debug=self._dbg)
-
-        self._cmd_q_wav = queue.Queue()
-        self._player_wav = MusicBoxPlayerWavFile(self._cmd_q_wav,
-                                                 debug=self._dbg)
+        # player object
+        if self._wav_mode:
+            self._player = MusicBoxPlayerWavFile(debug=self._dbg)
+        else:
+            self._player = MusicBoxPlayerServo(debug=self._dbg)
 
     def main(self):
         """main
         """
         self._log.debug('start')
 
-        self._player_servo.start()
-        self._player_wav.start()
+        self._player.start()
 
-        music_data = self._parser.parse(self._paper_tape_file)
-        self._log.debug('music_data=%s', music_data)
+        if len(self._paper_tape_file) > 0:
+            for f in self._paper_tape_file:
+                self.play_file(f)
+        else:
+            self._log.info('Interactive mode')
+            self.play_interactive()
 
-        for data in music_data:
-            ch_list = data['ch']
-            delay = data['delay']
-            self._log.debug("(ch_list,delay)=%s", (ch_list, delay))
-
-            cmd = dict(ch=ch_list, delay=delay)
-
-            if self._wav_mode:
-                self._cmd_q_wav.put(cmd)
-            else:
-                self._cmd_q_servo.put(cmd)
-
-            # play
-            if ch_list is not None:
-                self._log.info('ch_list=%s', ch_list)
-
-        self._log.debug('data end')
-        self._cmd_q_wav.put(MusicBoxPlayer.CMD_END)
-        self._cmd_q_servo.put(MusicBoxPlayer.CMD_END)
-
-        while self._player_servo.is_active() or self._player_wav.is_active():
+        while self._player.active:
             self._log.debug('wait sub threads ..')
             time.sleep(2)
 
         self._log.debug('done')
+
+    def play_file(self, paper_tape_file):
+        """ play_file
+        """
+        self._log.debug('paper_tape_file=%s', paper_tape_file)
+
+        music_data = self._parser.parse(self._paper_tape_file[0])
+        self._log.debug('music data:')
+        for i, d in enumerate(music_data):
+            self._log.debug('%4d: %s', i, d)
+        self._log.debug('end of music_data')
+
+        for i, d in enumerate(music_data):
+            self._log.info('%4d: %s', i, d)
+            self._player.play_and_sleep(d['ch'], d['delay'])
+
+        self._log.debug('end of music')
+        self._player.end_music()
+
+    def play_interactive(self):
+        """ play_interactive
+        """
+        self._log.debug('')
+
+        while True:
+            prompt = '[0-%s, ..]> ' % (14)
+
+            try:
+                line1 = input(prompt)
+            except Exception as e:
+                self._log.error('%s: %s', type(e), e)
+                continue
+
+            self._log.debug('line1=%a', line1)
+
+            if len(line1) == 0:
+                break
+
+            ch_str = line1.replace(' ', '').split(',')
+            self._log.debug('ch_str=%s', ch_str)
+
+            try:
+                ch_list = [int(c) for c in ch_str]
+            except Exception as e:
+                self._log.error('%s: %s', type(e), e)
+                continue
+
+            self._log.debug('ch_list=%s', ch_list)
+
+            self._player.play(ch_list)
+
+        self._log.info('END')
+        self._player.end_music()
 
     def end(self):
         """end
@@ -352,8 +420,7 @@ class SampleApp:
         """
         self._log.debug('doing ..')
 
-        self._player_wav.end()
-        self._player_servo.end()
+        self._player.end()
 
         self._log.debug('done')
 
@@ -365,7 +432,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
 Description
 ''')
-@click.argument('paper_tape_file', type=click.Path(exists=True))
+@click.argument('paper_tape_file', type=click.Path(exists=True), nargs=-1)
 @click.option('--wav', '-w', 'wav', is_flag=True, default=False,
               help='wav file mode')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
@@ -374,7 +441,8 @@ def main(paper_tape_file, wav, debug):
     """サンプル起動用メイン関数
     """
     _log = get_logger(__name__, debug)
-    _log.debug('paper_tape_file=%s, wav=%s', paper_tape_file, wav)
+    _log.debug('paper_tape_file=%s', paper_tape_file)
+    _log.debug('wav=%s', wav)
 
     app = SampleApp(paper_tape_file, wav, debug=debug)
     try:
