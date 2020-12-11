@@ -4,6 +4,35 @@
 #
 """
 Music box player class
+
+
+Simple usage:
+---
+from MusicBoxPlayer import MusicBoxPlayerServo
+
+# 初期設定
+player = MusicBoxPlayerServo()
+# スレッドスタート
+player.start()
+
+# 単発
+player.play([0,2,4])
+
+# 演奏: 一連のデータをまとめて演奏
+#   ch: チャンネルリスト
+#   delay: 出力後の遅延[msec]
+#
+player.play_music([
+    {'ch':None,    'delay':500},   # change default delay
+    {'ch':[1],     'delay':None},
+    {'ch':[1,3,5], 'delay':None},
+       :
+    {'ch':[0,2],   'delay':1000}
+])
+
+# プログラム終了時
+player.end()
+---
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
@@ -28,7 +57,7 @@ class MusicBoxPlayer(threading.Thread):
     """
     DEF_DELAY = 500
 
-    SOUND_END = 'END_OF_MUSIC'
+    PLAYER_END = 'End Player'
 
     _log = get_logger(__name__, False)
 
@@ -59,14 +88,28 @@ class MusicBoxPlayer(threading.Thread):
             c = self._sound_q.get()
             self._log.debug('%s: ignored', c)
 
-        self._sound_q.put(self.SOUND_END)
+        self._sound_q.put(self.PLAYER_END)
 
         self.join()
 
         self._log.debug('done')
 
+    def play_music(self, music_data):
+        """ play_music
+
+        music_data: list of {'ch':[0,1,2..], 'delay':300}
+            music data
+        """
+        self._log.debug('music_data=%s', music_data)
+
+        for i, d in enumerate(music_data):
+            self._log.debug('%4d: %s', i, d)
+            self.play_and_sleep(d['ch'], d['delay'])
+
+        self._log.debug('done')
+
     def play_and_sleep(self, ch_list=None, delay=None):
-        """ play: should be override
+        """ play_and_sleep
 
         ch_list=[1,2,3], delay=100}:  play and sleep delay
         ch_list=[1,2,3], delay=None}: play and sleep default delay
@@ -91,9 +134,7 @@ class MusicBoxPlayer(threading.Thread):
             delay = self._def_delay
             self._log.debug('delay=%s (default)', delay)
 
-        if len(ch_list) > 0:
-            self._log.debug('put queue(%s)', ch_list)
-            self._sound_q.put(ch_list)
+        self.play(ch_list)
 
         self._log.debug('sleep %s msec', delay)
         self.sleep(delay)
@@ -101,9 +142,16 @@ class MusicBoxPlayer(threading.Thread):
         self._log.debug('done')
 
     def play(self, ch_list=[]):
-        """ play: should be override
+        """ play: play One
         """
-        self._log.debug('should be override')
+        self._log.debug('ch_list=%s', ch_list)
+
+        self._sound_q.put(ch_list)
+
+    def play_sound(self, ch_list=[]):
+        """ play_sound: should be override
+        """
+        self._log.error('This method should be override')
 
     def sleep(self, delay):
         """ sleep
@@ -119,13 +167,6 @@ class MusicBoxPlayer(threading.Thread):
 
         self._log.debug('done')
 
-    def end_music(self):
-        """ end_music
-        """
-        self._log.debug('')
-
-        self._sound_q.put(self.SOUND_END)
-
     def run(self):
         """ run
         """
@@ -135,11 +176,11 @@ class MusicBoxPlayer(threading.Thread):
         while self.active:
             ch_list = self._sound_q.get()
             self._log.debug('ch_list=%s', ch_list)
-            if ch_list == self.SOUND_END:
+            if ch_list == self.PLAYER_END:
                 self.active = False
                 break
 
-            self.play(ch_list)
+            self.play_sound(ch_list)
 
         self._log.debug('done')
 
@@ -179,7 +220,7 @@ class MusicBoxPlayerServo(MusicBoxPlayer):
         self._servo.end()
         self._log.debug('done')
 
-    def play(self, ch_list):
+    def play_sound(self, ch_list):
         """ play
 
         Parameters
@@ -206,6 +247,11 @@ class MusicBoxPlayerWavFile(MusicBoxPlayer):
     """ MusicBoxPlayerWavFile
 
     Play wav_file insted of music box.
+
+    Attributes
+    ----------
+    ch_n: int
+        number of channels
     """
     _log = get_logger(__name__, False)
 
@@ -214,7 +260,7 @@ class MusicBoxPlayerWavFile(MusicBoxPlayer):
     WAV_FILE_PREFIX = 'ch'
     WAV_FILE_SUFFIX = 'wav'
 
-    DELAY_SERVO = 350  # msec
+    SERVO_DELAY = 350  # msec
 
     def __init__(self, wav_dir=DEF_WAV_DIR, debug=False):
         """ Constructor
@@ -248,7 +294,7 @@ class MusicBoxPlayerWavFile(MusicBoxPlayer):
 
         self._log.debug('done')
 
-    def play(self, ch_list):
+    def play_sound(self, ch_list):
         """ play
 
         Parameters
@@ -273,8 +319,8 @@ class MusicBoxPlayerWavFile(MusicBoxPlayer):
         """
         # simulate servo delay
         self._log.debug('sleep %s sec (simulate servo delay)',
-                        self.DELAY_SERVO)
-        time.sleep(self.DELAY_SERVO / 1000)
+                        self.SERVO_DELAY)
+        time.sleep(self.SERVO_DELAY / 1000)
         """
 
         self._log.debug('done')
@@ -350,13 +396,12 @@ class SampleApp:
         if len(self._paper_tape_file) > 0:
             for f in self._paper_tape_file:
                 self.play_file(f)
+
+            self._log.debug('end of music')
+
         else:
             self._log.info('Interactive mode')
             self.play_interactive()
-
-        while self._player.active:
-            self._log.debug('wait sub threads ..')
-            time.sleep(2)
 
         self._log.debug('done')
 
@@ -365,18 +410,18 @@ class SampleApp:
         """
         self._log.debug('paper_tape_file=%s', paper_tape_file)
 
-        music_data = self._parser.parse(self._paper_tape_file[0])
+        music_data = self._parser.parse(paper_tape_file)
         self._log.debug('music data:')
         for i, d in enumerate(music_data):
             self._log.debug('%4d: %s', i, d)
         self._log.debug('end of music_data')
 
+        self._player.play_music(music_data)
+        """
         for i, d in enumerate(music_data):
             self._log.info('%4d: %s', i, d)
             self._player.play_and_sleep(d['ch'], d['delay'])
-
-        self._log.debug('end of music')
-        self._player.end_music()
+        """
 
     def play_interactive(self):
         """ play_interactive
@@ -411,7 +456,6 @@ class SampleApp:
             self._player.play(ch_list)
 
         self._log.info('END')
-        self._player.end_music()
 
     def end(self):
         """end
