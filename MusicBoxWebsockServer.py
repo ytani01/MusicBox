@@ -8,9 +8,10 @@ Music Box Websock Server
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
 
-from MusicBoxPlayer import MusicBoxPlayerServo, MusicBoxPlayerWavFile
+from MusicBoxMovement import MusicBoxMovement, MusicBoxMovementWavFile
 import asyncio
 import websockets
+import json
 from MyLogger import get_logger
 
 
@@ -80,6 +81,11 @@ class MusicBoxWebsockServer:
 
         msg = await websock.recv()
         self.__log.debug('msg=%s', msg)
+
+        data = json.loads(msg)
+        self.__log.debug('data=%s', data)
+        for d in data:
+            self.__log.debug('ch=%s, delay=%s', d['ch'], d['delay'])
 
         await websock.send(msg)
 

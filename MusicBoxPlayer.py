@@ -3,459 +3,230 @@
 # (c) 2020 Yoichi Tanibayashi
 #
 """
-Music box player class
+Music Box Player class
 
 
 Simple usage:
 ---
-from MusicBoxPlayer import MusicBoxPlayerServo
+from MusicBoxPlayer import MusicBoxMusicPlayer
 
-# 初期設定
-player = MusicBoxPlayerServo()
-# スレッドスタート
-player.start()
+# initialize
+music_player = MusicBoxMusicPlayer()
+# start thread
+music_player.start()
 
-# 単発
-player.play([0,2,4])
+# single play
+player.play([1,3,5])
 
-# 演奏: 一連のデータをまとめて演奏
+# play music
 #   ch: チャンネルリスト
 #   delay: 出力後の遅延[msec]
 #
 player.play_music([
     {'ch':None,    'delay':500},   # change default delay
-    {'ch':[1],     'delay':None},
+    {'ch':[1],     'delay':None},  # play and sleep (default delay)
     {'ch':[1,3,5], 'delay':None},
        :
-    {'ch':[0,2],   'delay':1000}
+    {'ch':[0,2],   'delay':1000}   # play and sleep
 ])
 
 # プログラム終了時
 player.end()
+
 ---
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
 
-from MusicBoxPaperTape import MusicBoxPaperTape
-from MusicBoxServo import MusicBoxServo
-import pygame
-import glob
-import threading
-import queue
-import time
 from MyLogger import get_logger
 
 
-class MusicBoxPlayer(threading.Thread):
-    """ MusicBoxPlayer
+class MusicBoxPlayer:
+    """MusicBoxPlayer
 
     Attributes
     ----------
-    active: bool
-        active flag
+    infile: str
+        input file name (path)
     """
-    DEF_DELAY = 500
-
-    PLAYER_END = 'End Player'
-
     _log = get_logger(__name__, False)
 
-    def __init__(self, debug=False):
-        """ Constructor
+    COMMENT_CHR = '#'
+
+    ON_CHR  = 'oO*'
+    OFF_CHR = '-_'
+
+    def __init__(self, infile=None, debug=False):
+        """constructor
+
+        Parameters
+        ----------
+        infile: str
+            input file name
         """
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('')
+        self._log.debug('infile=%s', infile)
 
-        # public
-        self.active = False  # public
-
-        # private
-        self._def_delay = self.DEF_DELAY
-        self._sound_q = queue.Queue()
-
-        super().__init__(daemon=True)
+        self.infile = infile
 
     def end(self):
-        """ end
+        """end
 
         Call at the end of program
         """
         self._log.debug('doing ..')
-
-        while not self._sound_q.empty():
-            c = self._sound_q.get()
-            self._log.debug('%s: ignored', c)
-
-        self._sound_q.put(self.PLAYER_END)
-
-        self.join()
-
+        print('end of MusicBoxPlayer')
         self._log.debug('done')
 
-    def play_music(self, music_data):
-        """ play_music
-
-        music_data: list of {'ch':[0,1,2..], 'delay':300}
-            music data
-        """
-        self._log.debug('music_data=%s', music_data)
-
-        for i, d in enumerate(music_data):
-            self._log.debug('%4d: %s', i, d)
-            self.play_and_sleep(d['ch'], d['delay'])
-
-        self._log.debug('done')
-
-    def play_and_sleep(self, ch_list=None, delay=None):
-        """ play_and_sleep
-
-        ch_list=[1,2,3], delay=100}:  play and sleep delay
-        ch_list=[1,2,3], delay=None}: play and sleep default delay
-        ch_list=[],      delay=None}: sleep default delay
-        ch_list=None,    delay=100}:  change default delay, don't sleep
-        ch_list=None,    delay=None}: do nothing (comment line?)
-
-        """
-        self._log.debug('ch_list=%s, delay=%s', ch_list, delay)
-
-        if ch_list is None:
-            if delay is None:
-                self._log.debug('do nothing')
-            else:
-                self._def_delay = delay
-                self._log.debug('change default delay: %s',
-                                self._def_delay)
-
-            return
-
-        if delay is None:
-            delay = self._def_delay
-            self._log.debug('delay=%s (default)', delay)
-
-        self.play(ch_list)
-
-        self._log.debug('sleep %s msec', delay)
-        self.sleep(delay)
-
-        self._log.debug('done')
-
-    def play(self, ch_list=[]):
-        """ play: play One
-        """
-        self._log.debug('ch_list=%s', ch_list)
-
-        self._sound_q.put(ch_list)
-
-    def play_sound(self, ch_list=[]):
-        """ play_sound: should be override
-        """
-        self._log.error('This method should be override')
-
-    def sleep(self, delay):
-        """ sleep
+    def parse1(self, line):
+        """parse1
 
         Parameters
         ----------
-        delay: int
-            delay [msec]
+        line: line
+            paper tape line
+
+        Returns
+        -------
+        data: dict {'ch': [int, ..], 'delay': int}
+           ch: servo ch number (0..14)
+           delay: delay (msec)
+
+           None: Error (something is wrong)
+           {'ch': None, 'delay': None}: no data (ex. comment line)
+           {'ch': None, 'delay': 500}: delay only
+           {'ch': [1,3,5], 'delay': None}: play and default delay
+           {'ch': [], 'delay': 500}: sleep 500msec
         """
-        self._log.debug('delay=%s', delay)
+        self._log.debug('line=%a', line)
 
-        time.sleep(delay / 1000)
-
-        self._log.debug('done')
-
-    def run(self):
-        """ run
-        """
-        self._log.debug('')
-
-        self.active = True
-        while self.active:
-            ch_list = self._sound_q.get()
-            self._log.debug('ch_list=%s', ch_list)
-            if ch_list == self.PLAYER_END:
-                self.active = False
-                break
-
-            self.play_sound(ch_list)
-
-        self._log.debug('done')
-
-
-class MusicBoxPlayerServo(MusicBoxPlayer):
-    """ MusicBoxPlayer
-
-    Attributes
-    ----------
-    ch_n: int
-        number of channels
-    """
-    _log = get_logger(__name__, False)
-
-    def __init__(self, debug=False):
-        """ Constructor
-        """
-        self._dbg = debug
-        __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('start')
-
-        self._servo = MusicBoxServo(debug=self._dbg)
-
-        self.ch_n = self._servo.servo_n
-        self._log.debug('ch_n=%s', self.ch_n)
-
-        super().__init__(debug=self._dbg)
-
-    def end(self):
-        """ end
-
-        Call at the end of program
-        """
-        self._log.debug('doing ..')
-        super().end()
-
-        self._servo.end()
-        self._log.debug('done')
-
-    def play_sound(self, ch_list):
-        """ play
-
-        Parameters
-        ----------
-        ch_list: list of int
-            channel list
-        """
-        self._log.debug('ch_list=%s', ch_list)
-
-        if ch_list is None:
-            self._log.debug('do nothing')
-            return
-
-        self._log.debug('tap channels: %s', ch_list)
+        # remove comment
+        comment_i = None
         try:
-            self._servo.tap(ch_list)
+            comment_i = line.index(self.COMMENT_CHR)
         except ValueError as e:
-            self._log.warning('%s: %s', type(e), e)
+            self._log.debug('%s:%s', type(e), e)
 
-        self._log.debug('done')
+        if comment_i is not None:
+            line = line[0:comment_i]
 
+        self._log.debug('line=%a', line)
 
-class MusicBoxPlayerWavFile(MusicBoxPlayer):
-    """ MusicBoxPlayerWavFile
+        word = line.split()
+        self._log.debug('word=%s', word)
 
-    Play wav_file insted of music box.
+        if len(word) == 0:
+            return dict(ch=None, delay=None)
 
-    Attributes
-    ----------
-    ch_n: int
-        number of channels
-    """
-    _log = get_logger(__name__, False)
+        delay = None
 
-    DEF_WAV_DIR = './wav'
+        try:
+            delay = int(word[-1])
+            word.pop()
+        except ValueError as e:
+            self._log.debug('%s:%s.. ignored', type(e), e)
 
-    WAV_FILE_PREFIX = 'ch'
-    WAV_FILE_SUFFIX = 'wav'
+        self._log.debug('word=%s, delay=%s', word, delay)
 
-    SERVO_DELAY = 350  # msec
+        if len(word) == 0:
+            return dict(ch=None, delay=delay)
 
-    def __init__(self, wav_dir=DEF_WAV_DIR, debug=False):
-        """ Constructor
+        ch = []
 
-        Parameters
-        ----------
-        wav_dir: str
-            directory name
-        """
-        self._dbg = debug
-        __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('wav_dir=%s', wav_dir)
+        for i, c in enumerate(list(word[0])):
+            if c in self.ON_CHR:
+                ch.append(i)
 
-        self._wav_dir = wav_dir
+        self._log.debug('ch=%s', ch)
 
-        pygame.mixer.init()
-        self._sound = self.load_wav(self._wav_dir)
+        return dict(ch=ch, delay=delay)
 
-        self.ch_n = len(self._sound)
-        self._log.debug('ch_n=%s', self.ch_n)
+    def parse(self, infile):
+        """parse input file
 
-        super().__init__(debug=self._dbg)
-
-    def end(self):
-        """ end
-
-        Call at the end of program
-        """
-        self._log.debug('doing ..')
-        super().end()
-
-        self._log.debug('done')
-
-    def play_sound(self, ch_list):
-        """ play
+        入力ファイル全体をパースする。
+        何もしない行(None, {ch: None, delay: None})は無視をする。
 
         Parameters
         ----------
-        ch_list: list of int
-            channel list
+        infile: str
+            input file name
+
+        Returns
+        -------
+        result: list of dict(list of int, in)
+          ex. [
+                {'ch': None, 'delay': 600'},
+                {'ch': [1, 3, 5], 'delay': None},
+                {'ch': [], 'delay': 2000}
+              ]
         """
-        self._log.debug('ch_list=%s', ch_list)
+        self._log.debug('infile=%s', infile)
 
-        if ch_list is None:
-            self._log.debug('do nothing')
-            return
+        with open(infile) as f:
+            lines = f.readlines()
 
-        self._log.debug('play sounds')
-        for ch in ch_list:
-            if ch < 0 or ch > self.ch_n - 1:
-                self._log.warning('ch=%s: invalid', ch)
+        res = []
+        for line in lines:
+            res1 = self.parse1(line)
+
+            if res1 is None:
                 continue
 
-            self._sound[ch].play()
+            if res1['ch'] is None and res1['delay'] is None:
+                continue
 
-        """
-        # simulate servo delay
-        self._log.debug('sleep %s sec (simulate servo delay)',
-                        self.SERVO_DELAY)
-        time.sleep(self.SERVO_DELAY / 1000)
-        """
+            res.append(res1)
 
-        self._log.debug('done')
-
-    def load_wav(self, wav_dir=DEF_WAV_DIR):
-        """ load wav files
-
-        Parameters
-        ----------
-        wav_dir: str
-            directory name
-        """
-        self._log.debug('wav_dir=%s', wav_dir)
-
-        glob_pattern = "%s/%s*.%s" % (
-            wav_dir,
-            self.WAV_FILE_PREFIX,
-            self.WAV_FILE_SUFFIX)
-        self._log.debug('glob_pattern=%s', glob_pattern)
-        wav_files = sorted(glob.glob(glob_pattern))
-        self._log.debug('wav_files=%s', wav_files)
-
-        return [pygame.mixer.Sound(f) for f in wav_files]
+        return res
 
 
 # --- 以下、サンプル ---
 
 
 class SampleApp:
-    """ Sample application class
+    """Sample application class
 
     Attributes
     ----------
     """
-    DEF_DELAY = 500  # msec
-
     _log = get_logger(__name__, False)
 
-    def __init__(self, paper_tape_file, wav_mode=False, debug=False):
+    def __init__(self, paper_tape_file, debug=False):
         """constructor
 
         Parameters
         ----------
-        paper_tape_file: paper tape file name (path name)
-            description
-        wav_mode: bool
-            wav file mode
+        paper_tape_file: str
+            入力ファイル
         """
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('paper_tape_file=%s', paper_tape_file)
-        self._log.debug('wav_mode=%s', wav_mode)
 
-        self._paper_tape_file = paper_tape_file
-        self._wav_mode = wav_mode
+        self.paper_tape_file = paper_tape_file
 
-        # parser object
-        self._parser = MusicBoxPaperTape(debug=self._dbg)
-
-        # player object
-        if self._wav_mode:
-            self._player = MusicBoxPlayerWavFile(debug=self._dbg)
-        else:
-            self._player = MusicBoxPlayerServo(debug=self._dbg)
+        self.obj = MusicBoxPlayer(debug=self._dbg)
 
     def main(self):
         """main
         """
-        self._log.debug('start')
-
-        self._player.start()
-
-        if len(self._paper_tape_file) > 0:
-            for f in self._paper_tape_file:
-                self.play_file(f)
-
-            self._log.debug('end of music')
-
-        else:
-            self._log.info('Interactive mode')
-            self.play_interactive()
-
-        self._log.debug('done')
-
-    def play_file(self, paper_tape_file):
-        """ play_file
-        """
-        self._log.debug('paper_tape_file=%s', paper_tape_file)
-
-        music_data = self._parser.parse(paper_tape_file)
-        self._log.debug('music data:')
-        for i, d in enumerate(music_data):
-            self._log.debug('%4d: %s', i, d)
-        self._log.debug('end of music_data')
-
-        self._player.play_music(music_data)
-        """
-        for i, d in enumerate(music_data):
-            self._log.info('%4d: %s', i, d)
-            self._player.play_and_sleep(d['ch'], d['delay'])
-        """
-
-    def play_interactive(self):
-        """ play_interactive
-        """
         self._log.debug('')
 
-        while True:
-            prompt = '[0-%s, ..]> ' % (14)
+        with open(self.paper_tape_file) as f:
+            lines = f.readlines()
 
-            try:
-                line1 = input(prompt)
-            except Exception as e:
-                self._log.error('%s: %s', type(e), e)
-                continue
+        for line in lines:
+            res = self.obj.parse1(line)
+            print('res=%s' % (res))
 
-            self._log.debug('line1=%a', line1)
+        print()
 
-            if len(line1) == 0:
-                break
+        res = self.obj.parse(self.paper_tape_file)
+        print('res=%s' % (res))
 
-            ch_str = line1.replace(' ', '').split(',')
-            self._log.debug('ch_str=%s', ch_str)
-
-            try:
-                ch_list = [int(c) for c in ch_str]
-            except Exception as e:
-                self._log.error('%s: %s', type(e), e)
-                continue
-
-            self._log.debug('ch_list=%s', ch_list)
-
-            self._player.play(ch_list)
-
-        self._log.info('END')
+        self._log.debug('done')
 
     def end(self):
         """end
@@ -463,9 +234,7 @@ class SampleApp:
         Call at the end of program.
         """
         self._log.debug('doing ..')
-
-        self._player.end()
-
+        self.obj.end()
         self._log.debug('done')
 
 
@@ -476,19 +245,16 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
 Description
 ''')
-@click.argument('paper_tape_file', type=click.Path(exists=True), nargs=-1)
-@click.option('--wav', '-w', 'wav', is_flag=True, default=False,
-              help='wav file mode')
+@click.argument('paper_tape_file', type=click.Path(exists=True))
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(paper_tape_file, wav, debug):
+def main(paper_tape_file, debug):
     """サンプル起動用メイン関数
     """
     _log = get_logger(__name__, debug)
     _log.debug('paper_tape_file=%s', paper_tape_file)
-    _log.debug('wav=%s', wav)
 
-    app = SampleApp(paper_tape_file, wav, debug=debug)
+    app = SampleApp(paper_tape_file, debug=debug)
     try:
         app.main()
     finally:
