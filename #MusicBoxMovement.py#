@@ -145,6 +145,10 @@ class MusicBoxMovementBase:
 
     def music_th(self, music_data_i):
         """
+        Parameters
+        ----------
+        music_data_i: int
+            index of self._music_data
         """
         self._log.debug('music_data_i=%s', music_data_i)
 
