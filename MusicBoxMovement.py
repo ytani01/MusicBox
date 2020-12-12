@@ -284,7 +284,8 @@ class MusicBoxMovement(MusicBoxMovementBase):
 
         self._log.debug('tap channels: %s', ch_list)
         try:
-            self._servo.tap(ch_list)
+            # self._servo.tap(ch_list)
+            threading.Thread(target=self._servo.tap, args=(ch_list,)).start()
         except ValueError as e:
             self._log.warning('%s: %s', type(e), e)
 
@@ -487,6 +488,9 @@ class SampleApp:
 
             try:
                 line1 = input(prompt)
+            except EOFError as e:
+                self._log.info('EOF')
+                break
             except Exception as e:
                 self._log.error('%s: %s', type(e), e)
                 continue
