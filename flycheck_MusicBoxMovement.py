@@ -110,7 +110,7 @@ class MusicBoxMovementBase:
         __class__._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('ch_n=%s', ch_n)
 
-        # public
+         # public
         self.ch_n = ch_n
 
         # private
