@@ -27,9 +27,14 @@ from MusicBoxMovement import MusicBoxMovement
 movement = MusicBoxMovement()
 
 # ローテーション・モーター始動
-#   複数のプログラムで実行すると、正常に動作しないので注意
+#   複数のプログラム(プロセス、スレッド)で実行すると、
+#   正常に動作しないので注意
 #
 movement.rotation_speed(10)
+
+# プログラム終了時
+#   演奏は強制終了
+movement.end()
 
 ##
 # 単発で音を鳴らす
@@ -37,7 +42,6 @@ movement.play([0,2,4])
 
 ##
 # 以下、音楽再生関連: 一連の(パージング後の)データを続けて演奏
-#   [重要] スレッドで動作するので、関数はすぐリターンする。
 #
 # music_data形式: [{'ch': ch_list, 'delay': msec}, ... ]
 #   ch_list: チャンネルリスト ex [0,2,4]
@@ -53,18 +57,19 @@ movement.music_load([
     {'ch':[0,2],   'delay':1000}
 ])
 
-# 演奏開始
-movement.music_play()
+# 演奏開始 / 中断後の再開
+#   [重要] スレッドで動作するので、関数はすぐリターンする。
+movement.music_start()
 
-# 演奏を中断
+# 演奏を中断: 次回の music_start()で、最初から再生
 movement.music_stop()
+
+# 演奏をポーズ: 次回の music_start()で、つづきから再生
+movement.music_pause()
 
 # 演奏終了まで待つ
 movement.music_wait()
 
-# プログラム終了時
-#   演奏は強制終了
-movement.end()
 ---
 """
 __author__ = 'Yoichi Tanibayashi'
