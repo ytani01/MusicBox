@@ -94,8 +94,8 @@ class MusicBoxMovementBase:
         """
         Call at the end of program
         """
-        self._log.debug('doing ..')
-        self._log.debug('done')
+        self._log.debug('%s: doing ..', __class__.__name__)
+        self._log.debug('%s: done.', __class__.__name__)
 
     def single_play(self, ch_list):
         """
