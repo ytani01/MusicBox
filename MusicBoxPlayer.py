@@ -234,7 +234,7 @@ class MusicBoxPlayer:
                :
           ]
         """
-        # self._log.debug('music_data=%s', music_data)
+        self._log.debug('music_data=%s', music_data)
 
         self._music_data = copy.deepcopy(music_data)
         if self._music_data_i >= len(self._music_data):
@@ -298,9 +298,10 @@ class MusicBoxPlayer:
         """
         self._log.debug('start waiting')
 
-        while self._music_th.is_alive():
-            self._log.debug('waiting ..')
-            time.sleep(0.5)
+        if type(self._music_th) == threading.Thread:
+            while self._music_th.is_alive():
+                self._log.debug('waiting ..')
+                time.sleep(0.5)
 
         self._log.debug('done')
 

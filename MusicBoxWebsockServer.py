@@ -10,15 +10,45 @@ Music Box Websock Server
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
 
-from MusicBoxMovement import MusicBoxMovement, MusicBoxMovementWavFile
 import asyncio
 import websockets
 import json
+import time
+from MusicBoxPlayer import MusicBoxPlayer
 from MyLogger import get_logger
 
 
 class MusicBoxWebsockServer:
     """ MusicBoxWebsockServer
+
+    Simple usge
+    ===========
+    ## import
+    from MusicBoxWebsockServer import MusicBoxWebsockServer
+
+    ## initialize
+    svr = MusicBoxWebsockServer(port=8881)
+
+    ## start server
+    svr.main()  # run forever
+
+    ## end of program (interrupted)
+    svr.end()
+    
+
+    ===========
+
+    Simple client
+    =============
+    # [Important!] 'websocket' is not 'websockets'
+
+    from websocket import create_connection
+
+    ws = create_connection('ws://localhost:8881/')
+    ws.send('[{"ch": [1,2,3], "delay": 500}]')
+    ws.close()
+
+    =============
 
     Attributes
     ----------
@@ -47,6 +77,9 @@ class MusicBoxWebsockServer:
         self._port = port
         self._host = host
 
+        self._player = MusicBoxPlayer(wav_mode=self._wav_mode,
+                                      debug=self._dbg)
+
         self._start_svr = websockets.serve(self.handle, host, port)
         self._loop = asyncio.get_event_loop()
 
@@ -62,12 +95,12 @@ class MusicBoxWebsockServer:
         self._loop.run_forever()
 
     def end(self):
-        """end
-
-        Call at the end of program
+        """ Call at the end of program
         """
         self.__log.debug('doing ..')
-        print('end of %s' % __class__.__name__)
+
+        self._player.end()
+
         self.__log.debug('done')
 
     async def handle(self, websock, path):
@@ -84,24 +117,31 @@ class MusicBoxWebsockServer:
         msg = await websock.recv()
         self.__log.debug('msg=%s', msg)
 
-        data = json.loads(msg)
-        self.__log.debug('data=%s', data)
+        try:
+            data = json.loads(msg)
+            self.__log.debug('data=%s', data)
+        except json.decoder.JSONDecodeError as ex:
+            self.__log.error('%s: %s. msg=%s', type(ex), ex, msg)
+            return
 
-        if type(data[0]) == dict:
-            for d in data:
-                if d['ch'] == '':
-                    d['ch'] = None
+        if type(data) != list:
+            return
 
-                self.__log.info('ch=%s, delay=%s', d['ch'], d['delay'])
+        if len(data) == 0:
+            return
 
-        elif type(data[0]) == list:
-            for d in data:
-                self.__log.info('d=%s', d)
+        self.__log.info('data=%s', data)
 
-        else:
+        if type(data[0]) == int:
             self.__log.info('data=%s', data)
+            self._player.single_play(data)
+            return
 
-        # await websock.send(msg)
+        self._player.music_stop()
+        self._player.music_wait()
+        time.sleep(0.5)
+        self._player.music_load(data)
+        self._player.music_start()
 
         self.__log.debug('done')
 
@@ -154,7 +194,7 @@ class SampleApp:
         Call at the end of program.
         """
         self.__log.debug('doing ..')
-        
+
         self._ws_svr.end()
 
         self.__log.debug('done')
