@@ -4,6 +4,8 @@
 #
 """
 Music Box Websock Server
+
+
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
@@ -84,10 +86,22 @@ class MusicBoxWebsockServer:
 
         data = json.loads(msg)
         self.__log.debug('data=%s', data)
-        for d in data:
-            self.__log.debug('ch=%s, delay=%s', d['ch'], d['delay'])
 
-        await websock.send(msg)
+        if type(data[0]) == dict:
+            for d in data:
+                if d['ch'] == '':
+                    d['ch'] = None
+
+                self.__log.info('ch=%s, delay=%s', d['ch'], d['delay'])
+
+        elif type(data[0]) == list:
+            for d in data:
+                self.__log.info('d=%s', d)
+
+        else:
+            self.__log.info('data=%s', data)
+
+        # await websock.send(msg)
 
         self.__log.debug('done')
 

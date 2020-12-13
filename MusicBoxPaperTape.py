@@ -46,7 +46,6 @@ class MusicBoxPaperTape:
         Call at the end of program
         """
         self._log.debug('doing ..')
-        print('end of MusicBoxPaperTape')
         self._log.debug('done')
 
     def parse1(self, line):
