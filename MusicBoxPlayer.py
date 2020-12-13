@@ -5,62 +5,15 @@
 """
 Music Box Player class
 
-### for detail ###
+### for detail and simple usage ###
 
 $ pydoc3 MusicBoxPlayer.MusicBoxPlayer
 
 
-### dependency
+### sample program (interactive demo) usage ###
 
-MusicBoxPlayer
-    |
-    +- MusicBoxMovement
+$ ./MusicBoxPlayer.py -h
 
-
-### Simple usage ###
----
-from MusicBoxPlayer import MusicBoxMusicPlayer
-
-# initialize
-music_player = MusicBoxMusicPlayer()
-
-# single play
-player.single_play([1,3,5])
-
-# load music data
-#   music_data example:
-#      [
-#        {'ch':None,  'delay': 500},  # change default delay (500ms)
-#        {'ch':[1,2], 'delay': None}, # play and sleep (default delay)
-#        {'ch':[2,5], 'delay': 1000}, # play and sleep (1000ms)
-#        {'ch':[],    'delay': None}, # sleep (default delay)
-#        {'ch':None,  'delay': None}, # do nothing (no delay)
-#      ]
-#
-player.music_load(music_data)
-
-# start music
-#    [Important] This function starts sub-thread and return immidiately
-player.music_start()
-
-# pause music
-#    next music_start() play music from this point
-player.music_pause()
-
-# rewind music
-player.music_rewind()
-
-# stop music
-#    puase and rewind
-player.music_stop()
-
-# wait for the music to end
-player.music_wait()
-
-# end of program
-music_player.end()
-
----
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
@@ -76,7 +29,60 @@ from MyLogger import get_logger
 
 
 class MusicBoxPlayer:
-    """MusicBoxPlayer
+    """ Music Box Player class
+
+    Simple Usage
+    ============
+    ## Import
+
+    from MusicBoxPlayer import MusicBoxMusicPlayer
+
+    ## Initialize
+
+    music_player = MusicBoxMusicPlayer()
+
+    ## Single play
+
+    player.single_play([1,3,5])
+
+    ## load music data
+    #   music_data example:
+    #      [
+    #        {'ch':None,  'delay': 500},  # change default delay (500ms)
+    #        {'ch':[1,2], 'delay': None}, # play and sleep (default delay)
+    #        {'ch':[2,5], 'delay': 1000}, # play and sleep (1000ms)
+    #        {'ch':[],    'delay': None}, # sleep (default delay)
+    #        {'ch':None,  'delay': None}, # do nothing (no delay)
+    #      ]
+    #
+
+    player.music_load(music_data)
+
+    ## Start music
+    #  [IMPORTANT!] This function starts sub-thread and return immidiately
+
+    player.music_start()
+
+    ## Pause music: next music_start() play music from this point
+
+    player.music_pause()
+
+    ## Rewind music
+
+    player.music_rewind()
+
+    ## Stop music: puase and rewind
+
+    player.music_stop()
+
+    ## Wait for the music to end
+
+    player.music_wait()
+
+    ## End of program
+
+    music_player.end()
+    ============
 
     Attributes
     ----------
@@ -139,8 +145,9 @@ class MusicBoxPlayer:
         self.rotation_speed(self._rotation_speed)
 
     def end(self):
-        """
-        Call at the end of program
+        """ Call at the end of program
+
+        stop rotation and so on ...
         """
         self._log.debug('doing ..')
 
@@ -150,16 +157,14 @@ class MusicBoxPlayer:
         self._log.debug('done')
 
     def rotation_speed(self, speed=ROTATION_SPEED):
-        """
-        set rotation speed
+        """ set rotation speed
         """
         self._log.debug('speed=%s', speed)
         self._rotation_speed = speed
         self._movement.rotation_speed(self._rotation_speed)
 
     def single_play(self, ch_list=None):
-        """
-        single play
+        """ single play
 
         Parameters
         ----------
@@ -171,7 +176,7 @@ class MusicBoxPlayer:
         self._movement.single_play(ch_list)
 
     def single_play_and_sleep(self, ch_list=None, delay=None):
-        """
+        """ single play and sleep
         Parameters
         ----------
         ch_list: list of int
@@ -179,11 +184,11 @@ class MusicBoxPlayer:
         delay: int
             msec
 
-        ch_list=[1,2,3], delay=100}:  play and sleep
+        ch_list=[1,2,3], delay=500}:  play and sleep 500ms
         ch_list=[1,2,3], delay=None}: play and sleep (default delay)
         ch_list=[],      delay=None}: sleep only (default delay)
-        ch_list=None,    delay=100}:  change default delay, don't sleep
-        ch_list=None,    delay=None}: do nothing (don't sleep)
+        ch_list=None,    delay=300}:  change default delay, no delay
+        ch_list=None,    delay=None}: do nothing (no delay)
 
         """
         self._log.debug('ch=list=%s, delay=%s', ch_list, delay)
@@ -196,7 +201,7 @@ class MusicBoxPlayer:
                 self._log.debug('change default delay: %s',
                                 self._def_delay)
 
-            return  # don't play
+            return  # no delay
 
         if delay is None:
             delay = self._def_delay
@@ -210,8 +215,7 @@ class MusicBoxPlayer:
         self._log.debug('done')
 
     def music_load(self, music_data):
-        """
-        load music data
+        """ load music data
 
         Parameters
         ----------
@@ -221,8 +225,8 @@ class MusicBoxPlayer:
 
           music_data ex.
           [
-            {'ch':None,  'delay': 500},  # change default delay (500ms)
-            {'ch':[2,5], 'delay': 1000}, # play and sleep (1000ms)
+            {'ch':None,  'delay': 500},  # change default delay (no delay)
+            {'ch':[2,5], 'delay': 1000}, # play and sleep 1000ms
             {'ch':[1,2], 'delay': None}, # play and sleep (default delay)
             {'ch':[],    'delay': None}, # sleep (default delay)
             {'ch':None,  'delay': None}, # do nothing (no delay)
@@ -237,8 +241,7 @@ class MusicBoxPlayer:
             self._music_data_i = 0
 
     def music_th(self, music_data_i):
-        """
-        music thread function
+        """ music thread function
 
         Parameters
         ----------
@@ -272,8 +275,7 @@ class MusicBoxPlayer:
         self._log.debug('done')
 
     def music_start(self):
-        """
-        start music
+        """ start music
 
         This function starts sub-thread and returns immidiately
         """
@@ -292,8 +294,7 @@ class MusicBoxPlayer:
         self._log.debug('done: _music_th=%s', self._music_th)
 
     def music_wait(self):
-        """
-        wait music to end
+        """ wait music to end
         """
         self._log.debug('start waiting')
 
@@ -304,8 +305,7 @@ class MusicBoxPlayer:
         self._log.debug('done')
 
     def music_pause(self):
-        """
-        pause music
+        """ pause music
         """
         self._log.debug('')
 
@@ -316,8 +316,7 @@ class MusicBoxPlayer:
         self._log.debug('done: music_data_i=%s', self._music_data_i)
 
     def music_seek(self, idx=0):
-        """
-        seek music
+        """ seek music
         """
         self._log.debug('idx=%s', idx)
 
@@ -333,14 +332,14 @@ class MusicBoxPlayer:
         self._music_data_i = idx
 
     def music_rewind(self):
-        """
-        rewind music
+        """ rewind music
         """
         self.music_seek(0)
 
     def music_stop(self):
-        """
-        stop music
+        """ stop music
+
+        pause and rewind
         """
         self._log.debug('')
 
@@ -455,7 +454,7 @@ class SampleApp:
 
             if line1 in ('next', 'n'):
                 self._player.music_stop()
-                
+
                 self._cur_file += 1
                 if self._cur_file >= len(self._infile):
                     self._cur_file = 0
@@ -467,7 +466,7 @@ class SampleApp:
 
             if line1 in ('prev', 'P'):
                 self._player.music_stop()
-                
+
                 self._cur_file -= 1
                 if self._cur_file < 0:
                     self._cur_file = len(self._infile) - 1
@@ -524,26 +523,31 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
-MusicBoxPlayer class test program
+MusicBoxPlayer class test program (interactive demo)
 ''')
 @click.argument('infile', type=click.Path(exists=True), nargs=-1)
 @click.option('--wav', '-w', 'wav', is_flag=True, default=False,
-              help='wav file mode')
+              help='wav file mode: default=OFF')
 @click.option('--speed', '-s', 'speed', type=int,
               default=MusicBoxPlayer.ROTATION_SPEED,
-              help='rotation speed (0: stop)')
+              help='rotation speed (0: stop): default=%s' %
+              MusicBoxPlayer.ROTATION_SPEED)
 @click.option('--pin1', '-p1', 'pin1', type=int,
               default=MusicBoxPlayer.ROTATION_GPIO[0],
-              help='GPIO pin1 of rotation motor')
+              help='GPIO pin1 of rotation motor: default=%s' %
+              MusicBoxPlayer.ROTATION_GPIO[0])
 @click.option('--pin2', '-p2', 'pin2', type=int,
               default=MusicBoxPlayer.ROTATION_GPIO[1],
-              help='GPIO pin2 of rotation motor')
+              help='GPIO pin2 of rotation motor: default=%s' %
+              MusicBoxPlayer.ROTATION_GPIO[1])
 @click.option('--pin3', '-p3', 'pin3', type=int,
               default=MusicBoxPlayer.ROTATION_GPIO[2],
-              help='GPIO pin3 of rotation motor')
+              help='GPIO pin3 of rotation motor: default=%s' %
+              MusicBoxPlayer.ROTATION_GPIO[2])
 @click.option('--pin4', '-p4', 'pin4', type=int,
               default=MusicBoxPlayer.ROTATION_GPIO[3],
-              help='GPIO pin4 of rotation motor')
+              help='GPIO pin4 of rotation motor: default=%s' %
+              MusicBoxPlayer.ROTATION_GPIO[3])
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
 def main(infile, wav, speed, pin1, pin2, pin3, pin4, debug):
