@@ -2,17 +2,11 @@
 
 【未完成・内容が古い】
 
-Paper Tape Format(後述)に従って書かれた
-楽譜データ(テキストファイル)を読み込み
-演奏する。
+音楽データを読み込み演奏する。
+または、直接、チャンネル番号を指定して演奏することもできる。
 
 Music Box 本体で演奏するモードと、
 スピーカーから擬似的な音(wav形式)を鳴らずモードがある。
-
-## ToDo
-
-* クラスライブラリ化して、Webアプリなどから利用できるようにする。
-* 本体での演奏と、スピーカーから音をならすときの delayを共通化する。
 
 
 ## TL;DR
@@ -28,41 +22,58 @@ $ cd ~/env1/MusicBox
 $ pip install -r requirements.txt
 ```
 
-
 ### 0.2 Execute
+
+クライアント・サーバ構成になっている。
+
+サーバーを起動してから、クライアントで制御する。
+
+#### 0.2.1 Common
+
+クライアントもサーバーも、まずは以下を実行する。
 
 ```bash
 $ . ~/env1/bin/activate
 (env1)$ cd ~/env1/MusicBox
-(env1)$ ./MusicBoxPlayer.py kaeruno-uta.txt
 ```
 
+#### 0.2.2 Server side
 
-## 1. MusicBoxPlayer.py
+```
+(env1)$ ./MusicBoxWebsockServer.py
+```
 
-プログラム本体
+#### 0.2.3 Client side (play paper tape file)
 
-### 1.1 Usage
-
-以下のヘルプを参照
+一つのコマンドを実行する
 
 ```bash
-$ ./MusicBoxPlayer.py -h
+(env1)$ ./MusicBoxWebsockclinet.py ws://localhost:8881/ paper_tape
 ```
+#### 0.2.3 Client side (interactive mode)
+
+インタラクティブ(対話)モード
+
+```bash
+(env1) ~/env1/MusicBox$ ./MusicBoxWebsockclinet.py paper_tape
+> 0 2 3
+:
+> [Ctrl]-[D] to end
+```
+
+### Client API
+
+```
+```bash
+$ . ~/env1/bin/activate
+(env1)$ cd ~/env1/MusicBox
+(env1)$ python3 -m pydoc MusicBoxWebsockClient.MusicBoxWebsockClient
+```
+
 
 ## 2. Paper Tape Format
 
 紙テープをテキストで擬した形式
-
-
-### 2.0 TBD
-
-Music Box本体で演奏する場合、
-サーボの動作に遅延があるが、
-スピーカーを鳴らすときとは、遅延がない。
-
-このため、
-楽譜データの delayの値を共通にできない。
 
 
 ### 2.1 例

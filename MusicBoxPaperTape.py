@@ -4,6 +4,16 @@
 #
 """
 Paper Tape parser
+
+### for detail and simple usage ###
+
+$ python3 -m pydoc MusicBoxPaperTape.MusicBoxPaperTape
+
+
+### usage sample program ###
+
+$ ./MusicBoxPaperTape.py -h
+
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
@@ -183,12 +193,6 @@ class SampleApp:
         """main
         """
         self._log.debug('')
-
-        with open(self.paper_tape_file) as f:
-            lines = f.readlines()
-
-        for line in lines:
-            res = self.obj.parse1(line)
 
         res = self.obj.parse(self.paper_tape_file)
         try:

@@ -168,7 +168,7 @@ class MusicBoxWebsockServer:
             self._player.single_play(ch_list)
             return
 
-        if cmd in ('music_load', 'music', 'm', 'M', 'l', 'L'):
+        if cmd in ('music_load', 'music', 'load', 'l'):
             try:
                 music_data = data['music_data']
             except KeyError as ex:
@@ -178,23 +178,23 @@ class MusicBoxWebsockServer:
             self._player.music_load(music_data)
             return
 
-        if cmd in ('music_start', 's'):
+        if cmd in ('music_start', 'start', 's'):
             self._player.music_start()
             return
 
-        if cmd in ('music_pause', 'p'):
+        if cmd in ('music_pause', 'pause', 'p'):
             self._player.music_pause()
             return
 
-        if cmd in ('music_rewind', 'r'):
+        if cmd in ('music_rewind', 'rewind', 'r'):
             self._player.music_rewind()
             return
 
-        if cmd in ('music_stop', 'S'):
+        if cmd in ('music_stop', 'stop', 'S'):
             self._player.music_stop()
             return
 
-        if cmd in ('music_wait', 'w', 'W'):
+        if cmd in ('music_wait', 'wait', 'w'):
             self._player.music_wait()
             return
 
