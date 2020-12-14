@@ -2,4 +2,5 @@ pygpio
 mido
 pygame
 websockets
+websocket-client
 click

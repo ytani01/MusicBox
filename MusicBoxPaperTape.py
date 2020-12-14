@@ -3,11 +3,12 @@
 # (c) 2020 Yoichi Tanibayashi
 #
 """
-Description
+Paper Tape parser
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
 
+import json
 from MyLogger import get_logger
 
 
@@ -188,12 +189,13 @@ class SampleApp:
 
         for line in lines:
             res = self.obj.parse1(line)
-            print('res=%s' % (res))
-
-        print()
 
         res = self.obj.parse(self.paper_tape_file)
-        print('res=%s' % (res))
+        try:
+            print('{"cmd": "load", "music_data": %s}' %
+                  json.dumps(res, indent=2))
+        except Exception as ex:
+            self._log.error('%s: %s.', type(ex), ex)
 
         self._log.debug('done')
 

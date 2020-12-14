@@ -5,6 +5,20 @@
 """
 Music Box Websock Server
 
+## message format
+
+{"cmd": "play", "ch": [0,2,4]}
+
+{"cmd": "music_load", "music_data": [
+  {"ch": null,"delay": 500},
+  {"ch": [0,2,4], "delay": null},
+  {"ch": [], "delay": null}
+]
+
+{"cmd": "music_start"}
+{"cmd": "music_pause"}
+{"cmd": "music_rewind"}
+{"cmd": "music_stop"}
 
 """
 __author__ = 'Yoichi Tanibayashi'
@@ -34,8 +48,6 @@ class MusicBoxWebsockServer:
 
     ## end of program (interrupted)
     svr.end()
-    
-
     ===========
 
     Simple client
@@ -124,26 +136,53 @@ class MusicBoxWebsockServer:
             self.__log.error('%s: %s. msg=%s', type(ex), ex, msg)
             return
 
-        if type(data) != list:
+        self.__log.debug('data=%s', data)
+
+        try:
+            cmd = data['cmd']
+        except KeyError as ex:
+            self.__log.error('%s: %s. data=%s', type(ex), ex, data)
             return
 
-        if len(data) == 0:
+        if cmd in ('play', 'P'):
+            try:
+                ch_list = data['ch']
+            except KeyError as ex:
+                self.__log.error('%s: %s. data=%s', type(ex), ex, data)
+                return
+
+            self._player.single_play(ch_list)
             return
 
-        self.__log.info('data=%s', data)
+        if cmd in ('load', 'music_load', 'L'):
+            try:
+                music_data = data['music_data']
+            except KeyError as ex:
+                self.__log.error('%s: %s. data=%s', type(ex), ex, data)
+                return
 
-        if type(data[0]) == int:
-            self.__log.info('data=%s', data)
-            self._player.single_play(data)
+            self._player.music_load(music_data)
             return
 
-        self._player.music_stop()
-        self._player.music_wait()
-        time.sleep(0.5)
-        self._player.music_load(data)
-        self._player.music_start()
+        if cmd in ('music_start',):
+            self._player.music_start()
+            return
 
-        self.__log.debug('done')
+        if cmd in ('music_pause',):
+            self._player.music_pause()
+            return
+
+        if cmd in ('music_rewind',):
+            self._player.music_rewind()
+            return
+
+        if cmd in ('music_stop',):
+            self._player.music_stop()
+            return
+
+        if cmd in ('music_wait',):
+            self._player.music_wait()
+            return
 
 
 # --- 以下、サンプル ---

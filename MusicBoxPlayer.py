@@ -45,7 +45,8 @@ class MusicBoxPlayer:
 
     player.single_play([1,3,5])
 
-    ## load music data
+    ## Load and Start music
+    #
     #   music_data example:
     #      [
     #        {'ch':None,  'delay': 500},  # change default delay (500ms)
@@ -58,8 +59,7 @@ class MusicBoxPlayer:
 
     player.music_load(music_data)
 
-    ## Start music
-    #  [IMPORTANT!] This function starts sub-thread and return immidiately
+    ## (Re)start music
 
     player.music_start()
 
@@ -214,7 +214,7 @@ class MusicBoxPlayer:
 
         self._log.debug('done')
 
-    def music_load(self, music_data):
+    def music_load(self, music_data, start_flag=True):
         """ load music data
 
         Parameters
@@ -222,6 +222,8 @@ class MusicBoxPlayer:
         music_data: list of {'ch': ch_list, 'delay': delay_msec}
             ch_list: list of int
             delay_msec: int
+        start_flag: bool
+            start music or not
 
           music_data ex.
           [
@@ -236,17 +238,24 @@ class MusicBoxPlayer:
         """
         self._log.debug('music_data=%s', music_data)
 
+        self.music_stop()
+
         self._music_data = copy.deepcopy(music_data)
         if self._music_data_i >= len(self._music_data):
             self._music_data_i = 0
 
-    def music_th(self, music_data_i):
+        if start_flag:
+            self.music_start()
+
+    def music_th(self, music_data_i, repeat=True):
         """ music thread function
 
         Parameters
         ----------
         music_data_i:
             index of music data
+        repeat: bool
+            repeat flag
         """
         self._log.debug('music_data_i=%s', music_data_i)
 
@@ -261,15 +270,26 @@ class MusicBoxPlayer:
         self._music_data_i = music_data_i
         self._music_active = True
 
-        while self._music_active and \
-              self._music_data_i < len(self._music_data):
+        while True:
+            while self._music_active and \
+                  self._music_data_i < len(self._music_data):
 
-            data1 = self._music_data[self._music_data_i]
-            self.single_play_and_sleep(data1['ch'], data1['delay'])
-            self._music_data_i += 1
+                data1 = self._music_data[self._music_data_i]
+                self.single_play_and_sleep(data1['ch'], data1['delay'])
+                self._music_data_i += 1
 
-        if self._music_data_i >= len(self._music_data):
-            self._music_data_i = 0
+            if self._music_data_i >= len(self._music_data):
+                self._music_data_i = 0
+
+            if not self._music_active:
+                break
+
+            if repeat:
+                time.sleep(1)
+                continue
+            else:
+                break
+                
         self._msuci_active = False
 
         self._log.debug('done')
@@ -326,11 +346,17 @@ class MusicBoxPlayer:
             self._music_data_i = 0
             return
 
+        active = self._music_active
+        self.music_pause()
+        
         if idx > len(self._music_data) - 1:
             idx = len(self._music_data) - 1
             self._log.debug('fix idx=%s', idx)
 
         self._music_data_i = idx
+
+        if active:
+            self.music_start()
 
     def music_rewind(self):
         """ rewind music
