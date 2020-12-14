@@ -71,12 +71,13 @@ Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合�
 (env1)$ ./MusicBoxWebsockServer.py -w &
 ```
 
-## 2.3 Client side (play paper tape file)
+## 2.3 Client side (one time)
 
-コマンドを実行(サーバーに送信)する
+一つずつコマンドを実行(サーバーに送信)する
 
 ```bash
 (env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/ paper_tape paper_tape/kaeruno-uta.txt
+(env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/ stop
 ```
 ## 2.3 Client side (interactive mode)
 
