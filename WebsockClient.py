@@ -7,7 +7,7 @@ WebScok Client
 
 ### for detail and simple usage ###
 
-$ pydoc3 WebsockClient.WebsockClient
+$ python3 -m pydoc WebsockClient.WebsockClient
 
 
 ### sample program ###
@@ -38,6 +38,7 @@ class WebsockClient:
     obj = WebsockClient()
 
     ## send message
+
     obj.send(msg)
 
     ============

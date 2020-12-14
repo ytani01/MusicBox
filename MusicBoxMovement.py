@@ -7,7 +7,7 @@ Music Box movement class
 
 ### for detail ###
 
-$  pydoc3 MusicBoxMovement.MusicBoxMovement
+$ python3 -m pydoc MusicBoxMovement.MusicBoxMovement
 
 
 ### class tree ###
