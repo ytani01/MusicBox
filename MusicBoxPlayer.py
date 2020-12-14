@@ -5,12 +5,12 @@
 """
 Music Box Player class
 
-### for detail and simple usage ###
+##### Simple usage and detail
 
-$ pydoc3 MusicBoxPlayer.MusicBoxPlayer
+$ python3 -m pydoc MusicBoxPlayer.MusicBoxPlayer
 
 
-### sample program (interactive demo) usage ###
+##### sample program (interactive demo) usage
 
 $ ./MusicBoxPlayer.py -h
 

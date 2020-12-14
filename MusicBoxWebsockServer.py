@@ -5,20 +5,14 @@
 """
 Music Box Websock Server
 
-## message format
+### Message format, Simple client, Simple Usage, etc.
 
-{"cmd": "play", "ch": [0,2,4]}
+$ python3 -m pydoc MusicBoxWebsockServer.MusicBoxWebsockServer
 
-{"cmd": "music_load", "music_data": [
-  {"ch": null,"delay": 500},
-  {"ch": [0,2,4], "delay": null},
-  {"ch": [], "delay": null}
-]
 
-{"cmd": "music_start"}
-{"cmd": "music_pause"}
-{"cmd": "music_rewind"}
-{"cmd": "music_stop"}
+### Sample program (Server) usage
+
+$ ./MusicBoxWebsockServer.py -h
 
 """
 __author__ = 'Yoichi Tanibayashi'
@@ -35,8 +29,39 @@ from MyLogger import get_logger
 class MusicBoxWebsockServer:
     """ MusicBoxWebsockServer
 
+    Message format (JSON)
+    ---------------------
+    {"cmd": "play", "ch": [0,2,4]}         # single play
+
+    {"cmd": "music_load", "music_data": [  # load music and play
+      {"ch": null,"delay": 500},
+      {"ch": [0,2,4], "delay": null},
+      {"ch": [], "delay": null}
+    ]}
+
+    {"cmd": "music_start"}                 # (re)start music
+
+    {"cmd": "music_pause"}
+
+    {"cmd": "music_rewind"}
+
+    {"cmd": "music_stop"}
+
+
+    Simple client
+    -------------
+    # [Important!] 'websocket' is not 'websockets'
+
+    from websocket import create_connection
+
+    ws = create_connection('ws://localhost:8881/')
+    ws.send('text')
+    ws.close()
+    =============
+
+
     Simple usge
-    ===========
+    -----------
     ## import
     from MusicBoxWebsockServer import MusicBoxWebsockServer
 
@@ -50,17 +75,6 @@ class MusicBoxWebsockServer:
     svr.end()
     ===========
 
-    Simple client
-    =============
-    # [Important!] 'websocket' is not 'websockets'
-
-    from websocket import create_connection
-
-    ws = create_connection('ws://localhost:8881/')
-    ws.send('[{"ch": [1,2,3], "delay": 500}]')
-    ws.close()
-
-    =============
 
     Attributes
     ----------
