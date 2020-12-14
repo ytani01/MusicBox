@@ -36,6 +36,7 @@ $ . ~/env1/bin/activate
 (env1)$ ./MusicBoxPlayer.py kaeruno-uta.txt
 ```
 
+
 ## 1. MusicBoxPlayer.py
 
 プログラム本体
