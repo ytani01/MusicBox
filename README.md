@@ -71,7 +71,7 @@ Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合�
 (env1)$ ./MusicBoxWebsockServer.py -w &
 ```
 
-## 2.3 Client side (one time)
+## 2.3 Client side (one time): サンプル実装
 
 一つずつコマンドを実行(サーバーに送信)する
 
@@ -79,12 +79,12 @@ Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合�
 (env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/ paper_tape paper_tape/kaeruno-uta.txt
 (env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/ stop
 ```
-## 2.3 Client side (interactive mode)
+## 2.3 Client side (interactive mode): サンプル実装
 
 インタラクティブ(対話)モード
 
 ```bash
-(env1) ~/env1/MusicBox$ 
+(env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/
 > help
  :
 > 0 2 4
@@ -99,7 +99,7 @@ $ . ~/env1/bin/activate
 (env1)$ python3 -m pydoc MusicBoxWebsockClient.MusicBoxWebsockClient
 ```
 
-### 3.1 simple usage
+### 3.1 API simple usage
 
 ```python3
 ## Import
