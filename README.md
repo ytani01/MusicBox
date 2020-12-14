@@ -11,7 +11,24 @@ Music Box 本体で演奏するモードと、
 
 ## TL;DR
 
-### 0.1 Install
+```bash
+$ cd ~
+$ python3 -m venv env1
+$ cd ~/env1
+$ git clone https://github.com/ytani01/MusicBox.git
+$ source ./bin/activate
+(env1)$ cd ~/env1/MusicBox
+(env1)$ pip install -r requirements.txt
+(env1)$ ./MusicBoxWebsockServer.py &
+(env1)$ ./MusicBoxWebsockClient.py ws://localhost:8881/ papaer_tape/kaeruno-uta.txt
+(env1)$ ./MusicBoxWebsockClient.py ws://localhost:8881/
+> 0 2 4
+> stop
+> [Ctrl]-[D]
+(env1)$
+```
+
+## 1. Install
 
 ```bash
 $ cd ~
@@ -22,13 +39,17 @@ $ cd ~/env1/MusicBox
 $ pip install -r requirements.txt
 ```
 
-### 0.2 Execute
+## 2. Execute
 
 クライアント・サーバ構成になっている。
 
 サーバーを起動してから、クライアントで制御する。
 
-#### 0.2.1 Common
+クライアントのサンプルは、
+コマンドを単発で実行するモードと、
+対話的に実行するモードがある。
+
+### 2.1 Common
 
 クライアントもサーバーも、まずは以下を実行する。
 
@@ -37,46 +58,75 @@ $ . ~/env1/bin/activate
 (env1)$ cd ~/env1/MusicBox
 ```
 
-#### 0.2.2 Server side
+### 2.2 Server side
 
 ```
-(env1)$ ./MusicBoxWebsockServer.py
+(env1)$ ./MusicBoxWebsockServer.py &
 ```
 
-#### 0.2.3 Client side (play paper tape file)
+Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合は、
+``-w``オプションをつける。
 
-一つのコマンドを実行する
+```
+(env1)$ ./MusicBoxWebsockServer.py -w &
+```
+
+## 2.3 Client side (play paper tape file)
+
+コマンドを実行(サーバーに送信)する
 
 ```bash
-(env1)$ ./MusicBoxWebsockclinet.py ws://localhost:8881/ paper_tape
+(env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/ paper_tape paper_tape/kaeruno-uta.txt
 ```
-#### 0.2.3 Client side (interactive mode)
+## 2.3 Client side (interactive mode)
 
 インタラクティブ(対話)モード
 
 ```bash
-(env1) ~/env1/MusicBox$ ./MusicBoxWebsockclinet.py paper_tape
-> 0 2 3
-:
+(env1) ~/env1/MusicBox$ 
+> help
+ :
+> 0 2 4
 > [Ctrl]-[D] to end
 ```
 
-### Client API
+## 3. Client API
 
-```
 ```bash
 $ . ~/env1/bin/activate
 (env1)$ cd ~/env1/MusicBox
 (env1)$ python3 -m pydoc MusicBoxWebsockClient.MusicBoxWebsockClient
 ```
 
+### 3.1 simple usage
 
-## 2. Paper Tape Format
+```python3
+## Import
+from MusicBoxWebsockClient import MusicBoxWebsockClient
+
+## Initialize
+cl = MusicBoxWebsockClient('ws://ipaddr:port/')
+
+## send commands
+
+cl.single_play([0,1, ..])
+cl.midi(filename)   # not implemented
+cl.paper_tape(filename)
+cl.music_start()
+cl.music_pause()
+cl.music_rewind()
+cl.music_stop()
+
+## End of program
+cl.end()
+```
+
+## 4. Paper Tape Format
 
 紙テープをテキストで擬した形式
 
 
-### 2.1 例
+### 4.1 例
 
 ```
 # '#'以降はコメント
@@ -91,7 +141,7 @@ ___o___o_____o_
 ```
 
 
-### 2.2 詳細
+### 4.2 詳細
 
 * 紙テープと同様にどの音を鳴らすか、記号で指定する。
 
