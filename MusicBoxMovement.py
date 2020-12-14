@@ -260,6 +260,10 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
 
         self._log.debug('play sounds')
         for ch in ch_list:
+            if ch is None:
+                self._log.error('ch=%s: invalid', ch)
+                continue
+                
             if ch < 0 or ch > self.ch_n - 1:
                 self._log.error('ch=%s: invalid', ch)
                 continue
