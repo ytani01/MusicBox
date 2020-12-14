@@ -35,11 +35,11 @@ class WebsockClient:
 
     ## Initialize
 
-    obj = WebsockClient()
+    wsc = WebsockClient(url)
 
     ## send message
 
-    obj.send(msg)
+    wsc.send(msg)
 
     ============
 
@@ -54,7 +54,7 @@ class WebsockClient:
         Parameters
         ----------
         url: str
-            URL
+            URL (ex. 'ws://ipaddr:port/')
         """
         self._dbg = debug
         __class__.__log = get_logger(__class__.__name__, self._dbg)

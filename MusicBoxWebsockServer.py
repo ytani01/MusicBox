@@ -31,7 +31,7 @@ class MusicBoxWebsockServer:
 
     Message format (JSON)
     ---------------------
-    {"cmd": "play", "ch": [0,2,4]}         # single play
+    {"cmd": "single_play", "ch": [0,2,4]}  # single play
 
     {"cmd": "music_load", "music_data": [  # load music and play
       {"ch": null,"delay": 500},
@@ -158,7 +158,7 @@ class MusicBoxWebsockServer:
             self.__log.error('%s: %s. data=%s', type(ex), ex, data)
             return
 
-        if cmd in ('play', 'P'):
+        if cmd in ('single_play', 'play', 'P'):
             try:
                 ch_list = data['ch']
             except KeyError as ex:
@@ -168,7 +168,7 @@ class MusicBoxWebsockServer:
             self._player.single_play(ch_list)
             return
 
-        if cmd in ('load', 'music_load', 'L'):
+        if cmd in ('music_load', 'music', 'm', 'M', 'l', 'L'):
             try:
                 music_data = data['music_data']
             except KeyError as ex:
@@ -178,23 +178,23 @@ class MusicBoxWebsockServer:
             self._player.music_load(music_data)
             return
 
-        if cmd in ('music_start',):
+        if cmd in ('music_start', 's'):
             self._player.music_start()
             return
 
-        if cmd in ('music_pause',):
+        if cmd in ('music_pause', 'p'):
             self._player.music_pause()
             return
 
-        if cmd in ('music_rewind',):
+        if cmd in ('music_rewind', 'r'):
             self._player.music_rewind()
             return
 
-        if cmd in ('music_stop',):
+        if cmd in ('music_stop', 'S'):
             self._player.music_stop()
             return
 
-        if cmd in ('music_wait',):
+        if cmd in ('music_wait', 'w', 'W'):
             self._player.music_wait()
             return
 
