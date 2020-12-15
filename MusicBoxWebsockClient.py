@@ -14,12 +14,16 @@ $ python3 -m pydoc MusicBoxWebsockClient.MusicBoxWebsockClient
 
 $ ./MusicBoxWebsockClient.py -h
 
+or
+
+$ ./MusicBoxWebsockClient.py
+> help
+
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
 
 import json
-import copy
 from WebsockClient import WebsockClient
 from MusicBoxPaperTape import MusicBoxPaperTape
 from MusicBoxMidi import MusicBoxMidi
@@ -97,9 +101,9 @@ class MusicBoxWebsockClient:
             name of MIDI file
         note_base: int
 
-        track: int
+        track: list of int
 
-        channel: int
+        channel: list of int
         """
         self.__log.debug('file=%s', file)
         self.__log.debug('note_base=%s, track=%s, channel=%s',
@@ -194,7 +198,7 @@ class SampleApp:
 
     __log = get_logger(__name__, False)
 
-    def __init__(self, url, cmd, note_base=None, track=None, channel=None,
+    def __init__(self, url, cmd, note_base=None, track=[], channel=[],
                  debug=False):
         """ Constructor
 
@@ -358,9 +362,9 @@ MusicBoxWebsockClient sample program
 @click.argument('cmd', type=str, nargs=-1)
 @click.option('--note_base', '-b', 'note_base', type=int, default=None,
               help='MIDI note base')
-@click.option('--track', '-t', 'track', type=int, default=None,
+@click.option('--track', '-t', 'track', type=int, multiple=True,
               help='MIDI track')
-@click.option('--channel', '-c', 'channel', type=int, default=None,
+@click.option('--channel', '-c', 'channel', type=int, multiple=True,
               help='MIDI channel')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')

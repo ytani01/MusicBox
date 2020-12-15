@@ -12,20 +12,46 @@ Music Box 本体で演奏するモードと、
 ## TL;DR
 
 ```bash
-$ cd ~
-$ python3 -m venv env1
-$ cd ~/env1
-$ git clone https://github.com/ytani01/MusicBox.git
-$ source ./bin/activate
+      $ cd ~
+      $ python3 -m venv env1
+      $ cd ~/env1
+      $ git clone https://github.com/ytani01/MusicBox.git
+      $ source ./bin/activate
 (env1)$ cd ~/env1/MusicBox
 (env1)$ pip install -r requirements.txt
 (env1)$ ./MusicBoxWebsockServer.py &
 (env1)$ ./MusicBoxWebsockClient.py ws://localhost:8881/ papaer_tape/kaeruno-uta.txt
 (env1)$ ./MusicBoxWebsockClient.py ws://localhost:8881/
-> 0 2 4
-> stop
-> [Ctrl]-[D]
+      > 0 2 4
+      > stop
+      > [Ctrl]-[D]
 (env1)$
+```
+
+### Client API: Simple Usage
+
+```python
+from MusicBoxWebsockClient import MusicBoxWebsockClient
+
+cl = MusicBoxWebsockClient('ws://ipaddr:port/')
+
+cl.single_play([0,1, ..])
+cl.midi(filename)           # TBD
+cl.paper_tape(filename)
+cl.music_start()
+cl.music_pause()
+cl.music_rewind()
+cl.music_stop()
+
+cl.end()     # Call at the end of program
+```
+
+APIのマニュアルは、以下で見ることができます。
+
+```bash
+$ . ~/env1/bin/activate
+(env1)$ cd ~/env1/MusicBox
+(env1)$ python3 -m pydoc MusicBoxWebsockClient.MusicBoxWebsockClient
 ```
 
 ## 1. Install
@@ -89,14 +115,6 @@ Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合�
  :
 > 0 2 4
 > [Ctrl]-[D] to end
-```
-
-## 3. Client API
-
-```bash
-$ . ~/env1/bin/activate
-(env1)$ cd ~/env1/MusicBox
-(env1)$ python3 -m pydoc MusicBoxWebsockClient.MusicBoxWebsockClient
 ```
 
 ### 3.1 API simple usage
