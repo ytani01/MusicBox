@@ -12,6 +12,7 @@ Music Box 本体で演奏するモードと、
 ## TL;DR
 
 ```bash
+      $ sudo pigpiod
       $ cd ~
       $ python3 -m venv env1
       $ cd ~/env1
@@ -80,7 +81,8 @@ $ pip install -r requirements.txt
 クライアントもサーバーも、まずは以下を実行する。
 
 ```bash
-$ . ~/env1/bin/activate
+      $ sudo pigpiod
+      $ source ~/env1/bin/activate
 (env1)$ cd ~/env1/MusicBox
 ```
 
