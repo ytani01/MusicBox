@@ -6,7 +6,7 @@
 または、直接、チャンネル番号を指定して演奏することもできる。
 
 Music Box 本体で演奏するモードと、
-スピーカーから擬似的な音(wav形式)を鳴らずモードがある。
+スピーカーから擬似的な音を鳴らずモードがある。
 
 
 ## TL;DR
@@ -99,10 +99,11 @@ Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合�
 
 ## 2.3 Client side (one time): サンプル実装
 
-一つずつコマンドを実行(サーバーに送信)する
+一つずつコマンドを実行 (サーバーに送信) する方法
 
 ```bash
 (env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/ paper_tape paper_tape/kaeruno-uta.txt
+(env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/ midi midi/joy-4-62.midi -c 4
 (env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/ stop
 ```
 ## 2.3 Client side (interactive mode): サンプル実装
@@ -117,35 +118,12 @@ Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合�
 > [Ctrl]-[D] to end
 ```
 
-### 3.1 API simple usage
-
-```python3
-## Import
-from MusicBoxWebsockClient import MusicBoxWebsockClient
-
-## Initialize
-cl = MusicBoxWebsockClient('ws://ipaddr:port/')
-
-## send commands
-
-cl.single_play([0,1, ..])
-cl.midi(filename)   # not implemented
-cl.paper_tape(filename)
-cl.music_start()
-cl.music_pause()
-cl.music_rewind()
-cl.music_stop()
-
-## End of program
-cl.end()
-```
-
-## 4. Paper Tape Format
+## 3. Paper Tape Format
 
 紙テープをテキストで擬した形式
 
 
-### 4.1 例
+### 3.1 例
 
 ```
 # '#'以降はコメント
@@ -160,7 +138,7 @@ ___o___o_____o_
 ```
 
 
-### 4.2 詳細
+### 3.2 詳細
 
 * 紙テープと同様にどの音を鳴らすか、記号で指定する。
 
@@ -176,9 +154,11 @@ ___o___o_____o_
 * '#'以降は、コメント
 
 
-## MIDIの基本
+## memo
 
-### トラック、チャンネル
+### MIDI
+
+#### トラック、チャンネル
 
 * トラック: 楽譜に相当
 * チャンネル: 楽器に相当
@@ -203,4 +183,3 @@ MIDIデータ: [トラック1:チャンネル1]-[トラック1:チャンネル2]
 どれが主旋律かわからないので、自動選択は不可能。
 
 ## A. References
-
