@@ -31,22 +31,16 @@ class MusicBoxMidi:
     Simple Usage
     ============
     ## Import
-
     from MusicBoxMidi import MusicBoxMidi
 
     ## Initialize
-
-    obj = MusicBoxMidi()
-
+    parser = MusicBoxMidi()
 
     ## method1
-
-    obj.method1(arg)
-
+    parser.parse(arg)
 
     ## End of program
-
-    obj.end()
+    parser.end()
 
     ============
 
@@ -57,9 +51,14 @@ class MusicBoxMidi:
     """
     DEF_NOTE_BASE = 54
 
-    NOTE_LIST = [0, 2, 4, 5, 7, 9, 11,
-                 12, 14, 16, 17, 19, 21, 23,
-                 24]
+    DELAY_MAX = 3000
+
+    NOTE_BASE_MIN = 0
+    NOTE_BASE_MAX = 200
+
+    NOTE_OFFSET = [
+        0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24
+    ]
 
     __log = get_logger(__name__, False)
 
@@ -86,66 +85,170 @@ class MusicBoxMidi:
         self.__log.debug('doing ..')
         self.__log.debug('done')
 
-    def note2ch(self, note, note_base=DEF_NOTE_BASE):
+    def parse0(self, midi_data):
         """
         """
-        self.__log.debug('note=%s, note_base=%s', note, note_base)
-
-        for ch, offset in enumerate(self.NOTE_LIST):
-            if note == note_base + offset:
-                self.__log.debug('ch=%s', ch)
-                return ch
-
-    def parse(self, note_base=DEF_NOTE_BASE, channel=0):
-        """
-        Description
-
-        Parameters
-        ----------
-        note_base: int
-
-        channel: int
-        """
-        self.__log.debug('note_base=%s, channel=%s', note_base, channel)
+        self.__log.debug('midi_data=%s', midi_data)
 
         tempo = None
         delay = 0
-        music_data = []
+        data = []
 
-        for i, track in enumerate(self._midi.tracks):
-            self.__log.debug('Track %s:%s', i, track.name)
-
-
+        for i, track in enumerate(midi_data.tracks):
             for msg in track:
-                self.__log.debug('msg=%s', msg)
-
                 if msg.type == 'set_tempo':
                     tempo = msg.tempo
-                    self.__log.debug('tempo=%s', tempo)
+                    continue
 
-                if msg.time > 0:
+                if msg.type == 'note_on':
                     delay = mido.tick2second(
                         msg.time, self._midi.ticks_per_beat,
                         tempo) * 1000
+                    if delay > self.DELAY_MAX:
+                        delay = self.DELAY_MAX
 
-                    if delay > 2000:
-                        delay = 2000
-                else:
-                    delay = 0
+                    data_ent = {
+                        'midi_track': i,
+                        'midi_channel': msg.channel,
+                        'note': msg.note,
+                        'delay': delay
+                    }
 
-                self.__log.debug('delay=%s', delay)
+                    data.append(data_ent)
 
-                if msg.type == 'note_on' and msg.channel == channel:
-                    self.__log.debug('msg.note=%s', msg.note)
-                    ch = self.note2ch(msg.note, note_base)
+        return data
 
-                    data = {'ch': [ch], 'delay': delay}
-                    self.__log.info('data=%s', data)
+    def select_track_channel(self, data0, track=1, channel=0):
+        """
+        """
+        self.__log.debug('track=%s, channel=%s', track, channel)
 
-                    music_data.append(data)
+        data1 = []
 
-        self.__log.debug('done')
+        for d in data0:
+            if track is None and channel is None:
+                data1.append(d)
+                continue
+
+            if track is None and channel is not None:
+                if d['midi_channel'] == channel:
+                    data1.append(d)
+                    continue
+
+            if track is not None and channel is None:
+                if d['midi_track'] == track:
+                    data1.append(d)
+                    continue
+
+            if d['midi_track'] == track and d['midi_channel'] == channel:
+                data1.append(d)
+
+        return data1
+
+    def note2ch(self, note, base=DEF_NOTE_BASE):
+        """
+        """
+        # self.__log.debug('note=%s, base=%s', note, base)
+
+        for ch, offset in enumerate(self.NOTE_OFFSET):
+            if note == base + offset:
+                # self.__log.debug('ch=%s', ch)
+                return ch
+
+    def all_note2ch(self, data, base=DEF_NOTE_BASE):
+        """
+        """
+        # self.__log.debug('base=%s', base)
+
+        ch = []
+        for d in data:
+            ch.append(self.note2ch(d['note'], base))
+
+        return ch
+
+    def best_base(self, data,
+                  base_min=NOTE_BASE_MIN, base_max=NOTE_BASE_MAX):
+        """
+        """
+        self.__log.debug('(base_min, base_max)=%s', (base_min, base_max))
+
+        best_base = base_min
+        none_count_min = 999999
+        for base in range(base_min, base_max+1):
+            ch = self.all_note2ch(data, base)
+            none_count = ch.count(None)
+            if none_count < none_count_min:
+                best_base = base
+                none_count_min = none_count
+
+            if none_count_min * 0.5 < none_count < none_count_min * 1.5:
+                self.__log.info('base=%s(%s), best=%s(%s)',
+                                base, none_count,
+                                best_base, none_count_min)
+
+        return best_base
+
+    def mk_music_data(self, data, base):
+        """
+        """
+        self.__log.debug('base=%s', base)
+
+        music_data = []
+        for d in data:
+            ch = self.note2ch(d['note'], base)
+            data = {'ch': [ch], 'delay': d['delay']}
+            self.__log.debug('data=%s', data)
+            music_data.append(data)
+
         return music_data
+
+    def parse(self, track=None, channel=None, base=None):
+        """
+        parse MIDI data
+
+        base が None の場合は、最適値を自動選択する。
+
+        Parameters
+        ----------
+        track: int
+            MIDI track
+        channel: int
+            MIDI channel
+        base: int
+            note base
+
+        """
+        self.__log.debug('track=%s, channel=%s, base=%s',
+                         track, channel, base)
+
+        data0 = self.parse0(self._midi)
+        midi_track = []
+        midi_channel = []
+        midi_track_channel = []
+        for i, d in enumerate(data0):
+            midi_track.append(d['midi_track'])
+            midi_track = sorted(list(set(midi_track)))
+
+            midi_channel.append(d['midi_channel'])
+            midi_channel = sorted(list(set(midi_channel)))
+
+            midi_track_channel.append('%s %s' % (
+                d['midi_track'], d['midi_channel']))
+            midi_track_channel = sorted(list(set(midi_track_channel)))
+
+        self.__log.info('midi_track=%s, midi_channel=%s',
+                        midi_track, midi_channel)
+        self.__log.info('midi_trank_channel=%s', midi_track_channel)
+
+        data1 = self.select_track_channel(data0, track, channel)
+        for i, d in enumerate(data1):
+            self.__log.debug('%s: %s', i, d)
+
+        if base is None:
+            base  = self.best_base(data1)
+            self.__log.debug('base=%s (changed)', base)
+
+        return self.mk_music_data(data1, base)
 
 
 # --- 以下、サンプル ---
@@ -159,7 +262,7 @@ class SampleApp:
     """
     __log = get_logger(__name__, False)
 
-    def __init__(self, midi_file, base, channel, debug=False):
+    def __init__(self, midi_file, base, track=1, channel=0, debug=False):
         """constructor
 
         Parameters
@@ -168,16 +271,20 @@ class SampleApp:
             file name of MIDI file
         base: int
             note base
+        track: int
+            MIDI track
         channel: int
             MIDI channel
         """
         self._dbg = debug
         __class__.__log = get_logger(__class__.__name__, self._dbg)
         self.__log.debug('midi_file=%s', midi_file)
-        self.__log.debug('base=%s, channel=%s', base, channel)
+        self.__log.debug('base=%s, track=%s, channel=%s',
+                         base, track, channel)
 
         self._midi_file = midi_file
         self._base = base
+        self._track = track
         self._channel = channel
 
         self._parser = MusicBoxMidi(self._midi_file, debug=self._dbg)
@@ -187,7 +294,7 @@ class SampleApp:
         """
         self.__log.debug('')
 
-        data = self._parser.parse(self._base, self._channel)
+        data = self._parser.parse(self._track, self._channel, self._base)
         print(json.dumps(data))
 
         self.__log.debug('done')
@@ -208,21 +315,22 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 MusicBoxMidi sample program
 ''')
 @click.argument('midi_file', type=click.Path(exists=True))
-@click.option('--base', '-b', 'base', type=int,
-              default=MusicBoxMidi.DEF_NOTE_BASE,
+@click.option('--base', '-b', 'base', type=int, default=None,
               help='note base')
-@click.option('--channel', '-c', 'channel', type=int, default=0,
+@click.option('--track', '-t', 'track', type=int, default=None,
+              help='MIDI track')
+@click.option('--channel', '-c', 'channel', type=int, default=None,
               help='MIDI channel')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(midi_file, base, channel, debug):
+def main(midi_file, base, track, channel, debug):
     """サンプル起動用メイン関数
     """
     __log = get_logger(__name__, debug)
     __log.debug('midi_file=%s', midi_file)
-    __log.debug('base=%s, channel=%s', base, channel)
+    __log.debug('base=%s, track=%s, channel=%s', base, track, channel)
 
-    app = SampleApp(midi_file, base, channel, debug=debug)
+    app = SampleApp(midi_file, base, track, channel, debug=debug)
     try:
         app.main()
     finally:

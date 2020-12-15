@@ -16,12 +16,11 @@ $ ./MusicBoxWebsockServer.py -h
 
 """
 __author__ = 'Yoichi Tanibayashi'
-__date__   = '2020'
+__date__   = '2020'  # noqa
 
+import json
 import asyncio
 import websockets
-import json
-import time
 from MusicBoxPlayer import MusicBoxPlayer
 from MyLogger import get_logger
 
@@ -40,44 +39,50 @@ class MusicBoxWebsockServer:
     ]}
 
     {"cmd": "music_start"}                 # (re)start music
-
     {"cmd": "music_pause"}
-
     {"cmd": "music_rewind"}
-
     {"cmd": "music_stop"}
-
-
-    Simple client
-    -------------
-    # [Important!] 'websocket' is not 'websockets'
-
-    from websocket import create_connection
-
-    ws = create_connection('ws://localhost:8881/')
-    ws.send('text')
-    ws.close()
-    =============
 
 
     Simple usge
     -----------
-    ## import
     from MusicBoxWebsockServer import MusicBoxWebsockServer
 
-    ## initialize
     svr = MusicBoxWebsockServer(port=8881)
 
-    ## start server
     svr.main()  # run forever
 
-    ## end of program (interrupted)
-    svr.end()
+    svr.end()   # Call at the end of program (or interrupted)
     ===========
 
 
-    Attributes
-    ----------
+    Client Module: MusicBoxWebsockClient
+    ------------------------------------
+    from MusicBoxWebsockClient import MusicBoxWebsockClient
+
+    cl = MusicBoxWebsockClient('ws://ipaddr:port/')
+
+    cl.single_play([0,1, ..])
+    cl.midi(filename)          # TBD
+    cl.paper_tape(filename)
+    cl.music_start()
+    cl.music_pause()
+    cl.music_rewind()
+    cl.music_stop()
+
+    cl.end()
+    ====================================
+
+
+    FYI:Simple websocket client excample using websocket
+    ----------------------------------------------------
+    # [Important!] 'websocket' is not 'websockets'
+    from websocket import create_connection
+
+    ws = create_connection('ws://localhost:8881/')
+    ws.send('message')
+    ws.close()
+    ====================================================
     """
     DEF_PORT = 8881
 
@@ -89,13 +94,15 @@ class MusicBoxWebsockServer:
 
         Parameters
         ----------
-        port: int
-            port number
         wav_mode: bool
             wav file mode flag
+        host: str
+            host
+        port: int
+            port number
         """
         self._dbg = debug
-        __class__.__log = get_logger(__class__.__name__, self._dbg)
+        __class__.__log = get_logger(__class__.__name__, self._dbg) # noqa
         self.__log.debug('wav_mode=%s', wav_mode)
         self.__log.debug('host:port=%s:%s', host, port)
 
@@ -130,15 +137,16 @@ class MusicBoxWebsockServer:
         self.__log.debug('done')
 
     async def handle(self, websock, path):
-        """ handle
+        """
+        request handler
 
         Parameters
         ----------
+        websock: dict
+        path: str
         """
         self.__log.debug('websock=%s:%s, path=%s',
-                         websock.local_address,
-                         websock.host,
-                         path)
+                         websock.local_address, websock.host, path)
 
         msg = await websock.recv()
         self.__log.debug('msg=%s', msg)
@@ -158,7 +166,7 @@ class MusicBoxWebsockServer:
             self.__log.error('%s: %s. data=%s', type(ex), ex, data)
             return
 
-        if cmd in ('single_play', 'play', 'P'):
+        if cmd in ('single_play', 'single', 'play', 'P'):
             try:
                 ch_list = data['ch']
             except KeyError as ex:
@@ -204,9 +212,6 @@ class MusicBoxWebsockServer:
 
 class SampleApp:
     """Sample application class
-
-    Attributes
-    ----------
     """
     __log = get_logger(__name__, False)
 
@@ -222,7 +227,7 @@ class SampleApp:
             wav mode flag
         """
         self._dbg = debug
-        __class__.__log = get_logger(__class__.__name__, self._dbg)
+        __class__.__log = get_logger(__class__.__name__, self._dbg) # noqa
         self.__log.debug('port=%s, wav_mode=%s', port, wav_mode)
 
         self._port = port
@@ -253,7 +258,7 @@ class SampleApp:
         self.__log.debug('done')
 
 
-import click
+import click  # noqa
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
@@ -282,4 +287,4 @@ def main(port, wav, debug):
 
 
 if __name__ == '__main__':
-    main()
+    main()  # noqa

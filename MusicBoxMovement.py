@@ -258,14 +258,18 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
             self._log.debug('do nothing')
             return
 
+        if type(ch_list) != list:
+            self._log.debug('invalid ch_list: %s', ch_list)
+            return
+
         self._log.debug('play sounds')
         for ch in ch_list:
             if ch is None:
-                self._log.error('ch=%s: invalid', ch)
+                self._log.warning('ch=%s: ignored', ch)
                 continue
-                
+
             if ch < 0 or ch > self.ch_n - 1:
-                self._log.error('ch=%s: invalid', ch)
+                self._log.warning('ch=%s: ignored', ch)
                 continue
 
             self._sound[ch].play()
