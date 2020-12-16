@@ -155,10 +155,70 @@ ___o___o_____o_
 
 * '#'以降は、コメント
 
+## 4. MIDIパーサー: MusicBoxMidi.py
+
+MIDIファイルを解析し、
+以下の ``Data Format`` でオルゴールのデータに変換する。
+
+* トラック、チャンネルを選択することができる。
+
+  (``parse``メソッドの ``track``, ``channel``パラメータ)
+
+* キー(音程)を調整して、
+  なるべく多くの音が Music Box で再生できるよう自動調整する。
+  
+  (``parse``メソッドの ``base``パラメータ)
+  
+### 4.0 Simple Usaege
+
+```python
+from MusicBoxMidi import MusicBoxMidi
+
+parser = MusicBoxMidi()
+
+music_data = parser.parse(midi_file)
+
+  :
+
+parser.end()   # end of program
+```
+
+  
+### 4.1 Data Format
+
+```
+music_data := list of ``data_ent``
+
+data_ent := {'ch': ``ch_list``, 'delay': ``delay_msec``}
+
+ch_list := list of int
+    Music Box のチャンネル(サーボ番号)のリスト
+    
+delay_msec := int
+    音を鳴らした後の遅延 [msec]
+```
+
+例 (Python形式)
+```
+[
+  {'ch': [0, 2, 4]: 500},
+  {'ch': [1, 3]: 5},
+  {'ch': [], 150},
+  {'ch': [0], 200},
+    :
+]
+```
+
+### 4.2 API
+
+```bash
+$ python3 -m pydoc MusicBoxMidi.MusicBoxMidi
+```
+
 
 ## memo
 
-### MIDI
+### MIDIに関するメモ
 
 #### トラック、チャンネル
 
