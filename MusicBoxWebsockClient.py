@@ -23,6 +23,7 @@ $ ./MusicBoxWebsockClient.py
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
 
+import time
 import json
 from WebsockClient import WebsockClient
 from MusicBoxPaperTape import MusicBoxPaperTape
@@ -50,7 +51,7 @@ class MusicBoxWebsockClient:
     cl.music_rewind()
     cl.music_stop()
 
-    cl.end()     # Call at the end of program
+    cl.end()     # Call at the end of usage
     ============
     """
     __log = get_logger(__name__, False)
@@ -193,6 +194,7 @@ class SampleApp:
         ['music_rewind', 'rewind', 'r'],
         ['midi', 'm', 'M'],
         ['paper_tape', 'tape', 'paper', 'pt', 't', 'T'],
+        ['sleep'],
         ['help', 'h', 'H', '?']
     ]
 
@@ -268,6 +270,10 @@ class SampleApp:
         cmd = self.aliases2cmd(arg0)
         if cmd is None:
             self.__log.error('%s: no such command', cmd)
+            return
+
+        if cmd == 'sleep':
+            time.sleep(float(args[0]))
             return
 
         if cmd == 'help':
