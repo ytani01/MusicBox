@@ -3,16 +3,16 @@
 # (c) 2020 Yoichi Tanibayashi
 #
 """
-MIDI parser
+MIDI parser for Music Box
 
-### for detail and simple usage ###
-
+### for detail and simple usage
 $ python3 -m pydoc MusicBoxMidi.MusicBoxMidi
 
+### API
+see comment of ``MusicBoxMidi`` class
 
-### sample program ###
-
-$ ./MusicBoxMidi.py -h
+### sample program
+$ ./MusicBoxMidi.py file.mid
 
 """
 __author__ = 'Yoichi Tanibayashi'
@@ -26,40 +26,37 @@ from MyLogger import get_logger
 
 class MusicBoxMidi:
     """
-    Description
-    -----------
+    MIDI parser for Music Box
+
+    * トラック/チャンネルを選択することができる。
+
+    * 音程のキーを自動調節して、Music Box で
+      なるべく多くの音を再生できるようにする。
 
     Simple Usage
     ============
-    ## Import
     from MusicBoxMidi import MusicBoxMidi
 
-    ## Initialize
-    parser = MusicBoxMidi()
+    parser = MusicBoxMidi(midi_file)
 
-    ## method1
-    parser.parse(arg)
+    music_data = parser.parse()
 
-    ## End of program
-    parser.end()
+    # [Optional] JSON format
+    music_data_json = json.dumps(music_data)
 
+    parser.end()  # end of the program
     ============
-
-    Attributes
-    ----------
-    attr1: type(int|str|list of str ..)
-        description
     """
     DEF_NOTE_BASE = 54
-
-    DELAY_MAX = 3000
-
-    NOTE_BASE_MIN = 0
-    NOTE_BASE_MAX = 200
 
     NOTE_OFFSET = [
         0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24
     ]
+
+    NOTE_BASE_MIN = 0
+    NOTE_BASE_MAX = 200
+
+    DELAY_MAX = 3000
 
     __log = get_logger(__name__, False)
 
@@ -88,6 +85,17 @@ class MusicBoxMidi:
 
     def parse0(self, midi_data):
         """
+        parse MIDI format simply for subsequent parsing step
+
+        Parameters
+        ----------
+        midi_data:
+            MIDI data
+
+        Returns
+        -------
+        data:
+
         """
         self.__log.debug('midi_data=%s', midi_data)
 
@@ -136,10 +144,16 @@ class MusicBoxMidi:
 
     def mix_track_channecl(self, data):
         """
+        複数トラック/チャンネルを重ね合わせる
+
         Parameters
         ----------
-        data: list of dict
-            parse0 result
+        data:
+
+        Returns
+        -------
+        mixed_data: list of data
+
         """
         # self.__log.debug('data=%s', data)
 
@@ -161,14 +175,21 @@ class MusicBoxMidi:
 
     def select_track_channel(self, data0, track=[], channel=[]):
         """
+        指定されたトラック/チャンネルだけを抽出
+
         Parameters
         ----------
-        data0: list of data
-            result of parse0()
+        data0:
+
         track: list of int
             MIDI track
         channel: list of int
             MIDI channel
+
+        Returns
+        -------
+        data1: list of data_ent
+
         """
         self.__log.debug('track=%s, channel=%s', track, channel)
 
@@ -199,12 +220,12 @@ class MusicBoxMidi:
         Parameters
         ----------
         note: list of int
-            note number list
+            list of note number
 
         Returns
         -------
         ch_list: list of int
-            Music Box ch list
+            list of Music Box ch
         """
         # self.__log.debug('note=%s, base=%s', note, base)
 
@@ -222,7 +243,7 @@ class MusicBoxMidi:
         """
         Parameters
         ----------
-        data: list of dict
+        data:
 
         base: int
             base note number
@@ -243,6 +264,19 @@ class MusicBoxMidi:
     def best_base(self, data,
                   base_min=NOTE_BASE_MIN, base_max=NOTE_BASE_MAX):
         """
+        Parameters
+        ----------
+        data: list of data_ent
+
+        base_min: int
+            default: NOTE_BASE_MIN
+        base_max: int
+            default: NOtE_BASE_MAX
+
+        Returns
+        -------
+        best_base: int
+            base note number
         """
         self.__log.debug('(base_min, base_max)=%s', (base_min, base_max))
 
@@ -256,9 +290,9 @@ class MusicBoxMidi:
                 ch_len_max = len(ch)
 
             if len(ch) > ch_len_max * 0.6:
-                self.__log.info('base=%s (%s / %.2f), best=%s (%.2f)',
-                                base, len(ch), len(ch) / len(data),
-                                best_base, ch_len_max / len(data) )
+                self.__log.debug('base=%s (%s / %.2f), best=%s (%.2f)',
+                                 base, len(ch), len(ch) / len(data),
+                                 best_base, ch_len_max / len(data) )
 
         return best_base
 
@@ -290,7 +324,7 @@ class MusicBoxMidi:
     def join_ch_list(self, music_data):
         """
         join ch_list
-        
+
         Parameters
         ----------
         music_data: list of dict
@@ -330,13 +364,12 @@ class MusicBoxMidi:
 
         Parameters
         ----------
-        track: list of int
+        track: list of int or None for all tracks
             MIDI track
-        channel: list of int
+        channel: list of int or None for all channels
             MIDI channel
-        base: int
+        base: int or None
             note base
-
         """
         self.__log.debug('track=%s, channel=%s, base=%s',
                          track, channel, base)
@@ -350,21 +383,17 @@ class MusicBoxMidi:
                 (d['midi_track'], d['midi_channel']))
             midi_track_channel = sorted(list(set(midi_track_channel)))
 
-        self.__log.info('midi_trank_channel=%s', midi_track_channel)
+        self.__log.debug('midi_trank_channel=%s', midi_track_channel)
 
         data1 = self.select_track_channel(data0, track, channel)
         for i, d in enumerate(data1):
             self.__log.debug('%s: %s', i, d)
 
         mixed_data = self.mix_track_channecl(data1)
-        """
-        for i, d in enumerate(mixed_data):
-            self.__log.debug('%6d:%s', i, d)
-        """
 
         if base is None:
             base  = self.best_base(mixed_data)
-            self.__log.debug('base=%s (changed)', base)
+            self.__log.info('base=%s (selected automatically)', base)
 
         music_data = self.mk_music_data(mixed_data, base)
         for i, d in enumerate(music_data):
@@ -421,9 +450,19 @@ class SampleApp:
         """
         self.__log.debug('')
 
-        data = self._parser.parse(self._track, self._channel, self._base)
-        for d in data:
-            print('%a' % (json.dumps(d)))
+        music_data = self._parser.parse(self._track, self._channel,
+                                        self._base)
+        print('music_data = [')
+        for i, d in enumerate(music_data):
+            print('  %s' % (d), end='')
+            if i < len(music_data) - 1:
+                print(',')
+            else:
+                print('')
+
+        print(']')
+
+        print('music_data_json = %s' % json.dumps(music_data))
 
         self.__log.debug('done')
 
