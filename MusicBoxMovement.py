@@ -20,11 +20,9 @@ MusicBoxMovementBase
 
 ### Simple usage ###
 ---
-# import
 from MusicBoxMovement import MusicBoxMovement
 
-# 初期設定
-movement = MusicBoxMovement()
+movement = MusicBoxMovement()  # 初期設定
 
 # ローテーション・モーター始動
 #   複数のプログラム(プロセス、スレッド)で実行すると、
@@ -35,9 +33,7 @@ movement.rotation_speed(10)
 # 単発で音を鳴らす
 movement.single_play([0,2,4])
 
-# プログラム終了時
-movement.end()
-
+movement.end()  # Call at the end of usage
 ---
 """
 __author__ = 'Yoichi Tanibayashi'
@@ -364,16 +360,17 @@ class SampleApp:
         """
         self._log.debug('')
 
-        while True:
-            prompt = '[0-%s, ..]> ' % (14)
+        prompt = '[0-%s, ..|sleep SEC]> ' % (self._movement.ch_n - 1)
 
+        while True:
             try:
                 line1 = input(prompt)
             except EOFError:
                 self._log.info('EOF')
                 break
-            except Exception as e:
-                self._log.error('%s: %s .. ignored', type(e), e)
+            except Exception as ex:
+                self._log.error('%s: %s .. ignored',
+                                type(ex).__name__, ex)
                 continue
 
             self._log.debug('line1=%a', line1)
@@ -381,8 +378,26 @@ class SampleApp:
             if len(line1) == 0:
                 break
 
-            ch_str = line1.replace(' ', '').split(',')
+            ch_str = line1.split()
             self._log.debug('ch_str=%s', ch_str)
+
+            if ch_str[0] in ('sleep', 's'):
+                try:
+                    sleep_sec = float(ch_str[1])
+                except ValueError as ex:
+                    self._log.error('%s: %s: Invalid sleep_sec',
+                                    type(ex).__name__, ex)
+                    continue
+                except IndexError:
+                    self._log.error('specify sleep_sec')
+                    continue
+
+                try:
+                    time.sleep(sleep_sec)
+                except Exception as ex:
+                    self._log.error('%s: %s', type(ex).__name__, ex)
+
+                continue
 
             try:
                 ch_list = [int(c) for c in ch_str]
