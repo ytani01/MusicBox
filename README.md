@@ -31,6 +31,10 @@ Music Box 本体で演奏するモードと、
 
 ### Client API: Simple Usage
 
+内部では、Websocket通信を行っているが、
+この Client APIを使えば、
+ほとんど意識する必要は無い。
+
 ```python
 from MusicBoxWebsockClient import MusicBoxWebsockClient
 
@@ -155,6 +159,7 @@ ___o___o_____o_
 
 * '#'以降は、コメント
 
+
 ## 4. MIDIパーサー: MusicBoxMidi.py
 
 MIDIファイルを解析し、
@@ -209,7 +214,7 @@ delay_msec := int
 ]
 ```
 
-### 4.2 API
+### 4.2 MIDIパーサー API
 
 ```bash
 $ python3 -m pydoc MusicBoxMidi.MusicBoxMidi
