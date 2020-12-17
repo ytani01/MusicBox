@@ -8,6 +8,15 @@
 Music Box 本体で演奏するモードと、
 スピーカーから擬似的な音を鳴らずモードがある。
 
+* クライアント・サーバ間の通信は、Websocket
+
+* サーバが受付けるメッセージは、独自のJSON形式
+  (後述)
+
+* Client API(後述)を使えば、Websocketやメッセージ形式を意識する必要はない
+
+* ファイルのパージングは、クライアント側で行う
+
 
 ## TL;DR
 
@@ -123,6 +132,26 @@ Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合�
 > 0 2 4
 > [Ctrl]-[D] to end
 ```
+
+
+## 2.4 Message Format for Music Box Server
+
+```
+{"cmd": "single_play", "ch": [0,2,4]}  # single play
+
+{"cmd": "music_load",                  # load music and play
+ "music_data": [
+  {"ch": null,"delay": 500},
+  {"ch": [0,2,4], "delay": null},
+  {"ch": [], "delay": null}
+]}
+
+{"cmd": "music_start"}                 # (re)start music
+{"cmd": "music_pause"}
+{"cmd": "music_rewind"}
+{"cmd": "music_stop"
+```
+
 
 ## 3. Paper Tape Format
 

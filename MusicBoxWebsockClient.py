@@ -5,12 +5,15 @@
 """
 Music Box Websock Client
 
-### for detail and simple usage ###
+### for detail and simple usage
 
 $ python3 -m pydoc MusicBoxWebsockClient.MusicBoxWebsockClient
 
+### Message format
 
-### usage of sample program ###
+$ python3 -m pydoc MusicBoxWebsockServer.MusicBoxWebsockServer
+
+### usage of sample program
 
 $ ./MusicBoxWebsockClient.py -h
 
