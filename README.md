@@ -62,6 +62,8 @@ cl.music_pause()
 cl.music_rewind()
 cl.music_stop()
 
+cl.change_onoff(ch, on, pw_diff, tap)  # for calibration
+
 cl.end()     # Call at the end of program
 ```
 

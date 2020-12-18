@@ -69,7 +69,7 @@ class MusicBoxWebsockClient:
     cl.music_rewind()
     cl.music_stop()
 
-    cl.change_onoff(...)  # see definition
+    cl.change_onoff(ch, on, pw_diff, tap)  # see definition
 
     cl.end()     # Call at the end of usage
     ============
