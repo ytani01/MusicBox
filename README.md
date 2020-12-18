@@ -218,7 +218,7 @@ parser.end()   # end of program
 ```
 
   
-### 4.1 Data Format
+### 4.1 Output Data Format
 
 ```
 music_data := list of ``data_ent``
@@ -232,13 +232,13 @@ delay_msec := int
     音を鳴らした後の遅延 [msec]
 ```
 
-例 (Python形式)
+例
 ```
+(Python形式)
 [
-  {'ch': [0, 2, 4]: 500},
-  {'ch': [1, 3]: 5},
-  {'ch': [], 150},
-  {'ch': [0], 200},
+  {'ch': [0, 2, 4]: 'delay': 500},
+  {'ch': [1, 3]: 'delay': 5},
+  {'ch': [0], 'delay': 200},
     :
 ]
 ```

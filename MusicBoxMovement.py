@@ -5,12 +5,12 @@
 """
 Music Box movement class
 
-### for detail ###
+### For detail
 
 $ python3 -m pydoc MusicBoxMovement.MusicBoxMovement
 
 
-### class tree ###
+### Class tree
 
 MusicBoxMovementBase
  |
@@ -18,8 +18,8 @@ MusicBoxMovementBase
  +- MusicBoxMovementWavFile: wav file
 
 
-### Simple usage ###
----
+### Simple usage
+------------------------------------------------------------
 from MusicBoxMovement import MusicBoxMovement
 
 movement = MusicBoxMovement()  # 初期設定
@@ -34,7 +34,24 @@ movement.rotation_speed(10)
 movement.single_play([0,2,4])
 
 movement.end()  # Call at the end of usage
----
+------------------------------------------------------------
+
+### Module Architecture
+
+               ---------------------------------------
+              |         MusicBoxWebsockServer         |
+              |---------------------------------------|
+              |            MusicBoxPlayer             |
+              |---------------------------------------|
+This module-->|           MusicBoxMovement            |
+              |---------------------------------------|
+              | MusicBoxServo | MusicBoxRotationMotor |
+              |---------------+-----------------------|
+              | ServoPCA9685  |     StepMtrTh         |
+              |---------------+-----------------------|
+              | pigpioPCA9685 |      StepMtr          |
+               ---------------------------------------
+
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
@@ -110,6 +127,52 @@ class MusicBoxMovementBase:
         self._log.debug('ch_list=%s', ch_list)
         self._log.error('*** This method must be overridden ***')
 
+    def set_onoff(self, ch, on=False, pw=None, tap=False,
+                  conf_file=None):
+        """
+        on/offパラメータ設定(絶対値指定)
+
+        実装はサブクラスでオーバーライド
+
+        Parameters
+        ----------
+        ch: int
+            servo channel
+        on: bool
+            True: on, False: off
+        pw: int
+            pulse width
+        tap: bool
+            after change, execute tap()
+        conf_file: str
+            configuration file (path name)
+        """
+        self._log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
+                        ch, on, pw, tap, conf_file)
+
+    def change_onoff(self, ch, on=False, pw_diff=0, tap=False,
+                     conf_file=None):
+        """
+        on/offパラメータ変更(差分指定)
+
+        実装はサブクラスでオーバーライド
+
+        Parameters
+        ----------
+        ch: int
+            servo channel
+        on: bool
+            True: on, False: off
+        tap: bool
+            after change, execute tap()
+        pw_diff: int
+            differenc of pulse width
+        conf_file: str
+            configuration file (path name)
+        """
+        self._log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
+                        ch, on, pw_diff, tap, conf_file)
+
 
 class MusicBoxMovement(MusicBoxMovementBase):
     """
@@ -158,7 +221,7 @@ class MusicBoxMovement(MusicBoxMovementBase):
         time.sleep(2)
 
         # init servo
-        self._servo = MusicBoxServo(debug=False)
+        self._servo = MusicBoxServo(debug=self._dbg)
 
         super().__init__(ch_n=self._servo.servo_n, debug=self._dbg)
 
@@ -197,6 +260,58 @@ class MusicBoxMovement(MusicBoxMovementBase):
     def rotation_speed(self, speed=0):
         self._log.debug('speed=%s', speed)
         self._mtr.set_speed(speed)
+
+    def set_onoff(self, ch, on=False, pw=None, tap=False,
+                  conf_file=None):
+        """
+        on/offパラメータ設定(絶対値指定)
+
+        変更後 conf_file に保存する。
+
+        Parameters
+        ----------
+        ch: int
+            servo channel
+        on: bool
+            True: on
+            False: off
+        pw: int
+            pulse width
+        tap: bool
+            after change, execute tap()
+        conf_file: str
+            configuration file (path name)
+        """
+        self._log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
+                        ch, on, pw, tap, conf_file)
+
+        self._servo.set_onoff(ch, on, pw, tap, conf_file)
+
+    def change_onoff(self, ch, on=False, pw_diff=0, tap=False,
+                     conf_file=None):
+        """
+        on/offパラメータ変更(差分指定)
+
+        変更後 conf_file に保存する。
+
+        Parameters
+        ----------
+        ch: int
+            servo channel
+        on: bool
+            True: on
+            False: off
+        pw_diff: int
+            differenc of pulse width
+        tap: bool
+            after change, execute tap()
+        conf_file: str
+            configuration file (path name)
+        """
+        self._log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
+                        ch, on, pw_diff, tap, conf_file)
+
+        self._servo.change_onoff(ch, on, pw_diff, tap, conf_file)
 
 
 class MusicBoxMovementWavFile(MusicBoxMovementBase):

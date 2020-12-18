@@ -271,8 +271,8 @@ class MusicBoxPlayer:
         self._music_active = True
 
         while True:
-            while self._music_active and \
-                  self._music_data_i < len(self._music_data):
+            while self._music_active and self._music_data_i < len(
+                    self._music_data):
 
                 data1 = self._music_data[self._music_data_i]
                 self.single_play_and_sleep(data1['ch'], data1['delay'])
@@ -289,7 +289,7 @@ class MusicBoxPlayer:
                 continue
             else:
                 break
-                
+
         self._msuci_active = False
 
         self._log.debug('done')
@@ -348,7 +348,7 @@ class MusicBoxPlayer:
 
         active = self._music_active
         self.music_pause()
-        
+
         if idx > len(self._music_data) - 1:
             idx = len(self._music_data) - 1
             self._log.debug('fix idx=%s', idx)
@@ -372,6 +372,57 @@ class MusicBoxPlayer:
 
         self.music_pause()
         self.music_rewind()
+
+    def set_onoff(self, ch, on=False, pw=None, tap=False,
+                  conf_file=None):
+        """
+        on/offパラメータ設定(絶対値指定)
+
+        変更後 conf_file に保存する。
+
+        Parameters
+        ----------
+        ch: int
+            servo channel
+        on: bool
+            True: on, False: off
+        pw: int
+            pulse width
+        tap: bool
+            after change, execute tap()
+        conf_file: str
+            configuration file (path name)
+        """
+        self._log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
+                        ch, on, pw, tap, conf_file)
+
+        self._movement.set_onoff(ch, on, pw, tap, conf_file)
+
+    def change_onoff(self, ch, on=False, pw_diff=0, tap=False,
+                     conf_file=None):
+        """
+        on/offパラメータ変更(差分指定)
+
+        変更後 conf_file に保存する。
+
+        Parameters
+        ----------
+        ch: int
+            servo channel
+        on: bool
+            True: on
+            False: off
+        pw_diff: int
+            differenc of pulse width
+        tap: bool
+            after change, execute tap()
+        conf_file: str
+            configuration file (path name)
+        """
+        self._log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
+                        ch, on, pw_diff, tap, conf_file)
+
+        self._movement.change_onoff(ch, on, pw_diff, tap, conf_file)
 
 
 # --- 以下、サンプル ---

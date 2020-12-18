@@ -43,6 +43,8 @@ class MusicBoxWebsockServer:
     {"cmd": "music_rewind"}
     {"cmd": "music_stop"}
 
+    {"cmd": "change_onff", "on": true,
+     "ch": 5, "pw_diff": -10, "tap": ture}
 
     Simple usge
     -----------
@@ -204,6 +206,18 @@ class MusicBoxWebsockServer:
 
         if cmd in ('music_wait', 'wait', 'w'):
             self._player.music_wait()
+            return
+
+        if cmd in ('change_onoff'):
+            try:
+                ch = int(data['ch'])
+                on = data['on']
+                pw_diff = data['pw_diff']
+                tap = data['tap']
+            except KeyError as ex:
+                self.__log.error('%s: %s. data=%s', type(ex), ex, data)
+
+            self._player.change_onoff(ch, on, pw_diff, tap)
             return
 
 

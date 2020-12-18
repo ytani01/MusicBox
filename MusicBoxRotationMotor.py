@@ -89,7 +89,7 @@ class MusicBoxRotationMotor:
         if interval is None:
             self.sm_th.stop()
             return
-        
+
         self.sm_th.set_interval(interval)
         self.start()
 

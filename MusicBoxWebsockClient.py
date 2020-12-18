@@ -54,6 +54,8 @@ class MusicBoxWebsockClient:
     cl.music_rewind()
     cl.music_stop()
 
+    cl.change_onoff(...)  # see definition
+
     cl.end()     # Call at the end of usage
     ============
     """
@@ -181,6 +183,36 @@ class MusicBoxWebsockClient:
         json_str = json.dumps({'cmd': 'music_rewind'})
         self._ws.send(json_str)
 
+    def change_onoff(self, ch, on=True, pw_diff=0, tap=False):
+        """
+        on/offパラメータ変更(差分指定)
+
+        変更値はサーバ側で保存される
+
+        Parameters
+        ----------
+        ch: int
+            servo channel
+        on: bool
+            True: on
+            False: off
+        pw_diff: int
+            differenc of pulse width
+        tap: bool
+            after change, execute tap()
+        """
+        self.__log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s',
+                         ch, on, pw_diff, tap)
+
+        json_str = json.dumps({
+            'cmd': 'change_onoff',
+            'ch': ch,
+            'on': on,
+            'pw_diff': pw_diff,
+            'tap': tap
+        })
+        self._ws.send(json_str)
+
 
 # --- 以下、サンプル ---
 
@@ -199,6 +231,7 @@ class SampleApp:
         ['music_stop', 'stop', 'S'],
         ['music_pause', 'pause', 'p'],
         ['music_rewind', 'rewind', 'r'],
+        ['change_onoff', 'onoff'],
         ['midi', 'm', 'M'],
         ['paper_tape', 'tape', 'paper', 'pt', 't', 'T'],
         ['sleep'],
@@ -295,7 +328,11 @@ class SampleApp:
             return
 
         if cmd == 'single_play':
-            ch_list = [int(num) for num in args]
+            try:
+                ch_list = [int(num) for num in args]
+            except ValueError as ex:
+                self.__log.error('%s: %s.', type(ex).__name__, ex)
+                return
 
             self._cl.single_play(ch_list)
             return
@@ -327,6 +364,22 @@ class SampleApp:
 
         if cmd == 'music_rewind':
             self._cl.music_rewind()
+            return
+
+        if cmd == 'change_onoff':
+            try:
+                ch = int(args[0])
+                on = args[1] in ('on', 'On', 'ON')
+                pw_diff = int(args[2])
+                tap = args[3] in ('tap', 'Tap', 'TAP')
+            except ValueError as ex:
+                self.__log.error('%s: %s.', type(ex).__name__, ex)
+                return
+            except IndexError as ex:
+                self.__log.error('%s: %s.', type(ex).__name__, ex)
+                return
+
+            self._cl.change_onoff(ch, on, pw_diff, tap)
             return
 
         self.__log.error('%s %s: invalid command line', cmd, args)
