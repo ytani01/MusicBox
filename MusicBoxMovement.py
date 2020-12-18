@@ -14,12 +14,13 @@ $ python3 -m pydoc MusicBoxMovement.MusicBoxMovement
 
 MusicBoxMovementBase
  |
- +- MusicBoxMovement: servo
- +- MusicBoxMovementWavFile: wav file
+ +- MusicBoxMovement        : for servo motor
+ +- MusicBoxMovementWavFile : for wav file
 
 
 ### Simple usage
-------------------------------------------------------------
+
+============================================================
 from MusicBoxMovement import MusicBoxMovement
 
 movement = MusicBoxMovement()  # 初期設定
@@ -34,23 +35,24 @@ movement.rotation_speed(10)
 movement.single_play([0,2,4])
 
 movement.end()  # Call at the end of usage
-------------------------------------------------------------
+============================================================
 
-### Module Architecture
 
-               ---------------------------------------
-              |         MusicBoxWebsockServer         |
-              |---------------------------------------|
-              |            MusicBoxPlayer             |
-              |---------------------------------------|
-This module-->|           MusicBoxMovement            |
-              |---------------------------------------|
-              | MusicBoxServo | MusicBoxRotationMotor |
-              |---------------+-----------------------|
-              | ServoPCA9685  |     StepMtrTh         |
-              |---------------+-----------------------|
-              | pigpioPCA9685 |      StepMtr          |
-               ---------------------------------------
+### Module Architecture (server side)
+
+         ----------------------------------------------------
+        |                 MusicBoxWebsockServer              |
+        |---------------------------------------+------------|
+        |            MusicBoxPlayer             |            |
+        |---------------------------------------|            |
+This -->|           MusicBoxMovement            |            |
+        |---------------------------------------| websockets |
+        | MusicBoxServo | MusicBoxRotationMotor |            |
+        |---------------+-----------------------|            |
+        | ServoPCA9685  |     StepMtrTh         |            |
+        |---------------+-----------------------|            |
+        | pigpioPCA9685 |      StepMtr          |            |
+         ----------------------------------------------------
 
 """
 __author__ = 'Yoichi Tanibayashi'

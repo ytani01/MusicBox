@@ -14,6 +14,23 @@ $ python3 -m pydoc MusicBoxWebsockServer.MusicBoxWebsockServer
 
 $ ./MusicBoxWebsockServer.py -h
 
+
+### Module Architecture (server side)
+
+         ----------------------------------------------------
+This -->|                 MusicBoxWebsockServer              |
+        |---------------------------------------+------------|
+        |            MusicBoxPlayer             |            |
+        |---------------------------------------|            |
+        |           MusicBoxMovement            |            |
+        |---------------------------------------| websockets |
+        | MusicBoxServo | MusicBoxRotationMotor |            |
+        |---------------+-----------------------|            |
+        | ServoPCA9685  |     StepMtrTh         |            |
+        |---------------+-----------------------|            |
+        | pigpioPCA9685 |      StepMtr          |            |
+         ----------------------------------------------------
+
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'  # noqa
@@ -28,26 +45,10 @@ from MyLogger import get_logger
 class MusicBoxWebsockServer:
     """ MusicBoxWebsockServer
 
-    Message format (JSON)
-    ---------------------
-    {"cmd": "single_play", "ch": [0,2,4]}  # single play
-
-    {"cmd": "music_load", "music_data": [  # load music and play
-      {"ch": null,"delay": 500},
-      {"ch": [0,2,4], "delay": null},
-      {"ch": [], "delay": null}
-    ]}
-
-    {"cmd": "music_start"}                 # (re)start music
-    {"cmd": "music_pause"}
-    {"cmd": "music_rewind"}
-    {"cmd": "music_stop"}
-
-    {"cmd": "change_onff", "on": true,
-     "ch": 5, "pw_diff": -10, "tap": ture}
-
     Simple usge
     -----------
+
+    ============================================================
     from MusicBoxWebsockServer import MusicBoxWebsockServer
 
     svr = MusicBoxWebsockServer(port=8881)
@@ -55,36 +56,51 @@ class MusicBoxWebsockServer:
     svr.main()  # run forever
 
     svr.end()   # Call at the end of program (or interrupted)
-    ===========
+    ============================================================
+
+
+    Message format (JSON)
+    ---------------------
+
+    {"cmd": "single_play", "ch": [0,2,4]}  # single play
+
+    {"cmd": "music_load",                 # load music and play
+     "music_data": [
+                     {"ch": null,"delay": 500},
+                     {"ch": [0,2,4], "delay": null},
+                     {"ch": [], "delay": null}
+                   ]
+    }
+
+    {"cmd": "music_start"}                 # (re)start music
+    {"cmd": "music_pause"}
+    {"cmd": "music_rewind"}
+    {"cmd": "music_stop"}
+
+    {"cmd": "change_onff",                 # change servo param
+     "on": true,
+     "ch": 5,
+     "pw_diff": -10,
+     "tap": ture }
 
 
     Client Module: MusicBoxWebsockClient
     ------------------------------------
-    from MusicBoxWebsockClient import MusicBoxWebsockClient
-
-    cl = MusicBoxWebsockClient('ws://ipaddr:port/')
-
-    cl.single_play([0,1, ..])
-    cl.midi(filename)          # TBD
-    cl.paper_tape(filename)
-    cl.music_start()
-    cl.music_pause()
-    cl.music_rewind()
-    cl.music_stop()
-
-    cl.end()
-    ====================================
+    see ``MusicBoxWebsockClient.py``
 
 
-    FYI:Simple websocket client excample using websocket
-    ----------------------------------------------------
-    # [Important!] 'websocket' is not 'websockets'
+    FYI: Simple websocket client example
+    ------------------------------------
+
+    ============================================================
     from websocket import create_connection
+    # [Important!] 'websocket' is not 'websockets'
 
     ws = create_connection('ws://localhost:8881/')
     ws.send('message')
     ws.close()
-    ====================================================
+    ============================================================
+
     """
     DEF_PORT = 8881
 

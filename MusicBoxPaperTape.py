@@ -14,6 +14,19 @@ $ python3 -m pydoc MusicBoxPaperTape.MusicBoxPaperTape
 
 $ ./MusicBoxPaperTape.py -h
 
+
+### Module Architecture (client side)
+
+         --------------------------------------------------
+        |                 Music Box Apps ..                |
+        |==================================================|
+        |              MusicBoxWebsockClient               |
+        |--------------------------------------------------|
+This -->| MusicBoxPaperTape | MusicBoxMidi | WebsockClient |
+        |                   |--------------+---------------|
+        |                   |     mido     |   websocket   |
+         --------------------------------------------------
+
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'

@@ -8,11 +8,27 @@ MIDI parser for Music Box
 ### for detail and simple usage
 $ python3 -m pydoc MusicBoxMidi.MusicBoxMidi
 
+
 ### API
 see comment of ``MusicBoxMidi`` class
 
+
 ### sample program
+
 $ ./MusicBoxMidi.py file.mid
+
+
+### Module Architecture (client side)
+
+         --------------------------------------------------
+        |                 Music Box Apps ..                |
+        |==================================================|
+        |              MusicBoxWebsockClient               |
+        |--------------------------------------------------|
+This -->| MusicBoxMidi | MusicBoxPaperTape | WebsockClient |
+        |--------------|                   |---------------|
+        |     mido     |                   |   websocket   |
+         --------------------------------------------------
 
 """
 __author__ = 'Yoichi Tanibayashi'
@@ -33,8 +49,10 @@ class MusicBoxMidi:
     * 音程のキーを自動調節して、Music Box で
       なるべく多くの音を再生できるようにする。
 
+
     Simple Usage
-    ============
+    ------------
+    ============================================================
     from MusicBoxMidi import MusicBoxMidi
 
     parser = MusicBoxMidi(midi_file)
@@ -45,7 +63,8 @@ class MusicBoxMidi:
     music_data_json = json.dumps(music_data)
 
     parser.end()  # end of the program
-    ============
+    ============================================================
+
     """
     DEF_NOTE_BASE = 54
 
@@ -96,7 +115,10 @@ class MusicBoxMidi:
 
         Returns
         -------
-        data:
+        data: list of data_ent
+            data_ent: ex.
+            {'midi_track': 3, 'midi_channecl': 5, 'note': 65,
+             'abs_time': 500, 'delay': 300}
 
         """
         self.__log.debug('midi_data=%s', midi_data)
@@ -150,11 +172,11 @@ class MusicBoxMidi:
 
         Parameters
         ----------
-        data:
+        data: list of data_ent
 
         Returns
         -------
-        mixed_data: list of data
+        mixed_data: list of data_ent
 
         """
         # self.__log.debug('data=%s', data)
@@ -181,7 +203,7 @@ class MusicBoxMidi:
 
         Parameters
         ----------
-        data0:
+        data0: list of data_ent
 
         track: list of int
             MIDI track
@@ -254,6 +276,7 @@ class MusicBoxMidi:
         -------
         ch_list: list of int
             Music Box ch list
+
         """
         # self.__log.debug('base=%s', base)
 
@@ -279,6 +302,7 @@ class MusicBoxMidi:
         -------
         best_base: int
             base note number
+
         """
         self.__log.debug('(base_min, base_max)=%s', (base_min, base_max))
 
@@ -304,7 +328,7 @@ class MusicBoxMidi:
 
         Parameters
         ----------
-        data: list of dict
+        data: list of data_ent
             MIDI data
 
         Returns
@@ -336,6 +360,7 @@ class MusicBoxMidi:
         Returns
         -------
         music_data2: list of dict
+
         """
         music_data2 = []
         ch_list = []
@@ -378,12 +403,19 @@ class MusicBoxMidi:
             note base
         delay_limit: int
             delay limit (msec)
+
+        Returns
+        -------
+        music_data: list of dict
+
         """
         self.__log.debug('track=%s, channel=%s, base=%s delay_limit=%s',
                          track, channel, base, delay_limit)
 
+        # 1st step of parsing
         data0 = self.parse0(self._midi)
 
+        # get (track, channel) pairs
         midi_track_channel = []
 
         for i, d in enumerate(data0):
@@ -393,22 +425,26 @@ class MusicBoxMidi:
 
         self.__log.info('midi_trank_channel=%s', midi_track_channel)
 
+        # select MIDI track/channel
         data1 = self.select_track_channel(data0, track, channel)
         for i, d in enumerate(data1):
             self.__log.debug('%s: %s', i, d)
 
+        # mix and sort time-line
         mixed_data = self.mix_track_channecl(data1)
 
         if base is None:
             base  = self.best_base(mixed_data)
             self.__log.info('base=%s (selected automatically)', base)
 
+        # make ``music_data``
         music_data = self.mk_music_data(mixed_data, base)
         """
         for i, d in enumerate(music_data):
             self.__log.debug('%6d: %s', i, d)
         """
 
+        # join ``ch_list`` in ``music_data``
         music_data2 = self.join_ch_list(music_data, delay_limit)
         for i, d in enumerate(music_data2):
             self.__log.debug('%6d: %s', i, d)

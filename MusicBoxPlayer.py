@@ -14,6 +14,23 @@ $ python3 -m pydoc MusicBoxPlayer.MusicBoxPlayer
 
 $ ./MusicBoxPlayer.py -h
 
+
+### Module Architecture (server side)
+
+         ----------------------------------------------------
+        |                 MusicBoxWebsockServer              |
+        |----------------------------------------------------|
+This -->|            MusicBoxPlayer             |            |
+        |---------------------------------------|            |
+        |           MusicBoxMovement            |            |
+        |---------------------------------------| websockets |
+        | MusicBoxServo | MusicBoxRotationMotor |            |
+        |---------------+-----------------------|            |
+        | ServoPCA9685  |     StepMtrTh         |            |
+        |---------------+-----------------------|            |
+        | pigpioPCA9685 |      StepMtr          |            |
+         ----------------------------------------------------
+
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'

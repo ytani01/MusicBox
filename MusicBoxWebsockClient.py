@@ -9,9 +9,11 @@ Music Box Websock Client
 
 $ python3 -m pydoc MusicBoxWebsockClient.MusicBoxWebsockClient
 
+
 ### Message format
 
 $ python3 -m pydoc MusicBoxWebsockServer.MusicBoxWebsockServer
+
 
 ### usage of sample program
 
@@ -21,6 +23,19 @@ or
 
 $ ./MusicBoxWebsockClient.py
 > help
+
+
+### Module Architecture (client side)
+
+         --------------------------------------------------
+        |                 Music Box Apps ..                |
+        |==================================================|
+This -->|              MusicBoxWebsockClient               |
+        |--------------------------------------------------|
+        | MusicBoxMidi | MusicBoxPaperTape | WebsockClient |
+        |--------------|                   |---------------|
+        |     mido     |                   |   websocket   |
+         --------------------------------------------------
 
 """
 __author__ = 'Yoichi Tanibayashi'

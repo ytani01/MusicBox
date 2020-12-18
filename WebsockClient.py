@@ -14,6 +14,19 @@ $ python3 -m pydoc WebsockClient.WebsockClient
 
 $ ./WebsockClient.py -h
 
+
+### Module Architecture (client side)
+
+         --------------------------------------------------
+        |                 Music Box Apps ..                |
+        |==================================================|
+        |              MusicBoxWebsockClient               |
+        |--------------------------------------------------|
+This -->| WebsockClient | MusicBoxMidi | MusicBoxPaperTape |
+        |---------------|--------------|                   |
+        |   websocket   |     mido     |                   |
+         --------------------------------------------------
+
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
