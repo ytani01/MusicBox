@@ -63,9 +63,6 @@ import threading
 import time
 import pygame
 
-from MusicBoxRotationMotor import MusicBoxRotationMotor
-from MusicBoxServo import MusicBoxServo
-
 from MyLogger import get_logger
 
 
@@ -211,6 +208,9 @@ class MusicBoxMovement(MusicBoxMovementBase):
         __class__._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('rotation_gpio=%s', rotation_gpio)
         self._log.debug('rotation_speed=%s', rotation_speed)
+
+        from MusicBoxRotationMotor import MusicBoxRotationMotor
+        from MusicBoxServo import MusicBoxServo
 
         # start rotation
         self._mtr = MusicBoxRotationMotor(

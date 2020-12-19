@@ -59,10 +59,9 @@ class MusicBoxPlayer:
     music_player = MusicBoxMusicPlayer()
 
     ## Single play
-
     player.single_play([1,3,5])
 
-    ## Load and Start music
+    ## for Music
     #
     #   music_data example:
     #      [
@@ -73,32 +72,15 @@ class MusicBoxPlayer:
     #        {'ch':None,  'delay': None}, # do nothing (no delay)
     #      ]
     #
-
     player.music_load(music_data)
 
-    ## (Re)start music
-
     player.music_start()
-
-    ## Pause music: next music_start() play music from this point
-
     player.music_pause()
-
-    ## Rewind music
-
     player.music_rewind()
-
-    ## Stop music: puase and rewind
-
     player.music_stop()
-
-    ## Wait for the music to end
-
     player.music_wait()
 
-    ## End of program
-
-    music_player.end()
+    music_player.end()  # call at the end of using ``player``
     ============
 
     Attributes
@@ -332,6 +314,9 @@ class MusicBoxPlayer:
 
     def music_wait(self):
         """ wait music to end
+        
+        TBD
+
         """
         self._log.debug('start waiting')
 
@@ -455,12 +440,12 @@ class SampleApp:
     PROMPT_STR += '(s)tart|'
     PROMPT_STR += '(S)top|'
     PROMPT_STR += '(p)ause|'
-    PROMPT_STR += '(r)wind|'
+    PROMPT_STR += '(r)ewind|'
     PROMPT_STR += '(n)ext|'
-    PROMPT_STR += '(p)rev|'
+    PROMPT_STR += '(P)rev|'
     PROMPT_STR += '(w)ait|'
     PROMPT_STR += '0, ..|'
-    PROMPT_STR += '[Ctrl]-[D]:END] '
+    PROMPT_STR += '^D:END] '
 
     _log = get_logger(__name__, False)
 
@@ -527,7 +512,8 @@ class SampleApp:
 
             if line1 in ('start', 's'):
                 self._log.info('File:%s', self._infile[self._cur_file])
-                self.load(self._infile[self._cur_file])
+                if self._player._music_data is None:
+                    self.load(self._infile[self._cur_file])
                 self._player.music_start()
                 continue
 
@@ -609,7 +595,7 @@ class SampleApp:
 
         parser = MusicBoxPaperTape(debug=False)
         music_data = parser.parse(infile)
-        self._player.music_load(music_data)
+        self._player.music_load(music_data, start_flag=False)
         parser.end()
 
 
