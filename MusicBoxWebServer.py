@@ -3,170 +3,69 @@
 # (c) 2020 Yoichi Tanibayashi
 #
 """
-Python3 template
+Music Box Web Server
 
 ### for detail and simple usage ###
 
-$ python3 -m pydoc TemplateA.ClassA
+$ python3 -m pydoc MusicBoxWebServer
 
 
 ### sample program ###
 
-$ ./TemplateA.py -h
+$ ./MusicBoxWebServer.py -h
 
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
+__version__ = '0.01'
 
 import os
 from pathlib import Path
-import json
 import tornado.ioloop
 import tornado.web
-from MusicBoxWebsockClient import MusicBoxWebsockClient
 from MyLogger import get_logger
 
 
-class MusicBoxHandler(tornado.web.RequestHandler):
+class MusicBoxWebHandler(tornado.web.RequestHandler):
     """
-    Description
-    -----------
-
     """
-    WS_URL='ws://localhost:8881/'
+    CH_N = 15
+    CH_CENTER = 8
 
-    __dbg = True
-    __log = get_logger('MusicBoxHandler', __dbg)
+    __log = get_logger(__name__, False)
+
+    def __init__(self, app, req):
+        self._dbg = True
+        self.__class__.__log = get_logger(__class__.__name__, self._dbg)
+
+        super().__init__(app, req)
 
     def get(self):
         """
-        GET method and base rendering routine
+        GET method and rendering
         """
+        self.__log.debug('')
+
         self.render("index.html",
-                    title="Music Box Calibrator",
+                    title="Music Box Calibration",
                     author="FabLab Kannai",
-                    version="0.01",
-                    ch_list1=['%02d' % (i) for i in range(0, 8)],
-                    ch_list2=['%02d' % (i) for i in range(8, 15)])
-
-    def post(self):
-        """
-        POST method
-        """
-        args1 = self.get_arguments('msg')
-        args2 = self.get_arguments('cmdline')
-        self.__log.debug('args1=%s, args2=%s', args1, args2)
-
-        if len(args1) > 0:
-            json_str = args1[0].replace('\'', '"')
-            self.__log.debug('json_str=%s', json_str)
-
-            msg = json.loads(json_str)
-            self.__log.debug('msg=%s', msg)
-
-            ws = MusicBoxWebsockClient(self.WS_URL, debug=self.__dbg)
-            if msg['cmd'] == 'single_play':
-                ws.single_play(msg['ch'])
-
-        if len(args2) > 0:
-            cmdline = args2[0]
-            self.__log.debug('cmdline=%s', cmdline)
-
-            self.exec_cmd(cmdline)
-
-        self.get()
-
-    def exec_cmd(self, cmdline):
-        """
-        execute command line trext from form
-        """
-        self.__log.debug('cmdline=%s', cmdline)
-
-        args = cmdline.split()
-        self.__log.debug('args=%s', args)
-
-        cl = MusicBoxWebsockClient(self.WS_URL, debug=self.__dbg)
-
-        if args[0] == 'single_play':
-            ch_list = [int(ch) for ch in args[1:]]
-
-            cl.single_play(ch_list)
-            return
-
-        if args[0] == 'change_onoff':
-            ch = int(args[1])
-            on = args[2] == 'on'
-            pw_diff = int(args[3])
-            tap = args[4] == 'on' or args[4] == 'tap'
-
-            cl.change_onoff(ch, on, pw_diff, tap)
-            return
-
-
-class SinglePlay(MusicBoxHandler):
-    """
-    """
-    __dbg = True
-    __log = get_logger('SinglePlay', __dbg)
-
-    def get(self):
-        """
-        """
-        self.render("index.html",
-                    title="Music Box",
-                    author="FabLab Kannai",
-                    version="0.01",
-                    test1='world')
-
-    def post(self):
-        """
-        """
-        work = self.get_arguments('ch')
-        self.__log.debug('work=%s', work)
-
-        if len(work) == 0:
-            self.get()
-            return
-
-        ch_list = [int(ch) for ch in work[0].split()]
-
-        cl = MusicBoxWebsockClient(self.WS_URL, debug=True)
-        cl.single_play(ch_list)
-
-        self.get()
+                    version=__version__,
+                    ch_list1=['%02d' % (i) for i in range(0,
+                                                          self.CH_CENTER)],
+                    ch_list2=['%02d' % (i) for i in range(self.CH_CENTER,
+                                                          self.CH_N)])
 
 
 class MusicBoxWebServer:
     """
-    Description
-    -----------
-
     Simple Usage
     ============
-    ## Import
-
-    from TemplateA import MusicBoxWebServer
-
-    ## Initialize
+    from MusicBoxWebServer import MusicBoxWebServer
 
     obj = MusicBoxWebServer()
 
-
-    ## method1
-
-    obj.method1(arg)
-
-
-    ## End of program
-
-    obj.end()
-
+    obj.main()  # run forever
     ============
-
-    Attributes
-    ----------
-    attr1: type(int|str|list of str ..)
-        description
     """
     DEF_PORT = 10080
 
@@ -187,21 +86,13 @@ class MusicBoxWebServer:
         self._port = port
 
         self._mydir = Path(__file__).resolve().parents[0]
-
         self._app = tornado.web.Application(
-            [ (r"/", MusicBoxHandler),
-              (r"/single_play",SinglePlay) ],
+            [ (r"/", MusicBoxWebHandler), ],
+            autoreload=True,
+            debug=True,
             static_path=os.path.join(self._mydir, "static"),
             template_path=os.path.join(self._mydir, "templates")
         )
-
-    def end(self):
-        """
-        Call at the end of program
-        """
-        self.__log.debug('doing ..')
-        print('end of %s' % __class__.__name__)
-        self.__log.debug('done')
 
     def main(self):
         """
@@ -221,9 +112,6 @@ class MusicBoxWebServer:
 
 class SampleApp:
     """ Sample application class
-
-    Attributes
-    ----------
     """
     __log = get_logger(__name__, False)
 
@@ -256,7 +144,6 @@ class SampleApp:
         """ Call at the end of program.
         """
         self.__log.debug('doing ..')
-        self._svr.end()
         self.__log.debug('done')
 
 
@@ -277,6 +164,8 @@ def main(port, debug):
     """
     __log = get_logger(__name__, debug)
     __log.debug('port=%s', port)
+
+    __debug = debug
 
     app = SampleApp(port, debug=debug)
     try:
