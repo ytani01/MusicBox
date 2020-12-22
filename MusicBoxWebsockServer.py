@@ -78,8 +78,8 @@ class MusicBoxWebsockServer:
     {"cmd": "music_stop"}
 
     {"cmd": "change_onff",                 # change servo param
-     "on": true,
      "ch": 5,
+     "on": true,
      "pw_diff": -10,
      "tap": ture }
 
@@ -224,7 +224,7 @@ class MusicBoxWebsockServer:
             self._player.music_wait()
             return
 
-        if cmd in ('change_onoff'):
+        if cmd in ('change_onoff',):
             try:
                 ch = int(data['ch'])
                 on = data['on']
