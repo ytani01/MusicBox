@@ -159,6 +159,9 @@ class MusicBoxMidi:
                         'abs_time': abs_time,
                         'delay': delay
                     }
+                    if msg.velocity == 0:
+                        # 'note_on and velocity == 0' is 'note_off'
+                        data_ent['note'] = []
 
                     data.append(data_ent)
 
@@ -323,9 +326,9 @@ class MusicBoxMidi:
                 ch_len_max = len(ch)
 
             if len(ch) > ch_len_max * 0.6:
-                self.__log.info('base=%s (%s / %.2f), best=%s (%.2f)',
-                                base, len(ch), len(ch) / len(data),
-                                best_base, ch_len_max / len(data) )
+                self.__log.info('base=%s (%s/%s), best=%s',
+                                base, len(ch), ch_len_max, 
+                                best_base)
 
         return best_base
 
