@@ -211,10 +211,11 @@ class MusicBoxPlayer:
             delay = self._def_delay
             self._log.debug('delay=%s (default)', delay)
 
-        self.single_play(ch_list)
-
         self._log.debug('sleep %s msec', delay)
         time.sleep(delay / 1000)
+
+        # a MIDI message looks to be played note on/off "after" delay
+        self.single_play(ch_list)
 
         self._log.debug('done')
 
