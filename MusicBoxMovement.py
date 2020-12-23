@@ -386,6 +386,7 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
                 continue
 
             self._sound[ch].play()
+            #threading.Thread(target=self._sound[ch].play).start()
 
         """
         # simulate servo delay
@@ -418,6 +419,14 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
         return [pygame.mixer.Sound(f) for f in wav_files]
 
 
+class MusicBoxMovementWavFileFull(MusicBoxMovementWavFile):
+    """
+    """
+    _log = get_logger(__name__, False)
+
+    WAV_FILE_PREFIX = '39'
+
+
 # --- 以下、サンプル ---
 
 
@@ -429,6 +438,7 @@ class SampleApp:
 
     def __init__(self,
                  wav_mode=False,
+                 wav2_mode=False,
                  rotation_gpio=MusicBoxMovement.ROTATION_GPIO,
                  rotation_speed=MusicBoxMovement.ROTATION_SPEED,
                  debug=False):
@@ -446,14 +456,18 @@ class SampleApp:
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('wav_mode=%s', wav_mode)
+        self._log.debug('wav2_mode=%s', wav2_mode)
         self._log.debug('rotation_gpio=%s', rotation_gpio)
         self._log.debug('rotation_speed=%s', rotation_speed)
 
         self._wav_mode = wav_mode
+        self._wav2_mode = wav2_mode
         self._rotation_gpio = rotation_gpio
         self._rotation_speed = rotation_speed
 
-        if self._wav_mode:
+        if self._wav2_mode:
+            self._movement = MusicBoxMovementWavFileFull(debug=self._dbg)
+        elif self._wav_mode:
             self._movement = MusicBoxMovementWavFile(debug=self._dbg)
         else:
             self._movement = MusicBoxMovement(
@@ -548,19 +562,21 @@ Description
 ''')
 @click.option('--wav', '-w', 'wav', is_flag=True, default=False,
               help='wav file mode')
+@click.option('--wav2', '-w2', 'wav2', is_flag=True, default=False,
+              help='wav file mode')
 @click.option('--speed', '-s', 'speed', type=int,
               default=MusicBoxMovement.ROTATION_SPEED,
               help='rotation speed (0: don\'t use rotation motor')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(wav, speed, debug):
+def main(wav, wav2, speed, debug):
     """
     サンプル起動用メイン関数
     """
     _log = get_logger(__name__, debug)
-    _log.debug('wav=%s, speed=%s', wav, speed)
+    _log.debug('wav=%s, wav2=%s, speed=%s', wav, wav2, speed)
 
-    app = SampleApp(wav, rotation_speed=speed,
+    app = SampleApp(wav, wav2, rotation_speed=speed,
                     debug=debug)
     try:
         app.main()

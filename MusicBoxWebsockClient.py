@@ -113,12 +113,12 @@ class MusicBoxWebsockClient:
 
         self._ws.send(json_str)
 
-    def midi(self, file, note_base, track, channel, delay_limit):
+    def midi(self, midi_file, note_base, track, channel, delay_limit, full_midi=False):
         """ parse MIDI file and send music data to server
 
         Parameters
         ----------
-        file: str
+        midi_file: str
             name of MIDI file
         note_base: int
             base number of notes
@@ -129,15 +129,17 @@ class MusicBoxWebsockClient:
         delay_limit: int
             delay limit (msec)
         """
-        self.__log.debug('file=%s', file)
+        self.__log.debug('midi_file=%s', midi_file)
         self.__log.debug('note_base=%s, track=%s, channel=%s',
                          note_base, track, channel)
         self.__log.debug('delay_limit=%s', delay_limit)
+        self.__log.debug('full_midi=%s', full_midi)
 
         music_data = '{}'
 
-        parser = MusicBoxMidi(file, debug=self._dbg)
-        music_data = parser.parse(track, channel, note_base, delay_limit)
+        parser = MusicBoxMidi(midi_file, debug=self._dbg)
+        music_data = parser.parse(track, channel, note_base, delay_limit,
+                                  full_midi)
         parser.end()
 
         cmd_data = {'cmd': 'music_load', 'music_data': music_data}
@@ -256,6 +258,7 @@ class SampleApp:
     __log = get_logger(__name__, False)
 
     def __init__(self, url, cmd, note_base=None, track=[], channel=[],
+                 full_midi=False,
                  delay_limit=MusicBoxMidi.DEF_DELAY_LIMIT,
                  debug=False):
         """ Constructor
@@ -281,6 +284,7 @@ class SampleApp:
         self.__log.debug('cmd=%s', cmd)
         self.__log.debug('note_base=%s, track=%s, channel=%s',
                          note_base, track, channel)
+        self.__log.debug('full_midi=%s', full_midi)
         self.__log.debug('delay_limit=%s', delay_limit)
 
         self._url = url
@@ -288,6 +292,7 @@ class SampleApp:
         self._note_base = note_base
         self._track = track
         self._channel = channel
+        self._full_midi = full_midi
         self._delay_limit = delay_limit
 
         self._cl = MusicBoxWebsockClient(url, debug=self._dbg)
@@ -356,7 +361,8 @@ class SampleApp:
             file = args[0]
 
             self._cl.midi(file, self._note_base,
-                          self._track, self._channel, self._delay_limit)
+                          self._track, self._channel, self._delay_limit,
+                          self._full_midi)
             return
 
         if cmd == 'paper_tape':
@@ -452,21 +458,26 @@ MusicBoxWebsockClient sample program
               help='MIDI track')
 @click.option('--channel', '-c', 'channel', type=int, multiple=True,
               help='MIDI channel')
-@click.option('--delay_limit', '-dl', 'delay_limit', type=int,
+@click.option('--full_midi', '-f', 'full_midi', is_flag=True,
+              default=False,
+              help='Full MIDI mode')
+@click.option('--delay_limit', '-dl', 'delay_limit', type=float,
               default=MusicBoxMidi.DEF_DELAY_LIMIT,
               help='delay limit')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(url, cmd, note_base, track, channel, delay_limit, debug):
+def main(url, cmd, note_base, track, channel, full_midi,
+         delay_limit, debug):
     """サンプル起動用メイン関数
     """
     __log = get_logger(__name__, debug)
     __log.debug('url=%s, cmd=%s', url, cmd)
     __log.debug('note_base=%s, track=%s, channel=%s',
                 note_base, track, channel)
+    __log.debug('full_midi=%s', full_midi)
     __log.debug('delay_limit=%s', delay_limit)
 
-    app = SampleApp(url, cmd, note_base, track, channel,
+    app = SampleApp(url, cmd, note_base, track, channel, full_midi,
                     delay_limit, debug=debug)
     try:
         app.main()

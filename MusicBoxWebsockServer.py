@@ -106,7 +106,8 @@ class MusicBoxWebsockServer:
 
     __log = get_logger(__name__, False)
 
-    def __init__(self, wav_mode=False, host="0.0.0.0", port=DEF_PORT,
+    def __init__(self, wav_mode=False, wav2_mode=False,
+                 host="0.0.0.0", port=DEF_PORT,
                  debug=False):
         """constructor
 
@@ -122,13 +123,16 @@ class MusicBoxWebsockServer:
         self._dbg = debug
         __class__.__log = get_logger(__class__.__name__, self._dbg) # noqa
         self.__log.debug('wav_mode=%s', wav_mode)
+        self.__log.debug('wav2_mode=%s', wav2_mode)
         self.__log.debug('host:port=%s:%s', host, port)
 
         self._wav_mode = wav_mode
+        self._wav2_mode = wav2_mode
         self._port = port
         self._host = host
 
         self._player = MusicBoxPlayer(wav_mode=self._wav_mode,
+                                      wav2_mode=self._wav2_mode,
                                       debug=self._dbg)
 
         self._start_svr = websockets.serve(self.handle, host, port)
@@ -246,7 +250,7 @@ class SampleApp:
     __log = get_logger(__name__, False)
 
     def __init__(self, port=MusicBoxWebsockServer.DEF_PORT,
-                 wav_mode=False, debug=False):
+                 wav_mode=False, wav2_mode=False, debug=False):
         """constructor
 
         Parameters
@@ -259,11 +263,14 @@ class SampleApp:
         self._dbg = debug
         __class__.__log = get_logger(__class__.__name__, self._dbg) # noqa
         self.__log.debug('port=%s, wav_mode=%s', port, wav_mode)
+        self.__log.debug('wav2_mode=%s', wav2_mode)
 
         self._port = port
         self._wav_mode = wav_mode
+        self._wav2_mode = wav2_mode
 
         self._ws_svr = MusicBoxWebsockServer(wav_mode=self._wav_mode,
+                                             wav2_mode=self._wav2_mode,
                                              port=self._port,
                                              debug=self._dbg)
 
@@ -300,15 +307,17 @@ Description
               help='port number')
 @click.option('--wav', '-w', 'wav', is_flag=True, default=False,
               help='wav file mode')
+@click.option('--wav2', '-w2', 'wav2', is_flag=True, default=False,
+              help='wav file mode 2')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(port, wav, debug):
+def main(port, wav, wav2, debug):
     """サンプル起動用メイン関数
     """
     __log = get_logger(__name__, debug)
-    __log.debug('port=%s, wav=%s', port, wav)
+    __log.debug('port=%s, wav=%s, wav2=%s', port, wav, wav2)
 
-    app = SampleApp(port, wav, debug=debug)
+    app = SampleApp(port, wav, wav2, debug=debug)
     try:
         app.main()
     finally:
