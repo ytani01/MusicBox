@@ -3,4 +3,5 @@ mido
 pygame
 websockets
 websocket-client
+tornado
 click

@@ -296,6 +296,10 @@ MIDIデータ: [トラック1:チャンネル1]-[トラック1:チャンネル2]
 
 どれが主旋律かわからないので、自動選択は不可能。
 
+#### 6.3.2 (note_on + velocity=0) == note_off !!
+
+参考：[g200kg:Note Off ノートオフ](https://www.g200kg.com/jp/docs/dic/noteoff.html)
+
 
 ## 10. Software
 

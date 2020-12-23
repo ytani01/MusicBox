@@ -159,6 +159,9 @@ class MusicBoxMidi:
                         'abs_time': abs_time,
                         'delay': delay
                     }
+                    if msg.velocity == 0:
+                        # 'note_on and velocity == 0' is 'note_off'
+                        data_ent['note'] = []
 
                     data.append(data_ent)
 
@@ -239,7 +242,7 @@ class MusicBoxMidi:
 
         return data1
 
-    def note2ch(self, note, base=DEF_NOTE_BASE):
+    def note2ch(self, note, base=DEF_NOTE_BASE, full_midi=False):
         """
         Parameters
         ----------
@@ -255,15 +258,20 @@ class MusicBoxMidi:
 
         ch_list = []
         for n in note:
-            for ch, offset in enumerate(self.NOTE_OFFSET):
-                if n == base + offset:
-                    ch_list.append(ch)
+            if full_midi:
+                ch = n - base
+                if 0 <= ch < 88:
+                    ch_list.append(n - base)
+            else:
+                for ch, offset in enumerate(self.NOTE_OFFSET):
+                    if n == base + offset:
+                        ch_list.append(ch)
 
         # self.__log.debug('ch_list=%s', ch_list)
 
         return ch_list
 
-    def all_note2ch(self, data, base=DEF_NOTE_BASE):
+    def all_note2ch(self, data, base=DEF_NOTE_BASE, full_midi=False):
         """
         Parameters
         ----------
@@ -282,12 +290,13 @@ class MusicBoxMidi:
 
         ch_list = []
         for d in data:
-            ch_list += self.note2ch(d['note'], base)
+            ch_list += self.note2ch(d['note'], base, full_midi)
 
         return ch_list
 
     def best_base(self, data,
-                  base_min=NOTE_BASE_MIN, base_max=NOTE_BASE_MAX):
+                  base_min=NOTE_BASE_MIN, base_max=NOTE_BASE_MAX,
+                  full_midi=False):
         """
         Parameters
         ----------
@@ -305,24 +314,25 @@ class MusicBoxMidi:
 
         """
         self.__log.debug('(base_min, base_max)=%s', (base_min, base_max))
+        self.__log.debug('full_midi=%s', full_midi)
 
         best_base = base_min
         ch_len_max = 0
 
         for base in range(base_min, base_max+1):
-            ch = self.all_note2ch(data, base)
+            ch = self.all_note2ch(data, base, full_midi)
             if len(ch) > ch_len_max:
                 best_base = base
                 ch_len_max = len(ch)
 
             if len(ch) > ch_len_max * 0.6:
-                self.__log.info('base=%s (%s / %.2f), best=%s (%.2f)',
-                                base, len(ch), len(ch) / len(data),
-                                best_base, ch_len_max / len(data) )
+                self.__log.info('base=%s (%s/%s), best=%s',
+                                base, len(ch), ch_len_max, 
+                                best_base)
 
         return best_base
 
-    def mk_music_data(self, data, base):
+    def mk_music_data(self, data, base, full_midi=False):
         """
         make music_data from MIDI data
 
@@ -337,11 +347,13 @@ class MusicBoxMidi:
             music_data for Music Box
         """
         self.__log.debug('base=%s', base)
+        self.__log.debug('full_midi=%s', full_midi)
 
         music_data = []
 
         for d in data:
-            ch_list = self.note2ch(d['note'], base)
+            ch_list = self.note2ch(d['note'], base, full_midi)
+            self.__log.debug('note=%s, ch_list=%s', d['note'], ch_list)
             data_ent = {'ch': ch_list, 'delay': d['delay']}
             music_data.append(data_ent)
 
@@ -387,7 +399,7 @@ class MusicBoxMidi:
         return music_data2
 
     def parse(self, track=None, channel=None, base=None,
-              delay_limit=DEF_DELAY_LIMIT):
+              delay_limit=DEF_DELAY_LIMIT, full_midi=False):
         """
         parse MIDI data
 
@@ -411,6 +423,7 @@ class MusicBoxMidi:
         """
         self.__log.debug('track=%s, channel=%s, base=%s delay_limit=%s',
                          track, channel, base, delay_limit)
+        self.__log.debug('full_midi=%s', full_midi)
 
         # 1st step of parsing
         data0 = self.parse0(self._midi)
@@ -434,11 +447,12 @@ class MusicBoxMidi:
         mixed_data = self.mix_track_channecl(data1)
 
         if base is None:
-            base  = self.best_base(mixed_data)
+            base  = self.best_base(mixed_data, full_midi=full_midi)
             self.__log.info('base=%s (selected automatically)', base)
 
         # make ``music_data``
-        music_data = self.mk_music_data(mixed_data, base)
+        music_data = self.mk_music_data(mixed_data, base,
+                                        full_midi=full_midi)
         """
         for i, d in enumerate(music_data):
             self.__log.debug('%6d: %s', i, d)
@@ -465,6 +479,7 @@ class SampleApp:
 
     def __init__(self, midi_file, base, track=[], channel=[],
                  delay_limit=MusicBoxMidi.DEF_DELAY_LIMIT,
+                 full_midi=False,
                  debug=False):
         """constructor
 
@@ -487,12 +502,14 @@ class SampleApp:
         self.__log.debug('base=%s', base)
         self.__log.debug('track=%s, channel=%s', track, channel)
         self.__log.debug('delay_limit=%s', delay_limit)
+        self.__log.debug('full_midi=%s', full_midi)
 
         self._midi_file = midi_file
         self._base = base
         self._track = track
         self._channel = channel
         self._delay_limit = delay_limit
+        self._full_midi = full_midi
 
         self._parser = MusicBoxMidi(self._midi_file, debug=self._dbg)
 
@@ -502,7 +519,8 @@ class SampleApp:
         self.__log.debug('')
 
         music_data = self._parser.parse(self._track, self._channel,
-                                        self._base, self._delay_limit)
+                                        self._base, self._delay_limit,
+                                        self._full_midi)
         print('music_data = [')
         for i, d in enumerate(music_data):
             print('  %s' % (d), end='')
@@ -542,17 +560,22 @@ MusicBoxMidi sample program
 @click.option('--delay_limit', '-dl', 'delay_limit', type=int,
               default=MusicBoxMidi.DEF_DELAY_LIMIT,
               help='delay limit')
+@click.option('--full_midi', '-f', 'full_midi', is_flag=True,
+              default=False,
+              help='Full MIDI mode')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(midi_file, base, track, channel, delay_limit, debug):
+def main(midi_file, base, track, channel, delay_limit, full_midi, debug):
     """サンプル起動用メイン関数
     """
     __log = get_logger(__name__, debug)
     __log.debug('midi_file=%s', midi_file)
     __log.debug('base=%s, track=%s, channel=%s', base, track, channel)
     __log.debug('delay_limit=%s', delay_limit)
+    __log.debug('full_midi=%s', full_midi)
 
     app = SampleApp(midi_file, base, track, channel, delay_limit,
+                    full_midi,
                     debug=debug)
     try:
         app.main()

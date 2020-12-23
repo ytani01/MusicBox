@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+  <head lang="jp">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>{{ title }}: {{ version }}</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/css/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/music_box.css">
+
+    <script type="text/javascript"
+            src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+    <script type="text/javascript" src="/static/js/music_box.js"></script>
+    <script>
+      const dst_host = location.hostname;
+      const dst_port = 8881;
+      const ws_url = `ws://${dst_host}:${dst_port}/`;
+      console.log(`ws_url=${ws_url}`);
+      
+      const ws_send = function (msg) {
+          msg_str = JSON.stringify(msg);
+          console.log(`ws_send(${msg_str})`);
+
+          let ws = new WebSocket(ws_url);
+
+          ws.onopen = function () {
+              console.log(`ws.onopen()`);
+              ws.send(msg_str);
+              console.log(`ws.send${msg_str}`);
+          };
+
+          ws.onclose = function () {
+              console.log(`ws.onclose()`);
+          };
+      };
+
+      const single_play = function (ch_list) {
+          console.log(`single_play()`);
+
+          msg = {cmd: "single_play", ch: ch_list};
+          ws_send(msg);
+      };
+
+      const change_onoff = function (ch, on, pw_diff, tap) {
+          console.log(`change_onoff()`);
+
+          msg = {cmd: "change_onoff",
+                 ch: ch, on: on, pw_diff: pw_diff, tap: tap};
+          ws_send(msg);
+      };
+    </script>
+  </head>
+  <body style="background-color: lightgrey;">
+    <header>
+    <h1 class="text-center">{{ title }} Ver. {{ version }}</h1>
+    </header>
+    <main>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-sm-6 col-md-6">
+            <img src="/static/images/music_box1.jpg"
+                 height="510px">
+          </div> <!-- col -->
+          <div class="col-sm-6 col-md-6">
+            <table border="0">
+              {% for ch in ch_list1 %}
+              <tr>
+                <td align="center">
+                  <button
+                    type="button"
+                    onClick="change_onoff({{ ch }},true,+10,true);">
+                    <i class="fas fa-caret-square-left"></i>
+                  </button>
+                  <button
+                    type="button" 
+                    onClick="change_onoff({{ ch }},true,-10,true);">
+                    <i class="fas fa-caret-square-right"></i>
+                  </button>
+                </td>
+                <td align="center">
+                  --- 
+                  <button type="button"
+                          onClick="single_play([{{ ch }}]);">
+                    {{ ch }}</button>
+                  ---
+                </td>
+                <td align="center">
+                  <button
+                    type="button" 
+                    onClick="change_onoff({{ ch }},false,+10,true);">
+                    <i class="fas fa-caret-square-left"></i>
+                  </button>
+                  <button
+                    type="button" 
+                    onClick="change_onoff({{ ch }},false,-10,true);">
+                    <i class="fas fa-caret-square-right"></i>
+                  </button>
+                </td>
+                <td align="center">------</td>
+              </tr>
+              {% end %}
+              <tr>
+                <td align="center"><strong>[ push ]</strong></td>
+                <td align="center"></td>
+                <td align="center"><strong>[ pull ]</strong></td>
+                <td align="center"></td>
+              </tr>
+              {% for ch in ch_list2 %}
+              <tr>
+                <td align="center">
+                  <button type="button" 
+                          onClick="change_onoff({{ ch }},true,-10,true);">
+                    <i class="fas fa-caret-square-left"></i></button>
+                  <button type="button" 
+                          onClick="change_onoff({{ ch }},true,+10,true);">
+                    <i class="fas fa-caret-square-right"></i></button>
+                </td>
+                <td align="center">
+                  ---
+                  <button type="button"
+                          onClick="single_play([{{ ch }}]);">
+                    {{ ch }}</button>
+                  ---
+                </td>
+                <td align="center">
+                  <button type="button" 
+                          onClick="change_onoff({{ ch }},false,-10,true);">
+                    <i class="fas fa-caret-square-left"></i></button>
+                  <button type="button" 
+                          onClick="change_onoff({{ ch }},false,+10,true);">
+                    <i class="fas fa-caret-square-right"></i></button>
+                </td>
+                <td align="center">------</td>
+              </tr>
+              {% end %}
+          </table>
+          </div> <!-- col -->
+        </div> <!-- row -->
+      </div> <!-- container -->
+    </main>
+    <footer>
+      <hr />
+      <p class="text-right">
+        (c) 2020 <strong>{{ author }}</strong> &nbsp;
+      </p>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+            integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+            integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+            crossorigin="anonymous"></script>
+  </body>
+</html>
