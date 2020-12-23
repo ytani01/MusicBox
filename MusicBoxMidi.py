@@ -142,6 +142,7 @@ class MusicBoxMidi:
                     continue
 
                 if msg.type == 'note_on':
+                    self.__log.debug('msg=%s', msg)
                     if msg.channel != cur_channel:
                         cur_channel = msg.channel
                         abs_time = 0
@@ -151,6 +152,8 @@ class MusicBoxMidi:
                         tempo) * 1000
                     if delay > self.DELAY_MAX:
                         delay = self.DELAY_MAX
+
+                    abs_time += delay
 
                     data_ent = {
                         'midi_track': i,
@@ -164,8 +167,6 @@ class MusicBoxMidi:
                         data_ent['note'] = []
 
                     data.append(data_ent)
-
-                    abs_time += delay
 
         return data
 
