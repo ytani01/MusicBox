@@ -301,6 +301,11 @@ MIDIデータ: [トラック1:チャンネル1]-[トラック1:チャンネル2]
 参考：[g200kg:Note Off ノートオフ](https://www.g200kg.com/jp/docs/dic/noteoff.html)
 
 
+#### 6.3.A その他
+
+* [情報処理学会:ピアノをMIDIで駆動する際のノート・オン・タイミングの補正について](https://ipsj.ixsq.nii.ac.jp/ej/index.php?active_action=repository_view_main_item_detail&page_id=13&block_id=8&item_id=55958&item_no=1)
+
+
 ## 10. Software
 
 ### Module Architecture
