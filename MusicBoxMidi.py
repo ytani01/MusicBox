@@ -77,8 +77,6 @@ class MusicBoxMidi:
 
     DEF_DELAY_LIMIT = 10
 
-    DELAY_MAX = 3000
-
     __log = get_logger(__name__, False)
 
     def __init__(self, midi_file, debug=False):
@@ -150,8 +148,6 @@ class MusicBoxMidi:
                     delay = mido.tick2second(
                         msg.time, self._midi.ticks_per_beat,
                         tempo) * 1000
-                    if delay > self.DELAY_MAX:
-                        delay = self.DELAY_MAX
 
                     abs_time += delay
 
@@ -272,12 +268,12 @@ class MusicBoxMidi:
 
         return ch_list
 
-    def all_note2ch(self, data, base=DEF_NOTE_BASE, full_midi=False):
+    def all_note2ch(self, midi_data, base=DEF_NOTE_BASE, full_midi=False):
         """
         Parameters
         ----------
-        data:
-
+        midi_data: list of midi_data_ent
+            MIDI data
         base: int
             base note number
 
@@ -290,19 +286,19 @@ class MusicBoxMidi:
         # self.__log.debug('base=%s', base)
 
         ch_list = []
-        for d in data:
+        for d in midi_data:
             ch_list += self.note2ch(d['note'], base, full_midi)
 
         return ch_list
 
-    def best_base(self, data,
+    def best_base(self, midi_data,
                   base_min=NOTE_BASE_MIN, base_max=NOTE_BASE_MAX,
                   full_midi=False):
         """
         Parameters
         ----------
-        data: list of data_ent
-
+        midi_data: list of midi_data_ent
+            MIDI data
         base_min: int
             default: NOTE_BASE_MIN
         base_max: int
@@ -311,26 +307,35 @@ class MusicBoxMidi:
         Returns
         -------
         best_base: int
-            base note number
+            selected base note number
 
         """
         self.__log.debug('(base_min, base_max)=%s', (base_min, base_max))
         self.__log.debug('full_midi=%s', full_midi)
 
+        note_list = []
+        for ent in midi_data:
+            note_list += ent['note']
+        note_set = set(note_list)
+
         best_base = base_min
         ch_len_max = 0
-
         for base in range(base_min, base_max+1):
-            ch = self.all_note2ch(data, base, full_midi)
-            if len(ch) > ch_len_max:
+            ch_set = set(self.all_note2ch(midi_data, base, full_midi))
+            if len(ch_set) > ch_len_max:
                 best_base = base
-                ch_len_max = len(ch)
+                ch_len_max = len(ch_set)
+                best_ch_set = ch_set
 
-            if len(ch) > ch_len_max * 0.6:
-                self.__log.info('base=%s (%s/%s), best=%s',
-                                base, len(ch), ch_len_max, 
+            if len(ch_set) > ch_len_max * 0.6:
+                self.__log.info('base=%s (%s/%s/%s), best=%s',
+                                base,
+                                len(ch_set), ch_len_max, len(note_set),
                                 best_base)
 
+        self.__log.info('note_set=   %s', note_set)
+        self.__log.info('best_ch_set=%s', best_ch_set)
+        
         return best_base
 
     def mk_music_data(self, data, base, full_midi=False):
@@ -427,32 +432,32 @@ class MusicBoxMidi:
         self.__log.debug('full_midi=%s', full_midi)
 
         # 1st step of parsing
-        data0 = self.parse0(self._midi)
+        midi_data0 = self.parse0(self._midi)
 
         # get (track, channel) pairs
         midi_track_channel = []
 
-        for i, d in enumerate(data0):
+        for i, d in enumerate(midi_data0):
             midi_track_channel.append(
                 (d['midi_track'], d['midi_channel']))
             midi_track_channel = sorted(list(set(midi_track_channel)))
 
-        self.__log.info('midi_trank_channel=%s', midi_track_channel)
+        self.__log.debug('midi_track_channel=%s', midi_track_channel)
 
         # select MIDI track/channel
-        data1 = self.select_track_channel(data0, track, channel)
-        for i, d in enumerate(data1):
+        midi_data1 = self.select_track_channel(midi_data0, track, channel)
+        for i, d in enumerate(midi_data1):
             self.__log.debug('%s: %s', i, d)
 
         # mix and sort time-line
-        mixed_data = self.mix_track_channecl(data1)
+        mixed_midi_data = self.mix_track_channecl(midi_data1)
 
         if base is None:
-            base  = self.best_base(mixed_data, full_midi=full_midi)
+            base  = self.best_base(mixed_midi_data, full_midi=full_midi)
             self.__log.info('base=%s (selected automatically)', base)
 
         # make ``music_data``
-        music_data = self.mk_music_data(mixed_data, base,
+        music_data = self.mk_music_data(mixed_midi_data, base,
                                         full_midi=full_midi)
         """
         for i, d in enumerate(music_data):
@@ -463,6 +468,8 @@ class MusicBoxMidi:
         music_data2 = self.join_ch_list(music_data, delay_limit)
         for i, d in enumerate(music_data2):
             self.__log.debug('%6d: %s', i, d)
+
+        self.__log.info('midi_track_channel=%s', midi_track_channel)
 
         return music_data2
 

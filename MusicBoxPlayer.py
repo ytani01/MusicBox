@@ -195,7 +195,7 @@ class MusicBoxPlayer:
         ch_list=None,    delay=None}: do nothing (no delay)
 
         """
-        self._log.debug('ch=list=%s, delay=%s', ch_list, delay)
+        self._log.info('ch=list=%s, delay=%.1f', ch_list, delay)
 
         if ch_list is None:
             if delay is None:
