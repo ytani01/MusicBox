@@ -197,7 +197,7 @@ class MusicBoxMidi:
         mixed_data.insert(0, d0)
         return mixed_data
 
-    def select_track_channel(self, data0, track=[], channel=[]):
+    def select_channel(self, data0, channel=[]):
         """
         指定されたトラック/チャンネルだけを抽出
 
@@ -205,8 +205,6 @@ class MusicBoxMidi:
         ----------
         data0: list of data_ent
 
-        track: list of int
-            MIDI track
         channel: list of int
             MIDI channel
 
@@ -215,26 +213,16 @@ class MusicBoxMidi:
         data1: list of data_ent
 
         """
-        self.__log.debug('track=%s, channel=%s', track, channel)
+        self.__log.debug('channel=%s', channel)
 
         data1 = []
 
         for d in data0:
-            if len(track) == 0 and len(channel) == 0:
+            if len(channel) == 0:
                 data1.append(d)
                 continue
 
-            if len(track) == 0 and len(channel) > 0:
-                if d['midi_channel'] in channel:
-                    data1.append(d)
-                    continue
-
-            if len(track) > 0 and len(channel) == 0:
-                if d['midi_track'] in track:
-                    data1.append(d)
-                    continue
-
-            if d['midi_track'] in track and d['midi_channel'] in channel:
+            if d['midi_channel'] in channel:
                 data1.append(d)
 
         return data1
@@ -404,7 +392,7 @@ class MusicBoxMidi:
 
         return music_data2
 
-    def parse(self, track=None, channel=None, base=None,
+    def parse(self, channel=None, base=None,
               delay_limit=DEF_DELAY_LIMIT, full_midi=False):
         """
         parse MIDI data
@@ -413,8 +401,6 @@ class MusicBoxMidi:
 
         Parameters
         ----------
-        track: list of int or None for all tracks
-            MIDI track
         channel: list of int or None for all channels
             MIDI channel
         base: int or None
@@ -427,8 +413,8 @@ class MusicBoxMidi:
         music_data: list of dict
 
         """
-        self.__log.debug('track=%s, channel=%s, base=%s delay_limit=%s',
-                         track, channel, base, delay_limit)
+        self.__log.debug('channel=%s, base=%s delay_limit=%s',
+                         channel, base, delay_limit)
         self.__log.debug('full_midi=%s', full_midi)
 
         # 1st step of parsing
@@ -445,7 +431,7 @@ class MusicBoxMidi:
         self.__log.debug('midi_track_channel=%s', midi_track_channel)
 
         # select MIDI track/channel
-        midi_data1 = self.select_track_channel(midi_data0, track, channel)
+        midi_data1 = self.select_channel(midi_data0, channel)
         for i, d in enumerate(midi_data1):
             self.__log.debug('%s: %s', i, d)
 
@@ -485,7 +471,7 @@ class SampleApp:
     """
     __log = get_logger(__name__, False)
 
-    def __init__(self, midi_file, base, track=[], channel=[],
+    def __init__(self, midi_file, base, channel=[],
                  delay_limit=MusicBoxMidi.DEF_DELAY_LIMIT,
                  full_midi=False,
                  debug=False):
@@ -497,8 +483,6 @@ class SampleApp:
             file name of MIDI file
         base: int
             note base
-        track: list of int
-            MIDI track
         channel: list of int
             MIDI channel
         delay_limit: int
@@ -508,13 +492,12 @@ class SampleApp:
         __class__.__log = get_logger(__class__.__name__, self._dbg)
         self.__log.debug('midi_file=%s', midi_file)
         self.__log.debug('base=%s', base)
-        self.__log.debug('track=%s, channel=%s', track, channel)
+        self.__log.debug('channel=%s', channel)
         self.__log.debug('delay_limit=%s', delay_limit)
         self.__log.debug('full_midi=%s', full_midi)
 
         self._midi_file = midi_file
         self._base = base
-        self._track = track
         self._channel = channel
         self._delay_limit = delay_limit
         self._full_midi = full_midi
@@ -526,7 +509,7 @@ class SampleApp:
         """
         self.__log.debug('')
 
-        music_data = self._parser.parse(self._track, self._channel,
+        music_data = self._parser.parse(self._channel,
                                         self._base, self._delay_limit,
                                         self._full_midi)
         print('music_data = [')
@@ -561,8 +544,6 @@ MusicBoxMidi sample program
 @click.argument('midi_file', type=click.Path(exists=True))
 @click.option('--base', '-b', 'base', type=int, default=None,
               help='note base')
-@click.option('--track', '-t', 'track', type=int, multiple=True,
-              help='MIDI track')
 @click.option('--channel', '-c', 'channel', type=int, multiple=True,
               help='MIDI channel')
 @click.option('--delay_limit', '-dl', 'delay_limit', type=int,
@@ -573,16 +554,16 @@ MusicBoxMidi sample program
               help='Full MIDI mode')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(midi_file, base, track, channel, delay_limit, full_midi, debug):
+def main(midi_file, base, channel, delay_limit, full_midi, debug):
     """サンプル起動用メイン関数
     """
     __log = get_logger(__name__, debug)
     __log.debug('midi_file=%s', midi_file)
-    __log.debug('base=%s, track=%s, channel=%s', base, track, channel)
+    __log.debug('base=%s, channel=%s', base, channel)
     __log.debug('delay_limit=%s', delay_limit)
     __log.debug('full_midi=%s', full_midi)
 
-    app = SampleApp(midi_file, base, track, channel, delay_limit,
+    app = SampleApp(midi_file, base, channel, delay_limit,
                     full_midi,
                     debug=debug)
     try:
