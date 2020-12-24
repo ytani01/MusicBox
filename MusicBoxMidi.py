@@ -121,81 +121,45 @@ class MusicBoxMidi:
         """
         self.__log.debug('midi_data=%s', midi_data)
 
-        tempo = None
-        delay = 0
+        cur_tempo = 0
         abs_time = 0
         data = []
 
-        cur_track = 0
-        cur_channel = 0
+        merged_track = mido.merge_tracks(midi_data.tracks)
+        for msg in merged_track:
+            delay = 0
+            try:
+                delay = mido.tick2second(
+                    msg.time, self._midi.ticks_per_beat,
+                    cur_tempo) * 1000
 
-        for i, track in enumerate(midi_data.tracks):
-            for msg in track:
-                if i != cur_track:
-                    cur_track = i
-                    abs_time = 0
+                abs_time += delay
+            except KeyError:
+                pass
 
-                if msg.type == 'set_tempo':
-                    tempo = msg.tempo
+            self.__log.debug('msg=%s', msg)
+
+            if msg.type == 'end_of_track':
+                continue
+
+            if msg.type == 'set_tempo':
+                cur_tempo = msg.tempo
+                continue
+
+            if msg.type == 'note_on':
+                if msg.velocity == 0:
+                    # 'note_on and velocity == 0' is 'note_off'
                     continue
 
-                if msg.type == 'note_on':
-                    self.__log.debug('msg=%s', msg)
-                    if msg.channel != cur_channel:
-                        cur_channel = msg.channel
-                        abs_time = 0
+                data_ent = {
+                    'midi_channel': msg.channel,
+                    'note': [msg.note],
+                    'abs_time': abs_time,
+                }
 
-                    delay = mido.tick2second(
-                        msg.time, self._midi.ticks_per_beat,
-                        tempo) * 1000
-
-                    abs_time += delay
-
-                    data_ent = {
-                        'midi_track': i,
-                        'midi_channel': msg.channel,
-                        'note': [msg.note],
-                        'abs_time': abs_time,
-                        'delay': delay
-                    }
-                    if msg.velocity == 0:
-                        # 'note_on and velocity == 0' is 'note_off'
-                        data_ent['note'] = []
-
-                    data.append(data_ent)
+                data.append(data_ent)
 
         return data
-
-    def mix_track_channecl(self, data):
-        """
-        複数トラック/チャンネルを重ね合わせる
-
-        Parameters
-        ----------
-        data: list of data_ent
-
-        Returns
-        -------
-        mixed_data: list of data_ent
-
-        """
-        # self.__log.debug('data=%s', data)
-
-        if len(data) == 0:
-            return []
-
-        mixed_data = sorted(data, key=operator.itemgetter('abs_time'))
-
-        d0 = mixed_data.pop(0)
-        prev_d = d0
-
-        for d in mixed_data:
-            delay = d['abs_time'] - prev_d['abs_time']
-            prev_d['delay'] = delay
-            prev_d = d
-
-        mixed_data.insert(0, d0)
-        return mixed_data
 
     def select_channel(self, data0, channel=[]):
         """
@@ -323,7 +287,7 @@ class MusicBoxMidi:
 
         self.__log.info('note_set=   %s', note_set)
         self.__log.info('best_ch_set=%s', best_ch_set)
-        
+
         return best_base
 
     def mk_music_data(self, data, base, full_midi=False):
@@ -345,10 +309,15 @@ class MusicBoxMidi:
 
         music_data = []
 
+        prev_abs_time = 0
         for d in data:
             ch_list = self.note2ch(d['note'], base, full_midi)
             self.__log.debug('note=%s, ch_list=%s', d['note'], ch_list)
-            data_ent = {'ch': ch_list, 'delay': d['delay']}
+
+            delay = d['abs_time'] - prev_abs_time
+            prev_abs_time = d['abs_time']
+
+            data_ent = {'ch': ch_list, 'delay': delay}
             music_data.append(data_ent)
 
         return music_data
@@ -420,42 +389,34 @@ class MusicBoxMidi:
         # 1st step of parsing
         midi_data0 = self.parse0(self._midi)
 
-        # get (track, channel) pairs
-        midi_track_channel = []
+        # get channel pairs
+        midi_channel = []
 
         for i, d in enumerate(midi_data0):
-            midi_track_channel.append(
-                (d['midi_track'], d['midi_channel']))
-            midi_track_channel = sorted(list(set(midi_track_channel)))
+            midi_channel.append(d['midi_channel'])
 
-        self.__log.debug('midi_track_channel=%s', midi_track_channel)
+        midi_channel = sorted(list(set(midi_channel)))
+        self.__log.debug('midi_channel=%s', midi_channel)
 
         # select MIDI track/channel
         midi_data1 = self.select_channel(midi_data0, channel)
         for i, d in enumerate(midi_data1):
             self.__log.debug('%s: %s', i, d)
 
-        # mix and sort time-line
-        mixed_midi_data = self.mix_track_channecl(midi_data1)
-
         if base is None:
-            base  = self.best_base(mixed_midi_data, full_midi=full_midi)
+            base  = self.best_base(midi_data1, full_midi=full_midi)
             self.__log.info('base=%s (selected automatically)', base)
 
         # make ``music_data``
-        music_data = self.mk_music_data(mixed_midi_data, base,
+        music_data = self.mk_music_data(midi_data1, base,
                                         full_midi=full_midi)
-        """
-        for i, d in enumerate(music_data):
-            self.__log.debug('%6d: %s', i, d)
-        """
 
         # join ``ch_list`` in ``music_data``
         music_data2 = self.join_ch_list(music_data, delay_limit)
         for i, d in enumerate(music_data2):
             self.__log.debug('%6d: %s', i, d)
 
-        self.__log.info('midi_track_channel=%s', midi_track_channel)
+        self.__log.info('midi_channel=%s', midi_channel)
 
         return music_data2
 
