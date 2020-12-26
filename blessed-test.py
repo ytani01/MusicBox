@@ -13,6 +13,5 @@ with t.cbreak():
         if k.is_sequence:
             print('k.name=%s' % (k.name))
             continue
-        
+
         print('k=%s' % (k))
-            

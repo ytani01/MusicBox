@@ -4,7 +4,6 @@ import time
 import curses
 
 def main(stdscr):
-    
     stdscr.keypad(True)
 
     stdscr.clear()
