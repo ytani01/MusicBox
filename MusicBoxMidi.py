@@ -271,6 +271,7 @@ class MusicBoxMidi:
         note_set = set(note_list)
 
         best_base = base_min
+        best_ch_set = []
         ch_len_max = 0
         for base in range(base_min, base_max+1):
             ch_set = set(self.all_note2ch(midi_data, base, full_midi))
@@ -348,7 +349,7 @@ class MusicBoxMidi:
                 delay += d['delay']
                 continue
 
-            data_ent = {'ch': ch_list, 'delay': delay}
+            data_ent = {'ch': sorted(list(set(ch_list))), 'delay': delay}
             music_data2.append(data_ent)
 
             ch_list = d['ch']
@@ -412,7 +413,7 @@ class MusicBoxMidi:
                                         full_midi=full_midi)
 
         # join ``ch_list`` in ``music_data``
-        music_data2 = self.join_ch_list(music_data, delay_limit)
+        music_data2 = self.join_ch_list(music_data, delay_limit)        
         for i, d in enumerate(music_data2):
             self.__log.debug('%6d: %s', i, d)
 

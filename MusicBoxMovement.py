@@ -386,7 +386,7 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
                 continue
 
             self._sound[ch].set_volume(0.5)
-            self._sound[ch].play()
+            self._sound[ch].play(fade_ms=10)
             # threading.Thread(target=self._sound[ch].play).start()
 
         """
