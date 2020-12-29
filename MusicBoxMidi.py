@@ -312,9 +312,11 @@ class MusicBoxMidi:
         prev_abs_time = 0
         for d in data:
             ch_list = self.note2ch(d['note'], base, full_midi)
-            self.__log.debug('note=%s, ch_list=%s', d['note'], ch_list)
 
             delay = d['abs_time'] - prev_abs_time
+            self.__log.debug('note=%s, ch_list=%s delay=%s',
+                             d['note'], ch_list, delay)
+
             prev_abs_time = d['abs_time']
 
             data_ent = {'ch': ch_list, 'delay': delay}
@@ -346,13 +348,11 @@ class MusicBoxMidi:
                 delay += d['delay']
                 continue
 
-            d['ch'] += ch_list
-            d['ch'] = sorted(list(set(d['ch'])))
-            d['delay'] += delay
-            music_data2.append(d)
+            data_ent = {'ch': ch_list, 'delay': delay}
+            music_data2.append(data_ent)
 
-            ch_list = []
-            delay = 0
+            ch_list = d['ch']
+            delay = d['delay']
 
         if len(ch_list) > 0:
             data_ent = {'ch': ch_list, 'delay': delay}

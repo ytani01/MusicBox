@@ -385,8 +385,9 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
                 self._log.warning('ch=%s: ignored', ch)
                 continue
 
+            self._sound[ch].set_volume(0.5)
             self._sound[ch].play()
-            #threading.Thread(target=self._sound[ch].play).start()
+            # threading.Thread(target=self._sound[ch].play).start()
 
         """
         # simulate servo delay
