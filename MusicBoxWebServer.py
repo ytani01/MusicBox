@@ -30,7 +30,7 @@ class MusicBoxWebHandler(tornado.web.RequestHandler):
     """
     """
     CH_N = 15
-    CH_CENTER = 8
+    CH_CENTER = 7
 
     __log = get_logger(__name__, False)
 

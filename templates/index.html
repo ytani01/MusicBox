@@ -59,22 +59,19 @@
       <div class="container-fluid">
         <div class="row">
           <div class="col-sm-6 col-md-6">
-            <img src="/static/images/music_box1.jpg"
-                 height="510px">
-          </div> <!-- col -->
-          <div class="col-sm-6 col-md-6">
             <table border="0">
               {% for ch in ch_list1 %}
               <tr>
+                <td align="center">------</td>
                 <td align="center">
                   <button
-                    type="button"
-                    onClick="change_onoff({{ ch }},true,+10,true);">
+                    type="button" 
+                    onClick="change_onoff({{ ch }},false,-10,true);">
                     <i class="fas fa-caret-square-left"></i>
                   </button>
                   <button
                     type="button" 
-                    onClick="change_onoff({{ ch }},true,-10,true);">
+                    onClick="change_onoff({{ ch }},false,+10,true);">
                     <i class="fas fa-caret-square-right"></i>
                   </button>
                 </td>
@@ -88,32 +85,32 @@
                 <td align="center">
                   <button
                     type="button" 
-                    onClick="change_onoff({{ ch }},false,+10,true);">
+                    onClick="change_onoff({{ ch }},true,-10,true);">
                     <i class="fas fa-caret-square-left"></i>
-                  </button>
+                   </button>
                   <button
-                    type="button" 
-                    onClick="change_onoff({{ ch }},false,-10,true);">
+                    type="button"
+                    onClick="change_onoff({{ ch }},true,+10,true);">
                     <i class="fas fa-caret-square-right"></i>
                   </button>
                 </td>
-                <td align="center">------</td>
               </tr>
               {% end %}
               <tr>
+                <td align="center"></td>
+               <td align="center"><strong>[ pull ]</strong></td>
+                <td align="center"></td>
                 <td align="center"><strong>[ push ]</strong></td>
-                <td align="center"></td>
-                <td align="center"><strong>[ pull ]</strong></td>
-                <td align="center"></td>
               </tr>
               {% for ch in ch_list2 %}
               <tr>
+                <td align="center">------</td>
                 <td align="center">
                   <button type="button" 
-                          onClick="change_onoff({{ ch }},true,-10,true);">
+                          onClick="change_onoff({{ ch }},false,+10,true);">
                     <i class="fas fa-caret-square-left"></i></button>
                   <button type="button" 
-                          onClick="change_onoff({{ ch }},true,+10,true);">
+                          onClick="change_onoff({{ ch }},false,-10,true);">
                     <i class="fas fa-caret-square-right"></i></button>
                 </td>
                 <td align="center">
@@ -125,16 +122,19 @@
                 </td>
                 <td align="center">
                   <button type="button" 
-                          onClick="change_onoff({{ ch }},false,-10,true);">
+                          onClick="change_onoff({{ ch }},true,+10,true);">
                     <i class="fas fa-caret-square-left"></i></button>
                   <button type="button" 
-                          onClick="change_onoff({{ ch }},false,+10,true);">
+                          onClick="change_onoff({{ ch }},true,-10,true);">
                     <i class="fas fa-caret-square-right"></i></button>
                 </td>
-                <td align="center">------</td>
-              </tr>
+               </tr>
               {% end %}
           </table>
+          </div> <!-- col -->
+          <div class="col-sm-6 col-md-6">
+            <img src="/static/images/music_box1.jpg"
+                 height="510px" style="transform: rotate(180deg)">
           </div> <!-- col -->
         </div> <!-- row -->
       </div> <!-- container -->
