@@ -36,7 +36,6 @@ __date__   = '2020'
 
 import mido
 import json
-import operator
 from MyLogger import get_logger
 
 
@@ -61,8 +60,6 @@ class MusicBoxMidi:
 
     # [Optional] JSON format
     music_data_json = json.dumps(music_data)
-
-    parser.end()  # end of the program
     ============================================================
 
     """
@@ -79,7 +76,7 @@ class MusicBoxMidi:
 
     __log = get_logger(__name__, False)
 
-    def __init__(self, midi_file, debug=False):
+    def __init__(self, debug=False):
         """ Constructor
 
         Parameters
@@ -89,11 +86,6 @@ class MusicBoxMidi:
         """
         self._dbg = debug
         __class__.__log = get_logger(__class__.__name__, self._dbg)
-        self.__log.debug('midi_file=%s', midi_file)
-
-        self._midi_file = midi_file
-        self._midi = mido.MidiFile(self._midi_file)
-        self.__log.debug('ticks_per_beet=%s', self._midi.ticks_per_beat)
 
     def end(self):
         """
@@ -102,14 +94,14 @@ class MusicBoxMidi:
         self.__log.debug('doing ..')
         self.__log.debug('done')
 
-    def parse0(self, midi_data):
+    def parse0(self, midi):
         """
         parse MIDI format simply for subsequent parsing step
 
         Parameters
         ----------
-        midi_data:
-            MIDI data
+        midi:
+            MIDI data from mido.MidiFile(..)
 
         Returns
         -------
@@ -119,18 +111,18 @@ class MusicBoxMidi:
              'abs_time': 500, 'delay': 300}
 
         """
-        self.__log.debug('midi_data=%s', midi_data)
+        self.__log.debug('midi=%s', midi)
 
         cur_tempo = 0
         abs_time = 0
         data = []
 
-        merged_track = mido.merge_tracks(midi_data.tracks)
+        merged_track = mido.merge_tracks(midi.tracks)
         for msg in merged_track:
             delay = 0
             try:
                 delay = mido.tick2second(
-                    msg.time, self._midi.ticks_per_beat,
+                    msg.time, midi.ticks_per_beat,
                     cur_tempo) * 1000
 
                 abs_time += delay
@@ -161,7 +153,7 @@ class MusicBoxMidi:
 
         return data
 
-    def select_channel(self, data0, channel=[]):
+    def select_channel(self, data0, channel=None):
         """
         指定されたトラック/チャンネルだけを抽出
 
@@ -182,7 +174,7 @@ class MusicBoxMidi:
         data1 = []
 
         for d in data0:
-            if len(channel) == 0:
+            if channel is None or len(channel) == 0:
                 data1.append(d)
                 continue
 
@@ -191,7 +183,7 @@ class MusicBoxMidi:
 
         return data1
 
-    def note2ch(self, note, base=DEF_NOTE_BASE, full_midi=False):
+    def note2ch(self, note, note_base=DEF_NOTE_BASE, note_n=0):
         """
         Parameters
         ----------
@@ -203,31 +195,34 @@ class MusicBoxMidi:
         ch_list: list of int
             list of Music Box ch
         """
-        # self.__log.debug('note=%s, base=%s', note, base)
+        # self.__log.debug('note=%s, note_base=%s', note, note_base)
 
         ch_list = []
         for n in note:
-            if full_midi:
-                ch = n - base
-                if 0 <= ch < 88:
-                    ch_list.append(n - base)
+            if note_n > 0:
+                ch = n - note_base
+                if 0 <= ch < note_n:
+                    ch_list.append(n - note_base)
             else:
                 for ch, offset in enumerate(self.NOTE_OFFSET):
-                    if n == base + offset:
+                    if n == note_base + offset:
                         ch_list.append(ch)
 
         # self.__log.debug('ch_list=%s', ch_list)
 
         return ch_list
 
-    def all_note2ch(self, midi_data, base=DEF_NOTE_BASE, full_midi=False):
+    def all_note2ch(self, midi_data, note_base=DEF_NOTE_BASE,
+                    note_n=0):
         """
         Parameters
         ----------
         midi_data: list of midi_data_ent
             MIDI data
-        base: int
-            base note number
+        note_base: int
+            note base number
+        note_n: int
+            number of available notes
 
         Returns
         -------
@@ -235,63 +230,67 @@ class MusicBoxMidi:
             Music Box ch list
 
         """
-        # self.__log.debug('base=%s', base)
+        # self.__log.debug('note_base=%s', note_base)
 
         ch_list = []
         for d in midi_data:
-            ch_list += self.note2ch(d['note'], base, full_midi)
+            ch_list += self.note2ch(d['note'], note_base, note_n)
 
         return ch_list
 
-    def best_base(self, midi_data,
-                  base_min=NOTE_BASE_MIN, base_max=NOTE_BASE_MAX,
-                  full_midi=False):
+    def best_note_base(self, midi_data,
+                       note_base_min=NOTE_BASE_MIN,
+                       note_base_max=NOTE_BASE_MAX,
+                       note_n=0):
         """
         Parameters
         ----------
         midi_data: list of midi_data_ent
             MIDI data
-        base_min: int
+        note_base_min: int
             default: NOTE_BASE_MIN
-        base_max: int
+        note_base_max: int
             default: NOtE_BASE_MAX
+        note_n: int
+            number of available notes
 
         Returns
         -------
-        best_base: int
-            selected base note number
-
+        best_note_base: int
+            selected note base
         """
-        self.__log.debug('(base_min, base_max)=%s', (base_min, base_max))
-        self.__log.debug('full_midi=%s', full_midi)
+        self.__log.debug('(note_base_min, note_base_max)=%s',
+                         (note_base_min, note_base_max))
+        self.__log.debug('note_n=%s', note_n)
 
         note_list = []
         for ent in midi_data:
             note_list += ent['note']
         note_set = set(note_list)
 
-        best_base = base_min
+        best_note_base = note_base_min
         best_ch_set = []
         ch_len_max = 0
-        for base in range(base_min, base_max+1):
-            ch_set = set(self.all_note2ch(midi_data, base, full_midi))
+        for note_base in range(note_base_min, note_base_max+1):
+            ch_set = set(self.all_note2ch(midi_data, note_base,
+                                          note_n))
             if len(ch_set) > ch_len_max:
-                best_base = base
+                best_note_base = note_base
                 ch_len_max = len(ch_set)
                 best_ch_set = ch_set
 
-            if len(ch_set) > ch_len_max * 0.6:
-                self.__log.info('base=%s (%s/%s/%s), best=%s',
-                                base,
+            if len(ch_set) > ch_len_max * 0.8:
+                self.__log.info('note_base=%s (%s/%s/%s), best=%s',
+                                note_base,
                                 len(ch_set), ch_len_max, len(note_set),
-                                best_base)
+                                best_note_base)
 
-        self.__log.info('note_set=   %s', note_set)
-        self.__log.info('best_ch_set=%s', best_ch_set)
+        self.__log.info('note_set=   %s', sorted(list(note_set)))
+        self.__log.info('best_ch_set=%s', sorted(list(best_ch_set)))
 
-        return best_base
+        return best_note_base
 
-    def mk_music_data(self, data, base, full_midi=False):
+    def mk_music_data(self, data, note_base, note_n=0):
         """
         make music_data from MIDI data
 
@@ -299,20 +298,21 @@ class MusicBoxMidi:
         ----------
         data: list of data_ent
             MIDI data
+        note_base: int
+        note_n: int
 
         Returns
         -------
         music_data: list of dict
             music_data for Music Box
         """
-        self.__log.debug('base=%s', base)
-        self.__log.debug('full_midi=%s', full_midi)
+        self.__log.debug('note_base=%s, note_n=%s', note_base, note_n)
 
         music_data = []
 
         prev_abs_time = 0
         for d in data:
-            ch_list = self.note2ch(d['note'], base, full_midi)
+            ch_list = self.note2ch(d['note'], note_base, note_n)
 
             delay = d['abs_time'] - prev_abs_time
             self.__log.debug('note=%s, ch_list=%s delay=%s',
@@ -350,7 +350,8 @@ class MusicBoxMidi:
                 continue
 
             data_ent = {'ch': sorted(list(set(ch_list))), 'delay': delay}
-            music_data2.append(data_ent)
+            if len(data_ent['ch']) != 0 and data_ent['delay'] != 0:
+                music_data2.append(data_ent)
 
             ch_list = d['ch']
             delay = d['delay']
@@ -362,33 +363,41 @@ class MusicBoxMidi:
 
         return music_data2
 
-    def parse(self, channel=None, base=None,
-              delay_limit=DEF_DELAY_LIMIT, full_midi=False):
+    def parse(self, midi_file, channel=None, note_base=None,
+              delay_limit=DEF_DELAY_LIMIT, note_n=0):
         """
         parse MIDI data
 
-        base が None の場合は、最適値を自動選択する。
+        note_base が None の場合は、最適値を自動選択する。
 
         Parameters
         ----------
+        midi_file: str
+            MIDI file name
         channel: list of int or None for all channels
             MIDI channel
-        base: int or None
+        note_base: int or None
             note base
         delay_limit: int
             delay limit (msec)
+        note_n: int
 
         Returns
         -------
         music_data: list of dict
 
         """
-        self.__log.debug('channel=%s, base=%s delay_limit=%s',
-                         channel, base, delay_limit)
-        self.__log.debug('full_midi=%s', full_midi)
+        self.__log.debug('midi_file=%s', midi_file)
+        self.__log.debug('channel=%s, note_base=%s delay_limit=%s',
+                         channel, note_base, delay_limit)
+        self.__log.debug('note_n=%s', note_n)
+
+        # load midi_file
+        midi = mido.MidiFile(midi_file)
+        self.__log.debug('ticks_per_beet=%s', midi.ticks_per_beat)
 
         # 1st step of parsing
-        midi_data0 = self.parse0(self._midi)
+        midi_data0 = self.parse0(midi)
 
         # get channel pairs
         midi_channel = []
@@ -404,20 +413,26 @@ class MusicBoxMidi:
         for i, d in enumerate(midi_data1):
             self.__log.debug('%s: %s', i, d)
 
-        if base is None:
-            base  = self.best_base(midi_data1, full_midi=full_midi)
-            self.__log.info('base=%s (selected automatically)', base)
+        if note_base is None:
+            note_base  = self.best_note_base(midi_data1, note_n=note_n)
+            self.__log.info('note_base=%s (selected automatically)',
+                            note_base)
 
         # make ``music_data``
-        music_data = self.mk_music_data(midi_data1, base,
-                                        full_midi=full_midi)
+        music_data = self.mk_music_data(midi_data1, note_base,
+                                        note_n=note_n)
 
         # join ``ch_list`` in ``music_data``
-        music_data2 = self.join_ch_list(music_data, delay_limit)        
+        music_data2 = self.join_ch_list(music_data, delay_limit)
+
+        if music_data2[0]['delay'] > 2000:
+            music_data2[0]['delay'] = 2000
+
         for i, d in enumerate(music_data2):
             self.__log.debug('%6d: %s', i, d)
 
         self.__log.info('midi_channel=%s', midi_channel)
+        self.__log.info('selectied channel=%s', channel)
 
         return music_data2
 
@@ -433,9 +448,9 @@ class SampleApp:
     """
     __log = get_logger(__name__, False)
 
-    def __init__(self, midi_file, base, channel=[],
+    def __init__(self, midi_file, note_base, channel=[],
                  delay_limit=MusicBoxMidi.DEF_DELAY_LIMIT,
-                 full_midi=False,
+                 note_n=0,
                  debug=False):
         """constructor
 
@@ -443,37 +458,41 @@ class SampleApp:
         ----------
         midi_file: str
             file name of MIDI file
-        base: int
+        note_base: int
             note base
         channel: list of int
             MIDI channel
         delay_limit: int
             delay limit
+        note_n: int
+            number of available notes
         """
         self._dbg = debug
         __class__.__log = get_logger(__class__.__name__, self._dbg)
         self.__log.debug('midi_file=%s', midi_file)
-        self.__log.debug('base=%s', base)
+        self.__log.debug('note_base=%s', note_base)
         self.__log.debug('channel=%s', channel)
         self.__log.debug('delay_limit=%s', delay_limit)
-        self.__log.debug('full_midi=%s', full_midi)
+        self.__log.debug('note_n=%s', note_n)
 
         self._midi_file = midi_file
-        self._base = base
+        self._note_base = note_base
         self._channel = channel
         self._delay_limit = delay_limit
-        self._full_midi = full_midi
+        self._note_n = note_n
 
-        self._parser = MusicBoxMidi(self._midi_file, debug=self._dbg)
+        self._parser = MusicBoxMidi(debug=self._dbg)
 
     def main(self):
         """ main routine
         """
         self.__log.debug('')
 
-        music_data = self._parser.parse(self._channel,
-                                        self._base, self._delay_limit,
-                                        self._full_midi)
+        music_data = self._parser.parse(self._midi_file,
+                                        self._channel,
+                                        self._note_base,
+                                        self._delay_limit,
+                                        self._note_n)
         print('music_data = [')
         for i, d in enumerate(music_data):
             print('  %s' % (d), end='')
@@ -504,29 +523,27 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 MusicBoxMidi sample program
 ''')
 @click.argument('midi_file', type=click.Path(exists=True))
-@click.option('--base', '-b', 'base', type=int, default=None,
+@click.option('--note_base', '-b', 'note_base', type=int, default=None,
               help='note base')
 @click.option('--channel', '-c', 'channel', type=int, multiple=True,
               help='MIDI channel')
 @click.option('--delay_limit', '-dl', 'delay_limit', type=int,
               default=MusicBoxMidi.DEF_DELAY_LIMIT,
               help='delay limit')
-@click.option('--full_midi', '-f', 'full_midi', is_flag=True,
-              default=False,
-              help='Full MIDI mode')
+@click.option('--note_n', '-n', 'note_n', type=int, default=0,
+              help='number of available notes')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(midi_file, base, channel, delay_limit, full_midi, debug):
+def main(midi_file, note_base, channel, delay_limit, note_n, debug):
     """サンプル起動用メイン関数
     """
     __log = get_logger(__name__, debug)
     __log.debug('midi_file=%s', midi_file)
-    __log.debug('base=%s, channel=%s', base, channel)
+    __log.debug('note_base=%s, channel=%s', note_base, channel)
     __log.debug('delay_limit=%s', delay_limit)
-    __log.debug('full_midi=%s', full_midi)
+    __log.debug('note_n=%s', note_n)
 
-    app = SampleApp(midi_file, base, channel, delay_limit,
-                    full_midi,
+    app = SampleApp(midi_file, note_base, channel, delay_limit, note_n,
                     debug=debug)
     try:
         app.main()

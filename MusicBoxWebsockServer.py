@@ -106,15 +106,16 @@ class MusicBoxWebsockServer:
 
     __log = get_logger(__name__, False)
 
-    def __init__(self, wav_mode=False, wav2_mode=False,
+    def __init__(self,
+                 wav_mode=MusicBoxPlayer.WAVMODE_NONE,
                  host="0.0.0.0", port=DEF_PORT,
                  debug=False):
         """constructor
 
         Parameters
         ----------
-        wav_mode: bool
-            wav file mode flag
+        wav_mode: int
+            wav file mode
         host: str
             host
         port: int
@@ -123,16 +124,13 @@ class MusicBoxWebsockServer:
         self._dbg = debug
         __class__.__log = get_logger(__class__.__name__, self._dbg) # noqa
         self.__log.debug('wav_mode=%s', wav_mode)
-        self.__log.debug('wav2_mode=%s', wav2_mode)
         self.__log.debug('host:port=%s:%s', host, port)
 
         self._wav_mode = wav_mode
-        self._wav2_mode = wav2_mode
         self._port = port
         self._host = host
 
         self._player = MusicBoxPlayer(wav_mode=self._wav_mode,
-                                      wav2_mode=self._wav2_mode,
                                       debug=self._dbg)
 
         self._start_svr = websockets.serve(self.handle, host, port)
@@ -250,27 +248,25 @@ class SampleApp:
     __log = get_logger(__name__, False)
 
     def __init__(self, port=MusicBoxWebsockServer.DEF_PORT,
-                 wav_mode=False, wav2_mode=False, debug=False):
+                 wav_mode=MusicBoxPlayer.WAVMODE_NONE,
+                 debug=False):
         """constructor
 
         Parameters
         ----------
         port: int
             port number
-        wav_mode: bool
-            wav mode flag
+        wav_mode: int
+            wav mode
         """
         self._dbg = debug
         __class__.__log = get_logger(__class__.__name__, self._dbg) # noqa
         self.__log.debug('port=%s, wav_mode=%s', port, wav_mode)
-        self.__log.debug('wav2_mode=%s', wav2_mode)
 
         self._port = port
         self._wav_mode = wav_mode
-        self._wav2_mode = wav2_mode
 
         self._ws_svr = MusicBoxWebsockServer(wav_mode=self._wav_mode,
-                                             wav2_mode=self._wav2_mode,
                                              port=self._port,
                                              debug=self._dbg)
 
@@ -305,19 +301,23 @@ Description
 @click.option('--port', '-p', 'port', type=int,
               default=MusicBoxWebsockServer.DEF_PORT,
               help='port number')
-@click.option('--wav', '-w', 'wav', is_flag=True, default=False,
-              help='wav file mode')
-@click.option('--wav2', '-w2', 'wav2', is_flag=True, default=False,
-              help='wav file mode 2')
+@click.option('--wav', '-w', 'wav', type=int,
+              default=MusicBoxPlayer.WAVMODE_NONE,
+              help='wav file mode: %s, %s, %s, %s  default=%s' % (
+                  '0(MusicBox)',
+                  '1(simulate MusicBox)',
+                  '2(full MIDI)',
+                  '3(full MIDI, wave)',
+                  MusicBoxPlayer.WAVMODE_NONE))
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(port, wav, wav2, debug):
+def main(port, wav, debug):
     """サンプル起動用メイン関数
     """
     __log = get_logger(__name__, debug)
-    __log.debug('port=%s, wav=%s, wav2=%s', port, wav, wav2)
+    __log.debug('port=%s, wav=%s', port, wav)
 
-    app = SampleApp(port, wav, wav2, debug=debug)
+    app = SampleApp(port, wav, debug=debug)
     try:
         app.main()
     finally:
@@ -326,4 +326,4 @@ def main(port, wav, wav2, debug):
 
 
 if __name__ == '__main__':
-    main()  # noqa
+    main()

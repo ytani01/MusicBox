@@ -41,8 +41,6 @@ import time
 
 from MusicBoxMovement import MusicBoxMovement, MusicBoxMovementWavFile
 from MusicBoxMovement import MusicBoxMovementWavFileFull
-from MusicBoxPaperTape import MusicBoxPaperTape
-
 from MyLogger import get_logger
 
 
@@ -89,6 +87,11 @@ class MusicBoxPlayer:
     ch_n: int
         number of channels
     """
+    WAVMODE_NONE = 0
+    WAVMODE_MIDI = 1
+    WAVMODE_PIANO = 2
+    WAVMODE_WAVE = 3
+
     DEF_DELAY = 500  # msec
 
     ROTATION_SPEED = 10
@@ -97,8 +100,7 @@ class MusicBoxPlayer:
     _log = get_logger(__name__, False)
 
     def __init__(self,
-                 wav_mode=False,
-                 wav2_mode=False,
+                 wav_mode=WAVMODE_NONE,
                  rotation_speed=ROTATION_SPEED,
                  rotation_gpio=ROTATION_GPIO,
                  debug=False):
@@ -107,8 +109,8 @@ class MusicBoxPlayer:
 
         Parameters
         ----------
-        wav_mode: bool
-            wav-mode flag
+        wav_mode: int
+            Wav File mode
         rotation_speed: int
             speed of rotation motor (0 .. 10)
             0: stop rotation motor
@@ -122,7 +124,6 @@ class MusicBoxPlayer:
         self._log.debug('rotation_gpio=%s', rotation_gpio)
 
         self._wav_mode = wav_mode
-        self._wav2_mode = wav2_mode
         self._rotation_speed = rotation_speed
         self._rotation_gpio = rotation_gpio
 
@@ -133,14 +134,25 @@ class MusicBoxPlayer:
         self._music_active = False
         self._music_th = None
 
-        if self._wav2_mode:
-            self._movement = MusicBoxMovementWavFileFull(debug=self._dbg)
-        elif self._wav_mode:
-            self._movement = MusicBoxMovementWavFile(debug=self._dbg)
-        else:
+        if self._wav_mode == self.WAVMODE_NONE:
             self._movement = MusicBoxMovement(
                 self._rotation_gpio, self._rotation_speed,
                 debug=self._dbg)
+
+        elif self._wav_mode == self.WAVMODE_MIDI:
+            self._movement = MusicBoxMovementWavFile(debug=self._dbg)
+
+        elif self._wav_mode == self.WAVMODE_PIANO:
+            self._movement = MusicBoxMovementWavFileFull(
+                wav_dir='./wav', wav_prefix='39', debug=self._dbg)
+
+        elif self._wav_mode == self.WAVMODE_WAVE:
+            self._movement = MusicBoxMovementWavFileFull(
+                wav_dir='./note_wav', wav_prefix='note', debug=self._dbg)
+
+        else:
+            msg = 'invalid wav_mode: %s' % self._wav_mode
+            raise ValueError(msg)
 
         # public valiables
         self.ch_n = self._movement.ch_n
@@ -179,8 +191,8 @@ class MusicBoxPlayer:
 
         self._movement.single_play(ch_list)
 
-    def single_play_and_sleep(self, ch_list=None, delay=None):
-        """ single play and sleep
+    def sleep_and_single_play(self, ch_list=None, delay=None):
+        """ sleep and single play
         Parameters
         ----------
         ch_list: list of int
@@ -188,14 +200,14 @@ class MusicBoxPlayer:
         delay: int
             msec
 
-        ch_list=[1,2,3], delay=500}:  play and sleep 500ms
-        ch_list=[1,2,3], delay=None}: play and sleep (default delay)
+        ch_list=[1,2,3], delay=500}:  sleep 500ms and play
+        ch_list=[1,2,3], delay=None}: sleep(default delay) and play
         ch_list=[],      delay=None}: sleep only (default delay)
         ch_list=None,    delay=300}:  change default delay, no delay
         ch_list=None,    delay=None}: do nothing (no delay)
 
         """
-        self._log.info('ch=list=%s, delay=%.1f', ch_list, delay)
+        self._log.debug('delay=%.2f, ch=list=%s', delay, ch_list)
 
         if ch_list is None:
             if delay is None:
@@ -211,7 +223,7 @@ class MusicBoxPlayer:
             delay = self._def_delay
             self._log.debug('delay=%s (default)', delay)
 
-        self._log.debug('sleep %s msec', delay)
+        self._log.debug('sleep %.2f msec', delay)
         time.sleep(delay / 1000)
 
         self.single_play(ch_list)
@@ -242,9 +254,10 @@ class MusicBoxPlayer:
         """
         self._log.debug('music_data=%s', music_data)
 
+        self._music_data = copy.deepcopy(music_data)
+
         self.music_stop()
 
-        self._music_data = copy.deepcopy(music_data)
         if self._music_data_i >= len(self._music_data):
             self._music_data_i = 0
 
@@ -279,7 +292,7 @@ class MusicBoxPlayer:
                     self._music_data):
 
                 data1 = self._music_data[self._music_data_i]
-                self.single_play_and_sleep(data1['ch'], data1['delay'])
+                self.sleep_and_single_play(data1['ch'], data1['delay'])
                 self._music_data_i += 1
 
             if self._music_data_i >= len(self._music_data):
@@ -317,9 +330,22 @@ class MusicBoxPlayer:
 
         self._log.debug('done: _music_th=%s', self._music_th)
 
+    def music_pause(self):
+        """ pause music
+        """
+        self._log.debug('')
+
+        if type(self._music_th) == threading.Thread:
+            self._music_active = False
+
+            while self._music_th.is_alive():
+                self._log.warning('waiting music_th to end')
+                self._music_th.join(timeout=1)
+
+        self._log.debug('done: music_data_i=%s', self._music_data_i)
+
     def music_wait(self):
         """ wait music to end
-        
         TBD
 
         """
@@ -331,17 +357,6 @@ class MusicBoxPlayer:
                 time.sleep(0.5)
 
         self._log.debug('done')
-
-    def music_pause(self):
-        """ pause music
-        """
-        self._log.debug('')
-
-        if type(self._music_th) == threading.Thread:
-            self._music_active = False
-            self._music_th.join()
-
-        self._log.debug('done: music_data_i=%s', self._music_data_i)
 
     def music_seek(self, idx=0):
         """ seek music
@@ -435,6 +450,10 @@ class MusicBoxPlayer:
 # --- 以下、サンプル ---
 
 
+from MusicBoxMidi import MusicBoxMidi
+from MusicBoxPaperTape import MusicBoxPaperTape
+
+
 class SampleApp:
     """ Sample application class
 
@@ -454,11 +473,9 @@ class SampleApp:
 
     _log = get_logger(__name__, False)
 
-    def __init__(self, infile,
+    def __init__(self, infile, channel, file_type,
                  wav_mode,
-                 wav2_mode,
-                 rotation_speed,
-                 rotation_gpio,
+                 rotation_speed, rotation_gpio,
                  debug=False):
         """ Constructor
 
@@ -466,8 +483,14 @@ class SampleApp:
         ----------
         infile: list of str
             入力ファイル
-        wav_mode: bool
-            wav-mode flag
+        channel: list of int
+            MIDI channel
+        file_type: str
+            file type: 'paper_tape', 'midi'
+        wav_mode: int
+            0: Music Box
+            1: Wav File mode (simulate Music Box)
+            2: Wav File mode (Full MIDI)
         rotation_speed: int
             speed of rotation motor
         rotation_gpio: list of int
@@ -475,15 +498,16 @@ class SampleApp:
         """
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('infile=%s', infile)
+        self._log.debug('infile=%s, file_type=%s', infile, file_type)
+        self._log.debug('channel=%s', channel)
         self._log.debug('wav_mode=%s', wav_mode)
-        self._log.debug('wav2_mode=%s', wav2_mode)
         self._log.debug('rotation_speed=%s', rotation_speed)
         self._log.debug('rotation_gpio=%s', rotation_gpio)
 
         self._infile = infile
+        self._channel = channel
+        self._file_type = file_type
         self._wav_mode = wav_mode
-        self._wav2_mode = wav2_mode
         self._rotation_speed = rotation_speed
         self._rotation_gpio = rotation_gpio
 
@@ -492,7 +516,7 @@ class SampleApp:
             self._cur_file = 0
 
         self._player = MusicBoxPlayer(
-            self._wav_mode, self._wav2_mode,
+            self._wav_mode,
             self._rotation_speed, self._rotation_gpio,
             debug=self._dbg)
 
@@ -565,6 +589,11 @@ class SampleApp:
                 self._player.music_start()
                 continue
 
+            if line1[0] not in '0123456789':
+                msg = 'invalid command: %s' % line1
+                self._log.error(msg)
+                continue
+
             ch_str = line1.replace(' ', '').split(',')
             self._log.debug('ch_str=%s', ch_str)
 
@@ -601,10 +630,29 @@ class SampleApp:
         """
         self._log.debug('infile=%s', infile)
 
-        parser = MusicBoxPaperTape(debug=False)
-        music_data = parser.parse(infile)
+        parser = None
+        if self._file_type == 'paper_tape':
+            parser = MusicBoxPaperTape(debug=False)
+            music_data = parser.parse(infile)
+
+        if self._file_type == 'midi':
+            parser = MusicBoxMidi(debug=self._dbg)
+
+            note_n = 0
+            if self._wav_mode == MusicBoxPlayer.WAVMODE_PIANO:
+                note_n = 88
+            if self._wav_mode == MusicBoxPlayer.WAVMODE_WAVE:
+                note_n = 128
+
+            music_data = parser.parse(infile,
+                                      channel=self._channel,
+                                      note_n=note_n)
+
+        if parser is None:
+            err = 'invalid file_type: %s' % self._file_type
+            raise ValueError(err)
+
         self._player.music_load(music_data, start_flag=False)
-        parser.end()
 
 
 import click
@@ -615,10 +663,18 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 MusicBoxPlayer class test program (interactive demo)
 ''')
 @click.argument('infile', type=click.Path(exists=True), nargs=-1)
-@click.option('--wav', '-w', 'wav', is_flag=True, default=False,
-              help='wav file mode: default=OFF')
-@click.option('--wav2', '-w2', 'wav2', is_flag=True, default=False,
-              help='wav file mode 2: default=OFF')
+@click.option('--channel', '-c', 'channel', type=int, multiple=True,
+              help='MIDI channel')
+@click.option('--file_type', '-t', 'file_type', type=str, default='midi',
+              help='music file type: midi, paper_tape  default=midi')
+@click.option('--wav', '-w', 'wav', type=int,
+              default=MusicBoxPlayer.WAVMODE_MIDI,
+              help='wav file mode: %s, %s, %s, %s  default=%s' % (
+                  '0(Real Robot MusicBox)',
+                  '1(simulate MusicBox)',
+                  '2(Piano)',
+                  '3(full MIDI)',
+                  MusicBoxPlayer.WAVMODE_MIDI))
 @click.option('--speed', '-s', 'speed', type=int,
               default=MusicBoxPlayer.ROTATION_SPEED,
               help='rotation speed (0: stop): default=%s' %
@@ -641,17 +697,18 @@ MusicBoxPlayer class test program (interactive demo)
               MusicBoxPlayer.ROTATION_GPIO[3])
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(infile, wav, wav2, speed, pin1, pin2, pin3, pin4, debug):
+def main(infile, channel, file_type, wav,
+         speed, pin1, pin2, pin3, pin4, debug):
     """サンプル起動用メイン関数
     """
     _log = get_logger(__name__, debug)
-    _log.debug('infile=%s', infile)
-    _log.debug('wav=%s, wav2=%s', wav, wav2)
+    _log.debug('infile=%s, file_type=%s', infile, file_type)
+    _log.debug('wav=%s', wav)
     _log.debug('speed=%s', speed)
     _log.debug('pins:%s', (pin1, pin2, pin3, pin4))
 
     app = SampleApp(
-        infile, wav, wav2, speed, (pin1, pin2, pin3, pin4),
+        infile, channel, file_type, wav, speed, (pin1, pin2, pin3, pin4),
         debug=debug)
     try:
         app.main()

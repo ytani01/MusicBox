@@ -115,10 +115,22 @@ $ pip install -r requirements.txt
 ```
 
 Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合は、
-``-w``オプションをつける。
+``-w N``オプションをつける。
+(N = 1, 2, 3)
 
+Music Boxをシミュレートする
 ```
-(env1)$ ./MusicBoxWebsockServer.py -w &
+(env1)$ ./MusicBoxWebsockServer.py -w 1 &
+```
+
+ピアノをシミュレートする (88音階)
+```
+(env1)$ ./MusicBoxWebsockServer.py -w 2 &
+```
+
+sin波のサンプル音でシミュレートする (128音階)
+```
+(env1)$ ./MusicBoxWebsockServer.py -w 3 &
 ```
 
 ### 2.3 Client side: MusicBoxWebsockClinet.py

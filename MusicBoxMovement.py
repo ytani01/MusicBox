@@ -326,26 +326,36 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
     DEF_WAV_DIR = './wav'
 
     WAV_FILE_PREFIX = 'ch'
-    WAV_FILE_SUFFIX = 'wav'
+    WAV_FILE_SUFFIX = '.wav'
 
     SERVO_DELAY = 350  # msec
 
-    def __init__(self, wav_dir=DEF_WAV_DIR, debug=False):
+    def __init__(self, wav_dir=DEF_WAV_DIR,
+                 wav_prefix=WAV_FILE_PREFIX,
+                 wav_suffix=WAV_FILE_SUFFIX,
+                 debug=False):
         """ Constructor
 
         Parameters
         ----------
         wav_dir: str
             directory name
+        wav_prefix: str
+        wav_suffix: str
         """
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('wav_dir=%s', wav_dir)
+        self._log.debug('wav_prefix=%s, wav_suffix=%s',
+                        wav_prefix, wav_suffix)
 
         self._wav_dir = wav_dir
+        self._wav_prefix = wav_prefix
+        self._wav_suffix = wav_suffix
 
         pygame.mixer.init()
-        self._sound = self.load_wav(self._wav_dir)
+        self._sound = self.load_wav(self._wav_dir,
+                                    self._wav_prefix, self._wav_suffix)
 
         super().__init__(ch_n=len(self._sound), debug=self._dbg)
 
@@ -385,20 +395,15 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
                 self._log.warning('ch=%s: ignored', ch)
                 continue
 
-            self._sound[ch].set_volume(0.5)
-            self._sound[ch].play(fade_ms=10)
+            self._sound[ch].set_volume(0.2)  # 音割れ軽減
+            self._sound[ch].play(fade_ms=50) # ブツブツ音軽減
             # threading.Thread(target=self._sound[ch].play).start()
-
-        """
-        # simulate servo delay
-        self._log.debug('sleep %s sec (simulate servo delay)',
-                        self.SERVO_DELAY)
-        time.sleep(self.SERVO_DELAY / 1000)
-        """
 
         self._log.debug('done')
 
-    def load_wav(self, wav_dir=DEF_WAV_DIR):
+    def load_wav(self, wav_dir=DEF_WAV_DIR,
+                 wav_prefix=WAV_FILE_PREFIX,
+                 wav_suffix=WAV_FILE_SUFFIX):
         """
         load wav files
 
@@ -406,14 +411,17 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
         ----------
         wav_dir: str
             directory name
+        wav_prefix: str
+        wav_suffix: str
         """
         self._log.debug('wav_dir=%s', wav_dir)
+        self._log.debug('wav_prefix=%s, wav_suffix=%s',
+                        wav_prefix, wav_suffix)
 
-        glob_pattern = "%s/%s*.%s" % (
-            wav_dir,
-            self.WAV_FILE_PREFIX,
-            self.WAV_FILE_SUFFIX)
+        glob_pattern = "%s/%s*%s" % (
+            wav_dir, wav_prefix, wav_suffix)
         self._log.debug('glob_pattern=%s', glob_pattern)
+
         wav_files = sorted(glob.glob(glob_pattern))
         self._log.debug('wav_files=%s', wav_files)
 
@@ -423,9 +431,9 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
 class MusicBoxMovementWavFileFull(MusicBoxMovementWavFile):
     """
     """
-    _log = get_logger(__name__, False)
-
-    WAV_FILE_PREFIX = '39'
+    DEF_WAV_DIR = './note_wav'
+    WAV_FILE_PREFIX = 'note'
+    WAV_FILE_SUFFIX = '.wav'
 
 
 # --- 以下、サンプル ---
