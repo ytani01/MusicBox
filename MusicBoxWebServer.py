@@ -16,8 +16,8 @@ $ ./MusicBoxWebServer.py -h
 
 """
 __author__ = 'Yoichi Tanibayashi'
-__date__   = '2020'
-__version__ = '0.01'
+__date__   = '2020/12'
+__version__ = '0.1'
 
 import os
 from pathlib import Path
@@ -47,13 +47,13 @@ class MusicBoxWebHandler(tornado.web.RequestHandler):
         self.__log.debug('')
 
         self.render("index.html",
-                    title="Music Box Calibration",
+                    title="Robot Music Box Calibration",
                     author="FabLab Kannai",
                     version=__version__,
-                    ch_list1=['%02d' % (i) for i in range(0,
-                                                          self.CH_CENTER)],
-                    ch_list2=['%02d' % (i) for i in range(self.CH_CENTER,
-                                                          self.CH_N)])
+                    ch_list1=['%02d' % (i) for i in range(
+                        0, self.CH_CENTER)],
+                    ch_list2=['%02d' % (i) for i in range(
+                        self.CH_CENTER, self.CH_N)])
 
 
 class MusicBoxWebServer:

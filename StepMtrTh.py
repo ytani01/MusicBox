@@ -1,1 +1,1 @@
-../music_box/src/motor_drivers/StepMtrTh.py
+../StepperMotor/StepMtrTh.py
