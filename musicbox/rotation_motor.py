@@ -7,11 +7,11 @@ Rotation Motor driver for Music Box
 ### Architecture
 
  ---------------
-| RotationMotor |
-|---------------|
-|  StepMtrTh    |
-|---------------|
-|   StepMtr     |
+| RotationMotor |-----> This module
+|===============|
+|  StepMtrTh    |--+
+|---------------|  +--> `stepmtr`
+|   StepMtr     |--+
  ---------------
 
 """

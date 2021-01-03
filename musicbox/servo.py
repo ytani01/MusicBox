@@ -11,11 +11,11 @@ Rotation Motor driver for Music Box
 ### Architecture
 
  ---------------
-|    Servo      |
-|---------------|
-| ServoPCA9685  |
-|---------------|
-| pigpioPCA9685 |
+|    Servo      |-----> This module
+|===============|
+| ServoPCA9685  |--
+|---------------|  |--> `servoPCA9685`
+| pigpioPCA9685 |--
  ---------------
 
 """
