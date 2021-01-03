@@ -30,6 +30,7 @@ if [ -z $VIRTUAL_ENV ]; then
         echo
         exit 1
     fi
+    echo "### activate venv"
     . ../bin/activate
 fi
 cd $VIRTUAL_ENV
