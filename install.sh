@@ -7,7 +7,7 @@ MYDIR=`dirname $0`
 
 MIDILIB_PKG_NAME="midilib"
 MIDILIB_DIR="MIDI-lib"
-MIDILIB_GIT="https://github.com/ytani01/${MIDIRLIB_DIR}.git"
+MIDILIB_GIT="https://github.com/ytani01/${MIDILIB_DIR}.git"
 
 STEPMTR_PKG_NAME="stepmtr"
 STEPMTR_DIR="StepperMotor"
@@ -33,7 +33,7 @@ if [ -z $VIRTUAL_ENV ]; then
     . ../bin/activate
 fi
 cd $VIRTUAL_ENV
-echo '[' `pwd` ']'
+echo [ `pwd` ]
 
 #
 # update pip
@@ -45,12 +45,15 @@ pip -V
 #
 # MIDI-lib
 #
+cd $VIRTUAL_VENV
+echo [ `pwd` ]
+
 pip show $MIDILIB_PKG_NAME
 if [ $? -ne 0 ]; then
     echo "installing $MIDILIB_PKG_NAME .."
     
     if [ ! -d $MIDILIB_DIR ]; then
-        git clone $MIDILIB_GIT
+        git clone $MIDILIB_GIT || exit 1
     fi
 
     cd $MIDILIB_DIR
