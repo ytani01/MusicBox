@@ -36,7 +36,7 @@ cd $VIRTUAL_ENV
 echo [ `pwd` ]
 
 #
-# update pip
+# update pip, setuptools, and wheel
 #
 pip install -U pip setuptools wheel
 hash -r
