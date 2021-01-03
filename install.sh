@@ -66,7 +66,7 @@ fi
 #
 # StepperMotor
 #
-cd $VIRTUAL_VENV
+cd $VIRTUAL_ENV
 echo [ `pwd` ]
 
 pip show $STEPMTR_PKG_NAME
