@@ -47,7 +47,7 @@ pip -V
 #
 # MIDI-lib
 #
-cd $VIRTUAL_VENV
+cd $VIRTUAL_ENV
 echo [ `pwd` ]
 
 pip show $MIDILIB_PKG_NAME
