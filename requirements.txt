@@ -5,3 +5,4 @@ websockets
 websocket-client
 tornado
 click
+midilib
