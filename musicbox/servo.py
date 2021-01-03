@@ -1,34 +1,36 @@
-#!/usr/bin/env python3
 #
-# (c) 2020 FabLab Kannai
+# (c) 2021 FabLab Kannai
 #
 """
 Rotation Motor driver for Music Box
 
+### config file
 
-### Simple Usage (1): single thread
-------------------------------------------------------------
-from MusicBoxServo import MusicBoxServo
- :
-servo = MusicBoxServo()
- :
-servo.tap([0, 2, 4])  # list of channel numbers
- :
-servo.end()
-------------------------------------------------------------
+
+
+### Architecture
+
+ ---------------
+|    Servo      |
+|---------------|
+| ServoPCA9685  |
+|---------------|
+| pigpioPCA9685 |
+ ---------------
+
 """
 __author__ = 'FabLab Kannai'
-__date__   = '2020/12'
+__date__   = '2021/01'
 
 import os
-import pigpio
 import time
+import pigpio
 import threading
-from ServoPCA9685 import ServoPCA9685
-from MyLogger import get_logger
+from servoPCA9685 import Servo as ServoPCA9685
+from .my_logger import get_logger
 
 
-class MusicBoxServo:
+class Servo:
     """
     Servo Motor for Music Box
 
@@ -402,130 +404,3 @@ class MusicBoxServo:
 
         for ch in ch_list:
             self.pull1(ch)
-
-
-""" 以下、サンプル・コード """
-
-
-class Sample:
-    """サンプル
-    """
-    __log = get_logger(__name__, False)
-
-    def __init__(self, conf_file,
-                 push_interval, pull_interval,
-                 servo_n,
-                 debug=False):
-        self._dbg = debug
-        __class__.__log = get_logger(__class__.__name__, self._dbg)
-        self.__log.debug('conf_file=%s', conf_file)
-        self.__log.debug('push_interval=%s, off_interaval=%s',
-                         push_interval, pull_interval)
-        self.__log.debug('servo_n=%s', servo_n)
-
-        self.servo = MusicBoxServo(conf_file, push_interval, pull_interval,
-                                   servo_n,
-                                   debug=self._dbg)
-
-    def main(self):
-        self.__log.debug('')
-
-        prompt = '[0-%s ..|sleep sec]> ' % (self.servo.servo_n - 1)
-
-        while True:
-            try:
-                line1 = input(prompt)
-            except EOFError:
-                self.__log.info('EOF')
-                break
-            except Exception as ex:
-                self.__log.error('%s:%s', type(ex), ex)
-                continue
-            self.__log.debug('line1=%a', line1)
-
-            if len(line1) == 0:
-                continue
-
-            ch_str = line1.split()
-            self.__log.debug('ch_str=%s', ch_str)
-
-            if ch_str[0] in ('sleep', 's'):
-                try:
-                    sleep_sec = float(ch_str[1])
-                except ValueError as ex:
-                    self.__log.error('%s: %s: Invalid sleep_sec',
-                                     type(ex).__name__, ex)
-                    continue
-                except IndexError:
-                    self.__log.error('specify sleep_sec')
-                    continue
-
-                try:
-                    time.sleep(sleep_sec)
-                except ValueError as ex:
-                    self.__log.error('%s: %s', type(ex).__name__, ex)
-
-                continue
-
-            try:
-                ch = [int(s) for s in ch_str]
-            except Exception as ex:
-                self.__log.error('%s: %s .. ignored', type(ex), ex)
-                continue
-
-            self.__log.debug('ch=%s', ch)
-
-            try:
-                self.servo.tap(ch)
-            except ValueError as ex:
-                self.__log.error("%s: %s .. ignored", type(ex), ex)
-
-    def end(self):
-        self.__log.debug('')
-        self.servo.end()
-
-
-import click
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-
-
-@click.command(context_settings=CONTEXT_SETTINGS, help="""
-MusicBoxServo class test program
-""")
-@click.option('--conf', '-f', '-c', 'conf_file',
-              type=click.Path(exists=True),
-              default=MusicBoxServo.DEF_CONFFILE,
-              help='configuration file')
-@click.option('--push_interval', '-p', 'push_interval', type=float,
-              default=MusicBoxServo.DEF_PUSH_INTERVAL,
-              help='on interval[sec]')
-@click.option('--pull_interval', '-P', 'pull_interval', type=float,
-              default=MusicBoxServo.DEF_PULL_INTERVAL,
-              help='off interval[sec]')
-@click.option('--servo_n', '-s', 'servo_n', type=int,
-              default=MusicBoxServo.DEF_SERVO_N,
-              help='number of servo')
-@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
-              help='debug flag')
-def main(conf_file, push_interval, pull_interval, servo_n, debug):
-    """ サンプル起動用メイン関数
-    """
-    log = get_logger(__name__, debug)
-    log.debug('conf_file=%s', conf_file)
-    log.debug('push_interval=%s, pull_interval=%s',
-              push_interval, pull_interval)
-    log.debug('servo_n=%s', servo_n)
-
-    app = Sample(conf_file, push_interval, pull_interval,
-                 servo_n, debug=debug)
-
-    try:
-        app.main()
-    finally:
-        log.debug('finally')
-        app.end()
-        log.info('end')
-
-
-if __name__ == '__main__':
-    main()

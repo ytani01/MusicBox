@@ -9,5 +9,6 @@ __date__ = '2021/01'
 
 from .midi import Parser
 from .rotation_motor import RotationMotor
+from .servo import Servo
 
-__all__ = ['Parser', 'RotationMotor']
+__all__ = ['Parser', 'RotationMotor', 'Servo']

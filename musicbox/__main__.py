@@ -6,7 +6,8 @@ main for midi_tools
 """
 import json
 import click
-from . import Parser, RotationMotor
+import cuilib
+from . import Parser, RotationMotor, Servo
 from .my_logger import get_logger
 
 __author__ = 'Yoichi Tanibayashi'
@@ -91,6 +92,61 @@ class RotationMotorApp:
         self.mtr.end()
 
 
+class ServoMotorApp:
+    """ ServoMotorApp """
+
+    SERVO_KEY = '12345678qwertyu'
+    QUIT_KEY = ['KEY_ESCAPE', 'KEY_ENTER', '\x04']
+
+    def __init__(self, push_interval, pull_interval, debug=False):
+        """ Constructor """
+        self._dbg = debug
+        self.__log = get_logger(__class__.__name__, self._dbg)
+        self.__log.debug('push/pull_interval=%s',
+                         (push_interval, pull_interval))
+
+        self._servo = Servo(push_interval=push_interval,
+                            pull_interval=pull_interval,
+                            debug=self._dbg)
+
+        self._cui = cuilib.Cui(debug=self._dbg)
+
+        self._cui.add(self.SERVO_KEY, self.tap, 'tap')
+        self._cui.add(self.QUIT_KEY, self.quit, 'quit')
+
+    def tap(self, key_sym):
+        """
+        tap
+        """
+        self.__log.debug('keysym=%s', key_sym)
+
+        ch = self.SERVO_KEY.index(key_sym)
+        print('ch=%s' % (ch))
+
+        self._servo.tap([ch])
+
+    def quit(self, key_sym):
+        """ quit """
+        self.__log.debug('keysym=%s', key_sym)
+        print('*** Quit ***')
+        self._cui.end()
+
+    def main(self):
+        """ main """
+        self.__log.debug('')
+
+        self._cui.start()
+        print('*** Start ***')
+        print('%s to quit' % (self.QUIT_KEY))
+
+        self._cui.join()
+
+    def end(self):
+        """ end """
+        self.__log.debug('')
+        self._servo.end()
+
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
@@ -151,6 +207,33 @@ def rotation(pin1, pin2, pin3, pin4, debug):
     log.debug('pins=%s', (pin1, pin2, pin3, pin4))
 
     app = RotationMotorApp(pin1, pin2, pin3, pin4, debug=debug)
+
+    try:
+        app.main()
+    finally:
+        log.debug('finally')
+        app.end()
+        log.info('end')
+
+
+@cli.command(context_settings=CONTEXT_SETTINGS, help="""
+Servo motor test
+""")
+@click.option('--push', '-p', 'push_interval', type=float,
+              default=Servo.DEF_PUSH_INTERVAL,
+              help='push interaval, default=%s sec' % (
+                  Servo.DEF_PUSH_INTERVAL))
+@click.option('--pull', '-P', 'pull_interval', type=float,
+              default=Servo.DEF_PULL_INTERVAL,
+              help='pull interaval, default=%s sec' % (
+                  Servo.DEF_PULL_INTERVAL))
+@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
+              help='debug flag')
+def servo(push_interval, pull_interval, debug):
+    """ servo_motor """
+    log = get_logger(__name__, debug)
+
+    app = ServoMotorApp(push_interval, pull_interval, debug=debug)
 
     try:
         app.main()
