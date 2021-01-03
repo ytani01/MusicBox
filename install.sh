@@ -38,6 +38,7 @@ echo [ `pwd` ]
 #
 # update pip, setuptools, and wheel
 #
+echo "### insall/update pip etc. .."
 pip install -U pip setuptools wheel
 hash -r
 pip -V
@@ -50,12 +51,37 @@ echo [ `pwd` ]
 
 pip show $MIDILIB_PKG_NAME
 if [ $? -ne 0 ]; then
-    echo "installing $MIDILIB_PKG_NAME .."
+    echo "### installing $MIDILIB_PKG_NAME .."
     
     if [ ! -d $MIDILIB_DIR ]; then
         git clone $MIDILIB_GIT || exit 1
     fi
 
     cd $MIDILIB_DIR
+    echo [ `pwd` ]
     pip install .
 fi
+
+#
+# StepperMotor
+#
+cd $VIRTUAL_VENV
+echo [ `pwd` ]
+
+pip show $STEPMTR_PKG_NAME
+if [ $? -ne 0 ]; then
+    echo "### installing $STEPMTR_PKG_NAME .."
+
+    if [ ! -d $STEPMTR_DIR ]; then
+        git clone $STEPMTR_GIT || exit 1
+    fi
+
+    cd $STEPMTR_DIR
+    echo [ `pwd` ]
+    pip install .
+fi
+
+#
+#
+#
+
