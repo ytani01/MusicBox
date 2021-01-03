@@ -62,7 +62,7 @@ class RotationMotorApp:
             prompt = '[0 <= speed <= 10 | NULL:end] '
             try:
                 line1 = input(prompt)
-            except EOFError as ex:
+            except EOFError:
                 print('<EOF>')
                 break
             except Exception as ex:
@@ -180,7 +180,7 @@ class MovementApp:
                                       push_interval=push_interval,
                                       pull_interval=pull_interval,
                                       debug=self._dbg)
-           
+
         self._cui = cuilib.Cui(debug=self._dbg)
 
         self._cui.add(self.SERVO_KEY, self.single_play, 'single_play')
@@ -196,7 +196,7 @@ class MovementApp:
 
         if self._wav_mode == 2:
             ch += 69
-            
+
         print('ch=%s' % (ch))
 
         self._movement.single_play([ch])
@@ -212,7 +212,7 @@ class MovementApp:
         self.__log.debug('')
 
         self._movement.rotation_speed(self._rotation_speed)
-        
+
         self._cui.start()
         print('*** Start ***')
         print('%s to quit' % (self.QUIT_KEY))
