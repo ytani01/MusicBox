@@ -1,34 +1,28 @@
-#!/usr/bin/env python3
 #
 # (c) 2020 FabLab Kannai
 #
 """
 Rotation Motor driver for Music Box
 
+### Architecture
 
-Simple Usage
-----------------------------------------------------------------------
-from MusicBoxRotationMotor import MusicBoxRotationMotor
- :
-mtr = MusicBoxRotationMotor(pin1, pin2, pin3, pin4)
- :
-mtr.set_speed(9)  # 0 <= speed <= 10
- :
-mtr.set_speed(0)  # 0:stop
- :
-mtr.end()
-----------------------------------------------------------------------
+ ---------------
+| RotationMotor |
+|---------------|
+|  StepMtrTh    |
+|---------------|
+|   StepMtr     |
+ ---------------
+
 """
 __author__ = 'FabLab Kannai'
-__date__   = '2020/12'
+__date__   = '2021/01'
 
-from StepMtr import StepMtr
-from StepMtrTh import StepMtrTh
-
-from MyLogger import get_logger
+from stepmtr import StepMtr, StepMtrTh
+from .my_logger import get_logger
 
 
-class MusicBoxRotationMotor:
+class RotationMotor:
     """オルゴール回転モーター
     """
     SPEED2INTERVAL = (None,
@@ -44,7 +38,7 @@ class MusicBoxRotationMotor:
                       0.0015)
 
     def __init__(self, pin1, pin2, pin3, pin4, debug=False):
-        """コンストラクタ
+        """ Constructor
 
         Parameters
         ----------
@@ -152,35 +146,3 @@ class Sample:
     def end(self):
         self._log.debug('')
         self.mtr.end()
-
-
-import click
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-
-
-@click.command(context_settings=CONTEXT_SETTINGS, help="""
-""")
-@click.argument('pin1', type=int)
-@click.argument('pin2', type=int)
-@click.argument('pin3', type=int)
-@click.argument('pin4', type=int)
-@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
-              help='debug flag')
-def main(pin1, pin2, pin3, pin4, debug):
-    """サンプル起動用メイン関数
-    """
-    log = get_logger(__name__, debug)
-    log.debug('pins=%s', (pin1, pin2, pin3, pin4))
-
-    app = Sample(pin1, pin2, pin3, pin4, debug=debug)
-
-    try:
-        app.main()
-    finally:
-        log.debug('finally')
-        app.end()
-        log.info('end')
-
-
-if __name__ == '__main__':
-    main()

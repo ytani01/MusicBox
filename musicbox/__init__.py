@@ -8,5 +8,6 @@ __author__ = 'Yoichi Tanibayashi'
 __date__ = '2021/01'
 
 from .midi import Parser
+from .rotation_motor import RotationMotor
 
-__all__ = ['Parser']
+__all__ = ['Parser', 'RotationMotor']

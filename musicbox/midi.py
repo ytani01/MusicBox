@@ -23,7 +23,7 @@ class Parser:
     NOTE_BASE_MAX = 127 - NOTE_OFFSET[-1]
 
     def __init__(self, debug=False) -> None:
-        """ Constractor """
+        """ Constructor """
         self._dbg = debug
         self.__log = get_logger(self.__class__.__name__, self._dbg)
 
