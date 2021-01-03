@@ -38,7 +38,7 @@ echo [ `pwd` ]
 #
 # update pip
 #
-pip install -U pip
+pip install -U pip setuptools wheel
 hash -r
 pip -V
 
