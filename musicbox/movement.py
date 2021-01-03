@@ -1,72 +1,46 @@
-#!/usr/bin/env python3
 #
-# (c) 2020 Yoichi Tanibayashi
+# (c) 2021 Yoichi Tanibayashi
 #
 """
 Music Box movement class
 
-### For detail
-
-$ python3 -m pydoc MusicBoxMovement.MusicBoxMovement
-
-
 ### Class tree
 
-MusicBoxMovementBase
+MovementBase
  |
- +- MusicBoxMovement        : for servo motor
- +- MusicBoxMovementWavFile : for wav file
-
-
-### Simple usage
-
-============================================================
-from MusicBoxMovement import MusicBoxMovement
-
-movement = MusicBoxMovement()  # 初期設定
-
-# ローテーション・モーター始動
-#   複数のプログラム(プロセス、スレッド)で実行すると、
-#   正常に動作しないので注意
-#
-movement.rotation_speed(10)
-
-# 単発で音を鳴らす
-movement.single_play([0,2,4])
-
-movement.end()  # Call at the end of usage
-============================================================
+ +- Movement        : for servo motor
+ +- MovementWavFile : for wav file
 
 
 ### Module Architecture (server side)
 
-         ----------------------------------------------------
-        |                 MusicBoxWebsockServer              |
-        |---------------------------------------+------------|
-        |            MusicBoxPlayer             |            |
-        |---------------------------------------|            |
-This -->|           MusicBoxMovement            |            |
-        |---------------------------------------| websockets |
-        | MusicBoxServo | MusicBoxRotationMotor |            |
-        |---------------+-----------------------|            |
-        | ServoPCA9685  |     StepMtrTh         |            |
-        |---------------+-----------------------|            |
-        | pigpioPCA9685 |      StepMtr          |            |
-         ----------------------------------------------------
+         --------------------------------------------
+        |           MusicBoxWebsockServer            |
+        |-------------------------------+------------|
+        |          MusicBoxPlayer       |            |
+        |-------------------------------|            |
+This -->|            Movement           |            |
+        |-------------------------------| websockets |
+        |     Servo     | RotationMotor |            |
+        |---------------+---------------|            |
+        | ServoPCA9685  |  StepMtrTh    |            |
+        |---------------+---------------|            |
+        | pigpioPCA9685 |   StepMtr     |            |
+         --------------------------------------------
 
 """
 __author__ = 'Yoichi Tanibayashi'
-__date__   = '2020'
+__date__   = '2021/01'
 
 import glob
 import threading
 import time
 import pygame
+from .my_logger import get_logger
+from . import RotationMotor, Servo
 
-from MyLogger import get_logger
 
-
-class MusicBoxMovementBase:
+class MovementBase:
     """
     Music Box movement base class
 
@@ -173,7 +147,7 @@ class MusicBoxMovementBase:
                         ch, on, pw_diff, tap, conf_file)
 
 
-class MusicBoxMovement(MusicBoxMovementBase):
+class Movement(MovementBase):
     """
     Music Box Movement Class
 
@@ -196,34 +170,40 @@ class MusicBoxMovement(MusicBoxMovementBase):
     def __init__(self,
                  rotation_gpio=ROTATION_GPIO,
                  rotation_speed=ROTATION_SPEED,
+                 push_interval=Servo.DEF_PUSH_INTERVAL,
+                 pull_interval=Servo.DEF_PULL_INTERVAL,
                  debug=False):
         """ Constructor
-        pin1, pin2, pin3, pin4: int
+
+        Parameters
+        ----------
+        rotation_gpio: list of int
             GPIO pin number of rotation motor (stepper motor)
         rotation_speed: int
             speed of rotation motor (0 .. 10)
             0: don't use rotation motor
+        push_interval, pull_interval: float
+            interval sec
         """
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('rotation_gpio=%s', rotation_gpio)
         self._log.debug('rotation_speed=%s', rotation_speed)
 
-        from MusicBoxRotationMotor import MusicBoxRotationMotor
-        from MusicBoxServo import MusicBoxServo
-
         # start rotation
-        self._mtr = MusicBoxRotationMotor(
+        self._mtr = RotationMotor(
             rotation_gpio[0],
             rotation_gpio[1],
             rotation_gpio[2],
             rotation_gpio[3],
             debug=False)
         self._rotation_gpio = rotation_gpio
-        time.sleep(2)
+        time.sleep(1)
 
         # init servo
-        self._servo = MusicBoxServo(debug=self._dbg)
+        self._servo = Servo(push_interval=push_interval,
+                            pull_interval=pull_interval,
+                            debug=self._dbg)
 
         super().__init__(ch_n=self._servo.servo_n, debug=self._dbg)
 
@@ -316,8 +296,8 @@ class MusicBoxMovement(MusicBoxMovementBase):
         self._servo.change_onoff(ch, on, pw_diff, tap, conf_file)
 
 
-class MusicBoxMovementWavFile(MusicBoxMovementBase):
-    """ MusicBoxMovementWavFile
+class MovementWavFile(MovementBase):
+    """ MovementWavFile
 
     Play wav_file insted of music box movement.
     """
@@ -395,8 +375,8 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
                 self._log.warning('ch=%s: ignored', ch)
                 continue
 
-            self._sound[ch].set_volume(0.2)  # 音割れ軽減
-            self._sound[ch].play(fade_ms=50) # ブツブツ音軽減
+            self._sound[ch].set_volume(0.2)   # 音割れ軽減
+            self._sound[ch].play(fade_ms=50)  # ブツブツ音軽減
             # threading.Thread(target=self._sound[ch].play).start()
 
         self._log.debug('done')
@@ -428,171 +408,15 @@ class MusicBoxMovementWavFile(MusicBoxMovementBase):
         return [pygame.mixer.Sound(f) for f in wav_files]
 
 
-class MusicBoxMovementWavFileFull(MusicBoxMovementWavFile):
+class MovementWavFileFull(MovementWavFile):
     """
     """
     DEF_WAV_DIR = './note_wav'
     WAV_FILE_PREFIX = 'note'
     WAV_FILE_SUFFIX = '.wav'
 
-
-# --- 以下、サンプル ---
-
-
-class SampleApp:
-    """
-    Sample application class
-    """
-    _log = get_logger(__name__, False)
-
-    def __init__(self,
-                 wav_mode=False,
-                 wav2_mode=False,
-                 rotation_gpio=MusicBoxMovement.ROTATION_GPIO,
-                 rotation_speed=MusicBoxMovement.ROTATION_SPEED,
+    def __init__(self, wav_dir=DEF_WAV_DIR,
+                 wav_prefix=WAV_FILE_PREFIX,
+                 wav_suffix=WAV_FILE_SUFFIX,
                  debug=False):
-        """ Constructor
-
-        Parameters
-        ----------
-        wav_mode: bool
-            wav file mode
-        rotation_gpio: list of int
-            GPIO pin number of rotation motor(stepper motor)
-        rotation_speed: int
-            speed of rotation motor
-        """
-        self._dbg = debug
-        __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('wav_mode=%s', wav_mode)
-        self._log.debug('wav2_mode=%s', wav2_mode)
-        self._log.debug('rotation_gpio=%s', rotation_gpio)
-        self._log.debug('rotation_speed=%s', rotation_speed)
-
-        self._wav_mode = wav_mode
-        self._wav2_mode = wav2_mode
-        self._rotation_gpio = rotation_gpio
-        self._rotation_speed = rotation_speed
-
-        if self._wav2_mode:
-            self._movement = MusicBoxMovementWavFileFull(debug=self._dbg)
-        elif self._wav_mode:
-            self._movement = MusicBoxMovementWavFile(debug=self._dbg)
-        else:
-            self._movement = MusicBoxMovement(
-                self._rotation_gpio, self._rotation_speed,
-                debug=self._dbg)
-
-    def main(self):
-        """
-        main routine
-        """
-        self._log.debug('start')
-
-        self._movement.rotation_speed(self._rotation_speed)
-        self.play_interactive()
-
-        self._log.debug('done')
-
-    def play_interactive(self):
-        """
-        interactive play
-        """
-        self._log.debug('')
-
-        prompt = '[0-%s, ..|sleep SEC]> ' % (self._movement.ch_n - 1)
-
-        while True:
-            try:
-                line1 = input(prompt)
-            except EOFError:
-                self._log.info('EOF')
-                break
-            except Exception as ex:
-                self._log.error('%s: %s .. ignored',
-                                type(ex).__name__, ex)
-                continue
-
-            self._log.debug('line1=%a', line1)
-
-            if len(line1) == 0:
-                break
-
-            ch_str = line1.split()
-            self._log.debug('ch_str=%s', ch_str)
-
-            if ch_str[0] in ('sleep', 's'):
-                try:
-                    sleep_sec = float(ch_str[1])
-                except ValueError as ex:
-                    self._log.error('%s: %s: Invalid sleep_sec',
-                                    type(ex).__name__, ex)
-                    continue
-                except IndexError:
-                    self._log.error('specify sleep_sec')
-                    continue
-
-                try:
-                    time.sleep(sleep_sec)
-                except Exception as ex:
-                    self._log.error('%s: %s', type(ex).__name__, ex)
-
-                continue
-
-            try:
-                ch_list = [int(c) for c in ch_str]
-            except Exception as err:
-                self._log.error('%s: %s .. ignored', type(err), err)
-                continue
-
-            self._log.debug('ch_list=%s', ch_list)
-
-            self._movement.single_play(ch_list)
-
-        self._log.info('END')
-
-    def end(self):
-        """
-        Call at the end of program.
-        """
-        self._log.debug('doing ..')
-
-        self._movement.end()
-
-        self._log.debug('done')
-
-
-import click
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-
-
-@click.command(context_settings=CONTEXT_SETTINGS, help='''
-Description
-''')
-@click.option('--wav', '-w', 'wav', is_flag=True, default=False,
-              help='wav file mode')
-@click.option('--wav2', '-w2', 'wav2', is_flag=True, default=False,
-              help='wav file mode')
-@click.option('--speed', '-s', 'speed', type=int,
-              default=MusicBoxMovement.ROTATION_SPEED,
-              help='rotation speed (0: don\'t use rotation motor')
-@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
-              help='debug flag')
-def main(wav, wav2, speed, debug):
-    """
-    サンプル起動用メイン関数
-    """
-    _log = get_logger(__name__, debug)
-    _log.debug('wav=%s, wav2=%s, speed=%s', wav, wav2, speed)
-
-    app = SampleApp(wav, wav2, rotation_speed=speed,
-                    debug=debug)
-    try:
-        app.main()
-    finally:
-        _log.debug('finally')
-        app.end()
-
-
-if __name__ == '__main__':
-    main()
+        super().__init__(wav_dir, wav_prefix, wav_suffix, debug)

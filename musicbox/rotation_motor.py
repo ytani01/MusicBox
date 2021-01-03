@@ -9,9 +9,9 @@ Rotation Motor driver for Music Box
  ---------------
 | RotationMotor |-----> This module
 |===============|
-|  StepMtrTh    |--+
-|---------------|  +--> `stepmtr`
-|   StepMtr     |--+
+|  StepMtrTh    |--
+|---------------|  |--> `stepmtr`
+|   StepMtr     |--
  ---------------
 
 """

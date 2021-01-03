@@ -8,6 +8,7 @@ import json
 import click
 import cuilib
 from . import Parser, RotationMotor, Servo
+from . import Movement, MovementWavFile, MovementWavFileFull
 from .my_logger import get_logger
 
 __author__ = 'Yoichi Tanibayashi'
@@ -147,6 +148,83 @@ class ServoMotorApp:
         self._servo.end()
 
 
+class MovementApp:
+    """ MovementApp """
+
+    SERVO_KEY = '12345678qwertyu'
+    QUIT_KEY = ['KEY_ESCAPE', 'KEY_ENTER', '\x04']
+
+    def __init__(self, wav_mode,
+                 rotation_speed,
+                 push_interval, pull_interval,
+                 debug=False):
+        """ Constructor """
+        self._dbg = debug
+        self.__log = get_logger(__class__.__name__, self._dbg)
+        self.__log.debug('wav_mode=%s', wav_mode)
+        self.__log.debug('rotation_speed=%s', rotation_speed)
+        self.__log.debug('push/pull_interval=%s',
+                         (push_interval, pull_interval))
+
+        self._wav_mode = wav_mode
+        self._rotation_speed = rotation_speed
+
+        if self._wav_mode == 1:
+            self._movement = MovementWavFile(debug=self._dbg)
+
+        elif self._wav_mode == 2:
+            self._movement = MovementWavFileFull(debug=self._dbg)
+
+        else:
+            self._movement = Movement(rotation_speed=rotation_speed,
+                                      push_interval=push_interval,
+                                      pull_interval=pull_interval,
+                                      debug=self._dbg)
+           
+        self._cui = cuilib.Cui(debug=self._dbg)
+
+        self._cui.add(self.SERVO_KEY, self.single_play, 'single_play')
+        self._cui.add(self.QUIT_KEY, self.quit, 'quit')
+
+    def single_play(self, key_sym):
+        """
+        single_play
+        """
+        self.__log.debug('keysym=%s', key_sym)
+
+        ch = self.SERVO_KEY.index(key_sym)
+
+        if self._wav_mode == 2:
+            ch += 69
+            
+        print('ch=%s' % (ch))
+
+        self._movement.single_play([ch])
+
+    def quit(self, key_sym):
+        """ quit """
+        self.__log.debug('keysym=%s', key_sym)
+        print('*** Quit ***')
+        self._cui.end()
+
+    def main(self):
+        """ main """
+        self.__log.debug('')
+
+        self._movement.rotation_speed(self._rotation_speed)
+        
+        self._cui.start()
+        print('*** Start ***')
+        print('%s to quit' % (self.QUIT_KEY))
+
+        self._cui.join()
+
+    def end(self):
+        """ end """
+        self.__log.debug('')
+        self._movement.end()
+
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
@@ -234,6 +312,40 @@ def servo(push_interval, pull_interval, debug):
     log = get_logger(__name__, debug)
 
     app = ServoMotorApp(push_interval, pull_interval, debug=debug)
+
+    try:
+        app.main()
+    finally:
+        log.debug('finally')
+        app.end()
+        log.info('end')
+
+
+@cli.command(context_settings=CONTEXT_SETTINGS, help="""
+Movement test
+""")
+@click.option('--wav_mode', '-w', 'wav_mode', type=int,
+              default=0,
+              help='Wav file mode')
+@click.option('--speed', '-s', 'speed', type=int,
+              default=Movement.ROTATION_SPEED,
+              help='rotation speed')
+@click.option('--push', '-p', 'push_interval', type=float,
+              default=Servo.DEF_PUSH_INTERVAL,
+              help='push interaval, default=%s sec' % (
+                  Servo.DEF_PUSH_INTERVAL))
+@click.option('--pull', '-P', 'pull_interval', type=float,
+              default=Servo.DEF_PULL_INTERVAL,
+              help='pull interaval, default=%s sec' % (
+                  Servo.DEF_PULL_INTERVAL))
+@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
+              help='debug flag')
+def movement(wav_mode, push_interval, pull_interval, speed, debug):
+    """ movement """
+    log = get_logger(__name__, debug)
+
+    app = MovementApp(wav_mode, speed,
+                      push_interval, pull_interval, debug=debug)
 
     try:
         app.main()
