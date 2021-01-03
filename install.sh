@@ -5,13 +5,19 @@
 MYNAME=`basename $0`
 MYDIR=`dirname $0`
 
-MIDILIB_PKG_NAME="midilib"
-MIDILIB_DIR="MIDI-lib"
-MIDILIB_GIT="https://github.com/ytani01/${MIDILIB_DIR}.git"
+GITHUB_TOP="https://github.com/ytani01"
 
-STEPMTR_PKG_NAME="stepmtr"
+MIDILIB_PKG="midilib"
+MIDILIB_DIR="MIDI-lib"
+MIDILIB_GIT="${GITHUB_TOP}/${MIDILIB_DIR}.git"
+
+CUILIB_PKG="curlib"
+CUILIB_DIR="CuiLib"
+CUILIB_GIT="${GITHUB_TOP}/${CUILIB_DIR}.git"
+
+STEPMTR_PKG="stepmtr"
 STEPMTR_DIR="StepperMotor"
-STEPMTR_GIT="https://github.com/ytani01/${STEPMTR_DIR}.git"
+STEPMTR_GIT="${GITHUB_TOP}/${STEPMTR_DIR}.git"
 
 #
 # main
@@ -50,9 +56,9 @@ pip -V
 cd $VIRTUAL_ENV
 echo [ `pwd` ]
 
-pip show $MIDILIB_PKG_NAME
+pip show $MIDILIB_PKG
 if [ $? -ne 0 ]; then
-    echo "### installing $MIDILIB_PKG_NAME .."
+    echo "### installing $MIDILIB_PKG .."
     
     if [ ! -d $MIDILIB_DIR ]; then
         git clone $MIDILIB_GIT || exit 1
@@ -64,14 +70,33 @@ if [ $? -ne 0 ]; then
 fi
 
 #
+# CuiLib
+#
+cd $VIRTUAL_ENV
+echo [ `pwd` ]
+
+pip show $CUILIB_PKG
+if [ $? -ne 0 ]; then
+    echo "### installing $CUILIB_PKG .."
+
+    if [ ! -d $CUILIB_DIR ]; then
+        git clone $CUILIB_GIT || exit 1
+    fi
+
+    cd $CUILIB_DIR
+    echo [ `pwd` ]
+    pip install .
+fi
+
+#
 # StepperMotor
 #
 cd $VIRTUAL_ENV
 echo [ `pwd` ]
 
-pip show $STEPMTR_PKG_NAME
+pip show $STEPMTR_PKG
 if [ $? -ne 0 ]; then
-    echo "### installing $STEPMTR_PKG_NAME .."
+    echo "### installing $STEPMTR_PKG .."
 
     if [ ! -d $STEPMTR_DIR ]; then
         git clone $STEPMTR_GIT || exit 1
