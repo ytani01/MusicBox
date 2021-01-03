@@ -19,6 +19,8 @@ STEPMTR_PKG="stepmtr"
 STEPMTR_DIR="StepperMotor"
 STEPMTR_GIT="${GITHUB_TOP}/${STEPMTR_DIR}.git"
 
+MUSICBOX_PKG="musicbox"
+
 #
 # main
 #
@@ -108,6 +110,9 @@ if [ $? -ne 0 ]; then
 fi
 
 #
+# musicbox package
 #
-#
+cd $MYDIR
+echo [ `pwd` ]
+#pip install .
 
