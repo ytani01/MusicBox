@@ -24,10 +24,13 @@ echo [ $MYDIR ]
 # venv
 #
 if [ -z $VIRTUAL_ENV ]; then
-    echo
-    echo "ERROR: Please activate Python3 Virtualenv and run again"
-    echo
-    exit 1
+    if [ ! -f ../bin/activate ]; then
+        echo
+        echo "ERROR: Please activate Python3 Virtualenv and run again"
+        echo
+        exit 1
+    fi
+    . ../bin/activate
 fi
 cd $VIRTUAL_ENV
 echo '[' `pwd` ']'
@@ -44,6 +47,8 @@ pip -V
 #
 pip show $MIDILIB_PKG_NAME
 if [ $? -ne 0 ]; then
+    echo "installing $MIDILIB_PKG_NAME .."
+    
     if [ ! -d $MIDILIB_DIR ]; then
         git clone $MIDILIB_GIT
     fi
