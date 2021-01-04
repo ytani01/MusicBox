@@ -138,16 +138,14 @@ class Player:
             msg = 'invalid wav_mode: %s' % self._wav_mode
             raise ValueError(msg)
 
-        # public valiables
         self.ch_n = self._movement.ch_n
 
-        # start rotation
         self.rotation_speed(self._rotation_speed)
 
     def end(self):
         """ Call at the end of program
 
-        stop rotation and so on ...
+        stop movement
         """
         self._log.debug('doing ..')
 
@@ -157,15 +155,17 @@ class Player:
         self._log.debug('done')
 
     def rotation_speed(self, speed=ROTATION_SPEED):
-        """ set rotation speed
+        """
+        Parameters
+        ----------
+        speed: int
         """
         self._log.debug('speed=%s', speed)
         self._rotation_speed = speed
         self._movement.rotation_speed(self._rotation_speed)
 
     def single_play(self, ch_list=None):
-        """ single play
-
+        """
         Parameters
         ----------
         ch_list: list of int

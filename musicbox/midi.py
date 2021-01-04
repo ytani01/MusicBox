@@ -122,7 +122,7 @@ class Parser:
             if ch < 0:
                 continue
 
-            delay = round(abs_time - prev_abs_time, 3)
+            delay = round(abs_time - prev_abs_time, 3) * 1000
             prev_abs_time = abs_time
             
             ent = {'abs_time': round(abs_time, 3),
@@ -145,8 +145,9 @@ class Parser:
         """
         out_music_data = []
 
-        abs_time = 0
+        abs_time = -1
         for ent in in_music_data:
+            print(ent)
             if ent['abs_time'] == abs_time:
                 out_music_data[-1]['ch'] += ent['ch']
                 continue
