@@ -9,7 +9,7 @@ import click
 import cuilib
 from . import Parser, RotationMotor, Servo
 from . import Movement, MovementWav1, MovementWav2, MovementWav3
-from . import Player
+from . import Player, WsServer
 from .my_logger import get_logger
 
 __author__ = 'Yoichi Tanibayashi'
@@ -348,14 +348,55 @@ class PlayerApp:
         self._player.end()
 
 
+class WsServerApp:
+    """ Music Box Websocket Server App """
+    def __init__(self, port, wav_mode, debug=False):
+        """ Constructor
+
+        Parameters
+        ----------
+        port: int
+        wav_mode: int
+        """
+        self._dbg = debug
+        self.__log = get_logger(self.__class__.__name__, self._dbg)
+
+        self._port = port
+        self._wav_mode = wav_mode
+
+        self._svr = WsServer(wav_mode=self._wav_mode,
+                             port=self._port, debug=self._dbg)
+
+    def main(self):
+        """ main """
+        self.__log.debug('start')
+
+        self._svr.main()
+
+        self.__log.debug('done')
+
+    def end(self):
+        """ end: Call at the end of usage """
+        self.__log.debug('doing ..')
+
+        self._svr.end()
+
+        self.__log.debug('done')
+
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 @click.group(invoke_without_command=True,
              context_settings=CONTEXT_SETTINGS, help='''
-<< Music Box Test >>
+==========================
+
+ Music Box Apps and Tests
+
+--------------------------
 
 Usage: python3 -m musicbox [OPTIONS] COMMAND [OPTIONS] [ARGS] ...
+
 ''')
 @click.pass_context
 def cli(ctx):
@@ -510,6 +551,32 @@ def player(wav_mode, music_file, channel,
     app = PlayerApp(wav_mode, music_file, channel, speed,
                     push_interval, pull_interval, debug=debug)
 
+    try:
+        app.main()
+    finally:
+        log.debug('finally')
+        app.end()
+        log.info('end')
+
+
+@cli.command(context_settings=CONTEXT_SETTINGS, help="""
+Music Box Websocket Server
+""")
+@click.option('--port', '-p', 'port', type=int,
+              default=WsServer.DEF_PORT,
+              help='port number, default=%s' % (
+                  WsServer.DEF_PORT))
+@click.option('--wav_mode', '-w', 'wav_mode', type=int,
+              default=Player.WAVMODE_NONE,
+              help='Wav file mode, default=%s' % (
+                  Player.WAVMODE_NONE))
+@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
+              help='debug flag')
+def wsserver(port, wav_mode, debug):
+    """ wsserver """
+    log = get_logger(__name__, debug)
+
+    app = WsServerApp(port, wav_mode, debug=debug)
     try:
         app.main()
     finally:

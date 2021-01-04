@@ -12,7 +12,8 @@ from .rotation_motor import RotationMotor
 from .servo import Servo
 from .movement import Movement, MovementWav1, MovementWav2, MovementWav3
 from .player import Player
+from .wsserver import WsServer
 
 __all__ = ['Parser', 'RotationMotor', 'Servo',
            'Movement', 'MovementWav1', 'MovementWav2', 'MovementWav3',
-           'Player']
+           'Player', 'WsServer']
