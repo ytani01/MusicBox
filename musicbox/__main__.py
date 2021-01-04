@@ -2,13 +2,13 @@
 # (c) 2020 Yoichi Tanibayashi
 #
 """
-main for midi_tools
+main for musicbox package
 """
 import json
 import click
 import cuilib
 from . import Parser, RotationMotor, Servo
-from . import Movement, MovementWavFile, MovementWavFileFull
+from . import Movement, MovementWav1, MovementWav2, MovementWav3
 from . import Player
 from .my_logger import get_logger
 
@@ -174,10 +174,13 @@ class MovementApp:
         self._rotation_speed = rotation_speed
 
         if self._wav_mode == 1:
-            self._movement = MovementWavFile(debug=self._dbg)
+            self._movement = MovementWav1(debug=self._dbg)
 
         elif self._wav_mode == 2:
-            self._movement = MovementWavFileFull(debug=self._dbg)
+            self._movement = MovementWav2(debug=self._dbg)
+
+        elif self._wav_mode == 3:
+            self._movement = MovementWav3(debug=self._dbg)
 
         else:
             self._movement = Movement(rotation_speed=rotation_speed,
@@ -199,7 +202,9 @@ class MovementApp:
         ch = self.SERVO_KEY.index(key_sym)
 
         if self._wav_mode == 2:
-            ch += 69
+            ch += 48
+        if self._wav_mode == 3:
+            ch += 60
 
         print('ch=%s' % (ch))
 
@@ -235,6 +240,20 @@ class PlayerApp:
     SERVO_KEY = '12345678qwertyu'
     QUIT_KEY = ['KEY_ESCAPE', 'KEY_ENTER', '\x04']
 
+    NOTE_BASE = {
+        Player.WAVMODE_NONE: -1,
+        Player.WAVMODE_PIANO: -1,
+        Player.WAVMODE_PIANO_FULL: 21,
+        Player.WAVMODE_MIDI_FULL: 0
+    }
+
+    NOTE_N = {
+        Player.WAVMODE_NONE: -1,
+        Player.WAVMODE_PIANO: -1,
+        Player.WAVMODE_PIANO_FULL: 88,
+        Player.WAVMODE_MIDI_FULL: 128
+    }
+
     def __init__(self, wav_mode,
                  music_file, channel,
                  rotation_speed,
@@ -266,6 +285,9 @@ class PlayerApp:
         self._channel = channel
         self._rotation_speed = rotation_speed
 
+        self._note_n = self.NOTE_N[self._wav_mode]
+        self.__log.debug('note_n=%s', self._note_n)
+
         self._parser = Parser(debug=self._dbg)
 
         self._player = Player(self._wav_mode,
@@ -284,8 +306,10 @@ class PlayerApp:
 
         ch = self.SERVO_KEY.index(key_sym)
 
-        if self._wav_mode == 2:
-            ch += 69
+        if self._wav_mode == Player.WAVMODE_PIANO_FULL:
+            ch += 48
+        if self._wav_mode == Player.WAVMODE_MIDI_FULL:
+            ch += 60
 
         print('ch=%s' % (ch))
 
@@ -305,7 +329,10 @@ class PlayerApp:
 
         if self._music_file:
             music_data = self._parser.parse(
-                self._music_file, self._channel)
+                self._music_file,
+                self._channel,
+                self.NOTE_BASE[self._wav_mode],
+                self.NOTE_N[self._wav_mode])
 
             self._player.music_load(music_data)
 

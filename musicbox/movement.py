@@ -52,8 +52,6 @@ class MovementBase:
     active: bool
         active flag
     """
-    _log = get_logger(__name__, False)
-
     def __init__(self, ch_n=0, debug=False):
         """ Constructor
 
@@ -63,8 +61,8 @@ class MovementBase:
             number of channel from SubClass.super()__init__(ch_n=..)
         """
         self._dbg = debug
-        __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('ch_n=%s', ch_n)
+        self.__log = get_logger(self.__class__.__name__, self._dbg)
+        self.__log.debug('ch_n=%s', ch_n)
 
         # public
         self.ch_n = ch_n
@@ -74,20 +72,20 @@ class MovementBase:
         set rotation speed
         default: 0 (stop)
         """
-        self._log.debug('*** do nothing *** (speed=%s)', speed)
+        self.__log.debug('*** do nothing *** (speed=%s)', speed)
 
     def end(self):
         """
         Call at the end of program
         """
-        self._log.debug('%s: doing ..', __class__.__name__)
-        self._log.debug('%s: done.', __class__.__name__)
+        self.__log.debug('%s: doing ..', __class__.__name__)
+        self.__log.debug('%s: done.', __class__.__name__)
 
     def single_play(self, ch_list):
         """
         play One sound (in thread)
         """
-        self._log.debug('ch_list=%s', ch_list)
+        self.__log.debug('ch_list=%s', ch_list)
 
         # self.play_sound(ch_list)
         threading.Thread(target=self.play_sound,
@@ -97,8 +95,8 @@ class MovementBase:
         """
         Must be overridden
         """
-        self._log.debug('ch_list=%s', ch_list)
-        self._log.error('*** This method must be overridden ***')
+        self.__log.debug('ch_list=%s', ch_list)
+        self.__log.error('*** This method must be overridden ***')
 
     def set_onoff(self, ch, on=False, pw=None, tap=False,
                   conf_file=None):
@@ -120,7 +118,7 @@ class MovementBase:
         conf_file: str
             configuration file (path name)
         """
-        self._log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
+        self.__log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
                         ch, on, pw, tap, conf_file)
 
     def change_onoff(self, ch, on=False, pw_diff=0, tap=False,
@@ -143,7 +141,7 @@ class MovementBase:
         conf_file: str
             configuration file (path name)
         """
-        self._log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
+        self.__log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
                         ch, on, pw_diff, tap, conf_file)
 
 
@@ -186,9 +184,9 @@ class Movement(MovementBase):
             interval sec
         """
         self._dbg = debug
-        __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('rotation_gpio=%s', rotation_gpio)
-        self._log.debug('rotation_speed=%s', rotation_speed)
+        __class__.__log = get_logger(__class__.__name__, self._dbg)
+        self.__log.debug('rotation_gpio=%s', rotation_gpio)
+        self.__log.debug('rotation_speed=%s', rotation_speed)
 
         # start rotation
         self._mtr = RotationMotor(
@@ -211,12 +209,12 @@ class Movement(MovementBase):
         """
         Call at the end of program
         """
-        self._log.debug('doing ..')
+        self.__log.debug('doing ..')
         super().end()
 
         self._servo.end()
         self._mtr.end()
-        self._log.debug('done')
+        self.__log.debug('done')
 
     def play_sound(self, ch_list):
         """
@@ -225,22 +223,22 @@ class Movement(MovementBase):
         ch_list: list of int
             channel list
         """
-        self._log.debug('ch_list=%s', ch_list)
+        self.__log.debug('ch_list=%s', ch_list)
 
         if ch_list is None:
-            self._log.debug('do nothing')
+            self.__log.debug('do nothing')
             return
 
-        self._log.debug('tap channels: %s', ch_list)
+        self.__log.debug('tap channels: %s', ch_list)
         try:
             self._servo.tap(ch_list)
         except ValueError as err:
-            self._log.warning('%s: %s', type(err), err)
+            self.__log.warning('%s: %s', type(err), err)
 
-        self._log.debug('done')
+        self.__log.debug('done')
 
     def rotation_speed(self, speed=0):
-        self._log.debug('speed=%s', speed)
+        self.__log.debug('speed=%s', speed)
         self._mtr.set_speed(speed)
 
     def set_onoff(self, ch, on=False, pw=None, tap=False,
@@ -264,7 +262,7 @@ class Movement(MovementBase):
         conf_file: str
             configuration file (path name)
         """
-        self._log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
+        self.__log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
                         ch, on, pw, tap, conf_file)
 
         self._servo.set_onoff(ch, on, pw, tap, conf_file)
@@ -290,29 +288,31 @@ class Movement(MovementBase):
         conf_file: str
             configuration file (path name)
         """
-        self._log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
+        self.__log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
                         ch, on, pw_diff, tap, conf_file)
 
         self._servo.change_onoff(ch, on, pw_diff, tap, conf_file)
 
 
-class MovementWavFile(MovementBase):
-    """ MovementWavFile
-
+class MovementWav1(MovementBase):
+    """
     Play wav_file insted of music box movement.
+
+    Music Boxと同じ音階
     """
     _log = get_logger(__name__, False)
 
-    DEF_WAV_DIR = './wav'
+    DEF_WAV_DIR = './piano_wav'
 
     WAV_FILE_PREFIX = 'ch'
     WAV_FILE_SUFFIX = '.wav'
 
-    SERVO_DELAY = 350  # msec
+    NOTE_BASE = 0
 
     def __init__(self, wav_dir=DEF_WAV_DIR,
                  wav_prefix=WAV_FILE_PREFIX,
                  wav_suffix=WAV_FILE_SUFFIX,
+                 note_base=NOTE_BASE,
                  debug=False):
         """ Constructor
 
@@ -322,16 +322,19 @@ class MovementWavFile(MovementBase):
             directory name
         wav_prefix: str
         wav_suffix: str
+        note_base: int
         """
         self._dbg = debug
-        __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('wav_dir=%s', wav_dir)
-        self._log.debug('wav_prefix=%s, wav_suffix=%s',
+        self.__log = get_logger(self.__class__.__name__, self._dbg)
+        self.__log.debug('wav_dir=%s', wav_dir)
+        self.__log.debug('wav_prefix=%s, wav_suffix=%s',
                         wav_prefix, wav_suffix)
+        self.__log.debug('note_base=%s', note_base)
 
         self._wav_dir = wav_dir
         self._wav_prefix = wav_prefix
         self._wav_suffix = wav_suffix
+        self._note_base = note_base
 
         pygame.mixer.init()
         self._sound = self.load_wav(self._wav_dir,
@@ -343,43 +346,10 @@ class MovementWavFile(MovementBase):
         """
         Call at the end of program
         """
-        self._log.debug('doing ..')
+        self.__log.debug('doing ..')
         super().end()
 
-        self._log.debug('done')
-
-    def play_sound(self, ch_list):
-        """
-        Parameters
-        ----------
-        ch_list: list of int
-            channel list
-        """
-        self._log.debug('ch_list=%s', ch_list)
-
-        if ch_list is None:
-            self._log.debug('do nothing')
-            return
-
-        if type(ch_list) != list:
-            self._log.debug('invalid ch_list: %s', ch_list)
-            return
-
-        self._log.debug('play sounds')
-        for ch in ch_list:
-            if ch is None:
-                self._log.warning('ch=%s: ignored', ch)
-                continue
-
-            if ch < 0 or ch > self.ch_n - 1:
-                self._log.warning('ch=%s: ignored', ch)
-                continue
-
-            self._sound[ch].set_volume(0.2)   # 音割れ軽減
-            self._sound[ch].play(fade_ms=50)  # ブツブツ音軽減
-            # threading.Thread(target=self._sound[ch].play).start()
-
-        self._log.debug('done')
+        self.__log.debug('done')
 
     def load_wav(self, wav_dir=DEF_WAV_DIR,
                  wav_prefix=WAV_FILE_PREFIX,
@@ -394,29 +364,86 @@ class MovementWavFile(MovementBase):
         wav_prefix: str
         wav_suffix: str
         """
-        self._log.debug('wav_dir=%s', wav_dir)
-        self._log.debug('wav_prefix=%s, wav_suffix=%s',
-                        wav_prefix, wav_suffix)
-
         glob_pattern = "%s/%s*%s" % (
             wav_dir, wav_prefix, wav_suffix)
-        self._log.debug('glob_pattern=%s', glob_pattern)
+        self.__log.debug('glob_pattern=%s', glob_pattern)
 
         wav_files = sorted(glob.glob(glob_pattern))
-        self._log.debug('wav_files=%s', wav_files)
+        self.__log.debug('wav_files=%s', wav_files)
 
         return [pygame.mixer.Sound(f) for f in wav_files]
 
+    def play_sound(self, ch_list):
+        """
+        Parameters
+        ----------
+        ch_list: list of int
+            channel list
+        """
+        self.__log.debug('ch_list=%s', ch_list)
 
-class MovementWavFileFull(MovementWavFile):
+        if ch_list is None:
+            self.__log.debug('do nothing')
+            return
+
+        if type(ch_list) != list:
+            self.__log.debug('invalid ch_list: %s', ch_list)
+            return
+
+        self.__log.debug('play sounds')
+        for ch in ch_list:
+            if ch is None:
+                self.__log.warning('ch=%s: ignored', ch)
+                continue
+
+            if ch < 0 or ch > self.ch_n - 1:
+                self.__log.warning('ch=%s: ignored', ch)
+                continue
+
+            snd_i = ch - self._note_base
+            snd = self._sound[snd_i]
+            snd.set_volume(0.2)   # 音割れ軽減
+            # snd.play(fade_ms=50)  # fade_time: ブツブツ音軽減
+            # 早いテンポに対応するには、``maxtime``を制限した方がいいが、
+            # 音が不自然になる
+            snd.play(fade_ms=50, maxtime=400)
+
+        self.__log.debug('done')
+
+
+class MovementWav2(MovementWav1):
     """
+    ピアノの音階 (21 .. 108)
     """
-    DEF_WAV_DIR = './note_wav'
-    WAV_FILE_PREFIX = 'note'
+    DEF_WAV_DIR = './piano_wav'
+    WAV_FILE_PREFIX = 'piano'
     WAV_FILE_SUFFIX = '.wav'
+
+    NOTE_BASE=21
 
     def __init__(self, wav_dir=DEF_WAV_DIR,
                  wav_prefix=WAV_FILE_PREFIX,
                  wav_suffix=WAV_FILE_SUFFIX,
+                 note_base=NOTE_BASE,
                  debug=False):
-        super().__init__(wav_dir, wav_prefix, wav_suffix, debug)
+        super().__init__(wav_dir, wav_prefix, wav_suffix, note_base,
+                         debug)
+
+
+class MovementWav3(MovementWav1):
+    """
+    MIDIの全音階
+    """
+    DEF_WAV_DIR = './midi_wav'
+    WAV_FILE_PREFIX = 'note'
+    WAV_FILE_SUFFIX = '.wav'
+
+    NOTE_BASE=0
+
+    def __init__(self, wav_dir=DEF_WAV_DIR,
+                 wav_prefix=WAV_FILE_PREFIX,
+                 wav_suffix=WAV_FILE_SUFFIX,
+                 note_base=NOTE_BASE,
+                 debug=False):
+        super().__init__(wav_dir, wav_prefix, wav_suffix, note_base,
+                         debug)

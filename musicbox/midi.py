@@ -32,12 +32,13 @@ class Parser:
     def end(self) -> None:
         """ end: do nothing """
 
-    def note2ch(self, note, note_base=NOTE_BASE_MIN) -> int:
+    def note2ch(self, note, note_base=NOTE_BASE_MIN, note_n=-1) -> int:
         """
         Parameters
         ----------
         note: int
         note_base: int
+        note_n: int
 
         Returns
         -------
@@ -46,10 +47,13 @@ class Parser:
         """
         ch = -1
 
-        offset = note - note_base
+        if note_n <= 0:
+            offset = note - note_base
 
-        if offset in self.NOTE_OFFSET:
-            ch = self.NOTE_OFFSET.index(offset)
+            if offset in self.NOTE_OFFSET:
+                ch = self.NOTE_OFFSET.index(offset)
+        else:
+            ch = note - note_base
 
         return ch
 
@@ -58,6 +62,11 @@ class Parser:
         Parameters
         ----------
         note_data: list of midilib.NoteInfo
+        note_base: int
+
+        Returns
+        -------
+        ch_set: set of int
         """
         ch_set = set()
 
@@ -75,7 +84,6 @@ class Parser:
         Parameters
         ----------
         note_data: list of midilib.NoteInfo
-
         """
         self.__log.debug('len(note_data)=%s', len(note_data))
 
@@ -97,12 +105,13 @@ class Parser:
 
         return best_note_base
 
-    def mk_music_data(self, note_data, note_base):
+    def mk_music_data(self, note_data, note_base, note_n=-1):
         """
         Parameters
         ----------
         note_data: list of midilib.NoteInfo
         note_base: int
+        note_n: int
 
         Returns
         -------
@@ -117,18 +126,18 @@ class Parser:
                 continue
 
             abs_time = note_info.abs_time
-            ch = self.note2ch(note_info.note, note_base)
+            ch = self.note2ch(note_info.note, note_base, note_n)
 
             if ch < 0:
                 continue
 
             delay = round(abs_time - prev_abs_time, 3) * 1000
             prev_abs_time = abs_time
-            
+
             ent = {'abs_time': round(abs_time, 3),
                    'ch': [ch],
                    'delay': delay}
-            
+
             music_data.append(ent)
 
         return music_data
@@ -149,7 +158,9 @@ class Parser:
         for ent in in_music_data:
             print(ent)
             if ent['abs_time'] == abs_time:
-                out_music_data[-1]['ch'] += ent['ch']
+                ch_set = set(out_music_data[-1]['ch'] + ent['ch'])
+
+                out_music_data[-1]['ch'] = sorted(list(ch_set))
                 continue
 
             ent2 = {'abs_time': ent['abs_time'],
@@ -160,13 +171,14 @@ class Parser:
 
         return out_music_data
 
-    def parse(self, midi_file, channel=[]):
+    def parse(self, midi_file, channel=[], note_base=-1, note_n=-1):
         """
         Parameters
         ----------
         midi_file: str
-
         channel: list of int
+        note_base: int
+        note_n: int
 
         Returns
         -------
@@ -177,11 +189,12 @@ class Parser:
 
         parsed_midi = self._midilib_parser.parse(midi_file, channel)
 
-        note_base = self.best_note_base(parsed_midi['note_info'])
+        if note_base < 0:
+            note_base = self.best_note_base(parsed_midi['note_info'])
         self.__log.info('best note_bas=%s', note_base)
 
         music_data = self.mk_music_data(parsed_midi['note_info'],
-                                        note_base)
+                                        note_base, note_n)
 
         music_data2 = self.merge_ch(music_data)
 

@@ -5,21 +5,21 @@
 """
 Music Box Player class
 
-### Module Architecture (server side)
+### Architecture (server side)
 
-         ----------------------------------------------------
-        |                 WebsockServer              |
-        |----------------------------------------------------|
+         --------------------------------------------
+        |                WebsockServer               |
+        |--------------------------------------------|
 This -->|            Player             |            |
-        |---------------------------------------|            |
+        |-------------------------------|            |
         |           Movement            |            |
-        |---------------------------------------| websockets |
-        | Servo | RotationMotor |            |
-        |---------------+-----------------------|            |
-        | ServoPCA9685  |     StepMtrTh         |            |
-        |---------------+-----------------------|            |
-        | pigpioPCA9685 |      StepMtr          |            |
-         ----------------------------------------------------
+        |-------------------------------| websockets |
+        |     Servo     | RotationMotor |            |
+        |---------------+---------------|            |
+        | ServoPCA9685  |  StepMtrTh    |            |
+        |---------------+---------------|            |
+        | pigpioPCA9685 |   StepMtr     |            |
+         --------------------------------------------
 
 """
 __author__ = 'Yoichi Tanibayashi'
@@ -29,9 +29,8 @@ import threading
 import copy
 import time
 
-from . import Movement
-from . import MovementWavFile, MovementWavFileFull
-from MyLogger import get_logger
+from . import Movement, MovementWav1, MovementWav2, MovementWav3
+from .my_logger import get_logger
 
 
 class Player:
@@ -72,9 +71,9 @@ class Player:
         number of channels
     """
     WAVMODE_NONE = 0
-    WAVMODE_MIDI = 1
-    WAVMODE_PIANO = 2
-    WAVMODE_WAVE = 3
+    WAVMODE_PIANO = 1
+    WAVMODE_PIANO_FULL = 2
+    WAVMODE_MIDI_FULL = 3
 
     DEF_DELAY = 500  # msec
 
@@ -123,16 +122,15 @@ class Player:
                 self._rotation_gpio, self._rotation_speed,
                 debug=self._dbg)
 
-        elif self._wav_mode == self.WAVMODE_MIDI:
-            self._movement = MovementWavFile(debug=self._dbg)
-
         elif self._wav_mode == self.WAVMODE_PIANO:
-            self._movement = MovementWavFileFull(
-                wav_dir='./wav', wav_prefix='39', debug=self._dbg)
+            self._movement = MovementWav1(debug=self._dbg)
 
-        elif self._wav_mode == self.WAVMODE_WAVE:
-            self._movement = MovementWavFileFull(
-                wav_dir='./note_wav', wav_prefix='note', debug=self._dbg)
+        elif self._wav_mode == self.WAVMODE_PIANO_FULL:
+            # self._movement = MovementWav2(debug=self._dbg)
+            self._movement = MovementWav2()
+
+        elif self._wav_mode == self.WAVMODE_MIDI_FULL:
+            self._movement = MovementWav3(debug=self._dbg)
 
         else:
             msg = 'invalid wav_mode: %s' % self._wav_mode
@@ -191,7 +189,7 @@ class Player:
         ch_list=None,    delay=None}: do nothing (no delay)
 
         """
-        self._log.debug('delay=%.2f, ch=list=%s', delay, ch_list)
+        self._log.info('delay=%.2f, ch=list=%s', delay, ch_list)
 
         if ch_list is None:
             if delay is None:
@@ -236,7 +234,7 @@ class Player:
                :
           ]
         """
-        self._log.debug('music_data=%s', music_data)
+        # self._log.debug('music_data=%s', music_data)
 
         self._music_data = copy.deepcopy(music_data)
 
