@@ -422,7 +422,7 @@ MIDI parser test
               help='MIDI channel')
 @click.option('--debug', '-d', 'dbg', is_flag=True, default=False,
               help='debug flag')
-def parse(midi_file, channel, dbg) -> None:
+def midi(midi_file, channel, dbg) -> None:
     """ parser main """
     log = get_logger(__name__, dbg)
 
