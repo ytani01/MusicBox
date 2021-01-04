@@ -16,7 +16,7 @@ __author__ = 'Yoichi Tanibayashi'
 __date__ = '2021/01'
 
 
-class ParseApp:
+class MidiApp:
     """ MidiApp """
     def __init__(self, midi_file, channel=[], debug=False) -> None:
         """ Constructor """
@@ -40,9 +40,6 @@ class ParseApp:
 
         with open('music_data.json', mode='w') as f:
             json.dump(music_data, f, indent=4)
-
-    def end(self) -> None:
-        """ end: do nothing """
 
 
 class RotationMotorApp:
@@ -426,12 +423,11 @@ def midi(midi_file, channel, dbg) -> None:
     """ parser main """
     log = get_logger(__name__, dbg)
 
-    app = ParseApp(midi_file, channel, debug=dbg)
+    app = MidiApp(midi_file, channel, debug=dbg)
     try:
         app.main()
     finally:
         log.debug('finally')
-        app.end()
 
 
 @cli.command(context_settings=CONTEXT_SETTINGS, help="""

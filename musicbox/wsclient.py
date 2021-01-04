@@ -10,7 +10,7 @@ Music Box Websocket Client
          ----------------------------------
         |        Music Box Apps ..         |
         |==================================|
-This -->|          WebsockClient           |
+This -->|          WsClient           |
         |----------------------------------|
         | Midi | PaperTape | WebsockClient |
         |------|           |---------------|
@@ -23,37 +23,45 @@ __date__   = '2020'
 
 import time
 import json
-from WebsockClient import WebsockClient
-from PaperTape import PaperTape
-from Midi import Midi
-from MyLogger import get_logger
+from websocket import create_connection
+# from PaperTape import PaperTape
+from . import Midi
+from .my_logger import get_logger
 
 
-class WebsockClient:
-    """
-    Description
-    -----------
-    Music Box Websock Client
+class SimpleWebsocketClient:
+    """ simple websocket client class """
+    def __init__(self, url, debug=False):
+        """ Constructor
 
-    Simple Usage
-    ------------
-    from WebsockClient import WebsockClient
+        Parameters
+        ----------
+        url: str
+            URL (ex. 'ws://localhost:8881')
+        """
+        self._dbg = debug
+        self.__log = get_logger(self.__class__.__name__, self._dbg)
+        self.__log.debug('url=%s', url)
 
-    cl = WebsockClient('ws://ipaddr:port/')
+        self._url = url
 
-    cl.single_play([0,1, ..])
-    cl.midi(filename)           # TBD
-    cl.paper_tape(filename)
-    cl.music_start()
-    cl.music_pause()
-    cl.music_rewind()
-    cl.music_stop()
+    def send(self, msg):
+        """
+        Parameters
+        ----------
+        msg: str
+        """
+        self.__log.debug('msg=%s', msg)
 
-    cl.change_onoff(ch, on, pw_diff, tap)  # see definition
+        ws = create_connection(self._url)
+        ws.send(msg)
+        ws.close()
 
-    cl.end()     # Call at the end of usage
-    ============
-    """
+        self.__log.debug('done')
+
+
+class WsClient:
+    """ Music Box websocket client """
     __log = get_logger(__name__, False)
 
     def __init__(self, url, debug=False):
@@ -70,13 +78,10 @@ class WebsockClient:
 
         self._url = url
 
-        self._ws = WebsockClient(self._url, debug=self._dbg)
+        self._ws = SimpleWebsocketClient(self._url, debug=self._dbg)
 
     def end(self):
-        """
-        Call at the end of program
-        """
-        self.__log.debug('doing ..')
+        """ end: Call at the end of program """
         self.__log.debug('done')
 
     def single_play(self, ch_list):
@@ -211,257 +216,3 @@ class WebsockClient:
             'tap': tap
         })
         self._ws.send(json_str)
-
-
-# --- 以下、サンプル ---
-
-
-class SampleApp:
-    """ Sample application class
-
-    Attributes
-    ----------
-    """
-    PROMPT_STR = '> '
-
-    ALIASES = [
-        ['single_play', 'single', 'play', 'P'],
-        ['music_start', 'start', 's'],
-        ['music_stop', 'stop', 'S'],
-        ['music_pause', 'pause', 'p'],
-        ['music_rewind', 'rewind', 'r'],
-        ['change_onoff', 'onoff'],
-        ['midi', 'm', 'M'],
-        ['paper_tape', 'tape', 'paper', 'pt', 't', 'T'],
-        ['sleep'],
-        ['help', 'h', 'H', '?']
-    ]
-
-    __log = get_logger(__name__, False)
-
-    def __init__(self, url, cmd, note_base=None, channel=[],
-                 note_n=0,
-                 delay_limit=Midi.DEF_DELAY_LIMIT,
-                 debug=False):
-        """ Constructor
-
-        Parameters
-        ----------
-        url: str
-            URL
-        cmd: list of str
-            command line
-        note_base: int
-            note number
-        channel: int
-            channel number
-        note_n: int
-            number of available notes
-        delay_limit:
-            delay limit (msec)
-        """
-        self._dbg = debug
-        __class__.__log = get_logger(__class__.__name__, self._dbg)
-        self.__log.debug('url=%s', url)
-        self.__log.debug('cmd=%s', cmd)
-        self.__log.debug('note_base=%s, channel=%s',
-                         note_base, channel)
-        self.__log.debug('note_n=%s', note_n)
-        self.__log.debug('delay_limit=%s', delay_limit)
-
-        self._url = url
-        self._cmd = cmd
-        self._note_base = note_base
-        self._channel = channel
-        self._note_n = note_n
-        self._delay_limit = delay_limit
-
-        self._cl = WebsockClient(url, debug=self._dbg)
-
-    def aliases2cmd(self, cmd_str):
-        """ search command aliseses
-        """
-        self.__log.debug('cmd_str=%s', cmd_str)
-
-        for i, alias in enumerate(self.ALIASES):
-            self.__log.debug('%s:%s.', i, alias)
-
-            if cmd_str in alias:
-                return alias[0]
-
-        return None
-
-    def cmd_func(self, args):
-        """
-        Parameters
-        ----------
-        args: list of str
-            command line
-        """
-        self.__log.debug('args=%s', args)
-
-        if len(args) == 0:
-            return
-
-        args = list(args)
-        arg0 = args.pop(0)
-
-        try:
-            int(arg0)
-            args.insert(0, arg0)
-            arg0 = 'single_play'
-        except ValueError:
-            pass
-
-        cmd = self.aliases2cmd(arg0)
-        if cmd is None:
-            self.__log.error('%s: no such command', cmd)
-            return
-
-        if cmd == 'sleep':
-            time.sleep(float(args[0]))
-            return
-
-        if cmd == 'help':
-            for a in self.ALIASES:
-                print('%s' % a)
-
-            return
-
-        if cmd == 'single_play':
-            try:
-                ch_list = [int(num) for num in args]
-            except ValueError as ex:
-                self.__log.error('%s: %s.', type(ex).__name__, ex)
-                return
-
-            self._cl.single_play(ch_list)
-            return
-
-        if cmd == 'midi':
-            file = args[0]
-
-            self._cl.midi(file, self._note_base,
-                          self._channel, self._delay_limit, self._note_n)
-            return
-
-        if cmd == 'paper_tape':
-            file = args[0]
-
-            self._cl.paper_tape(file)
-            return
-
-        if cmd == 'music_start':
-            self._cl.music_start()
-            return
-
-        if cmd == 'music_stop':
-            self._cl.music_stop()
-            return
-
-        if cmd == 'music_pause':
-            self._cl.music_pause()
-            return
-
-        if cmd == 'music_rewind':
-            self._cl.music_rewind()
-            return
-
-        if cmd == 'change_onoff':
-            try:
-                ch = int(args[0])
-                on = args[1] in ('on', 'On', 'ON')
-                pw_diff = int(args[2])
-                tap = args[3] in ('tap', 'Tap', 'TAP')
-            except ValueError as ex:
-                self.__log.error('%s: %s.', type(ex).__name__, ex)
-                return
-            except IndexError as ex:
-                self.__log.error('%s: %s.', type(ex).__name__, ex)
-                return
-
-            self._cl.change_onoff(ch, on, pw_diff, tap)
-            return
-
-        self.__log.error('%s %s: invalid command line', cmd, args)
-
-    def main(self):
-        """ main routine
-        """
-        self.__log.debug('')
-
-        if len(self._cmd) == 0:
-            self.interactive()
-            return
-
-        self.cmd_func(self._cmd)
-
-    def interactive(self):
-        """ interactive mode
-        """
-        self.__log.debug('')
-
-        while True:
-            try:
-                line1 = input(self.PROMPT_STR)
-            except EOFError:
-                self.__log.info('EOF')
-                break
-
-            self.__log.debug('line1=%s', line1)
-
-            args = line1.split()
-            self.__log.debug('args=%s', args)
-
-            self.cmd_func(args)
-
-    def end(self):
-        """ Call at the end of program.
-        """
-        self.__log.debug('doing ..')
-        self._cl.end()
-        self.__log.debug('done')
-
-
-import click
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-
-
-@click.command(context_settings=CONTEXT_SETTINGS, help='''
-WebsockClient sample program
-''')
-@click.argument('url', type=str)
-@click.argument('cmd', type=str, nargs=-1)
-@click.option('--note_base', '-b', 'note_base', type=int, default=None,
-              help='MIDI note base')
-@click.option('--channel', '-c', 'channel', type=int, multiple=True,
-              help='MIDI channel')
-@click.option('--note_n', '-n', 'note_n', type=int, default=0,
-              help='number of available notes')
-@click.option('--delay_limit', '-dl', 'delay_limit', type=float,
-              default=Midi.DEF_DELAY_LIMIT,
-              help='delay limit')
-@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
-              help='debug flag')
-def main(url, cmd, note_base, channel, note_n,
-         delay_limit, debug):
-    """サンプル起動用メイン関数
-    """
-    __log = get_logger(__name__, debug)
-    __log.debug('url=%s, cmd=%s', url, cmd)
-    __log.debug('note_base=%s, channel=%s',
-                note_base, channel)
-    __log.debug('note_n=%s', note_n)
-    __log.debug('delay_limit=%s', delay_limit)
-
-    app = SampleApp(url, cmd, note_base, channel, note_n,
-                    delay_limit, debug=debug)
-    try:
-        app.main()
-    finally:
-        __log.debug('finally')
-        app.end()
-
-
-if __name__ == '__main__':
-    main()

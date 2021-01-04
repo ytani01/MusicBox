@@ -29,9 +29,6 @@ class Midi:
 
         self._midilib_parser = midilib.Parser()
 
-    def end(self) -> None:
-        """ end: do nothing """
-
     def note2ch(self, note, note_base=NOTE_BASE_MIN, note_n=-1) -> int:
         """
         Parameters
