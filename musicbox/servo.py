@@ -20,7 +20,7 @@ Rotation Motor driver for Music Box
 
 """
 __author__ = 'FabLab Kannai'
-__date__   = '2021/01'
+__date__ = '2021/01'
 
 import os
 import time
@@ -73,7 +73,7 @@ class Servo:
             number of servo motors
         """
         self._dbg = debug
-        __class__.__log = get_logger(__class__.__name__, self._dbg)
+        self.__log = get_logger(self.__class__.__name__, self._dbg)
         self.__log.debug('conf_file=%s' % conf_file)
         self.__log.debug('push/pull interval=%s',
                          (push_interval, pull_interval))
@@ -96,7 +96,7 @@ class Servo:
         self.load_conf(self.conf_file)
 
         self._dev = ServoPCA9685(list(range(self.servo_n)), self._pi,
-                                  debug=self._dbg)
+                                 debug=self._dbg)
         self.pull(list(range(self.servo_n)))
 
     def end(self):
@@ -275,9 +275,9 @@ class Servo:
 
         for ch in ch_list:
             # daemon化しないほうがいい (?)
-            threading.Thread(target=self.tap1, args=(
-                ch, push_interval, pull_interval),
-                daemon=False).start()
+            threading.Thread(target=self.tap1,
+                             args=(ch, push_interval, pull_interval),
+                             daemon=False).start()
 
     def tap1(self, ch, push_interval=None, pull_interval=None):
         """

@@ -16,4 +16,4 @@ from .wsserver import WsServer
 
 __all__ = ['Midi', 'RotationMotor', 'Servo',
            'Movement', 'MovementWav1', 'MovementWav2', 'MovementWav3',
-           'Player', 'WsServer']
+           'Player', 'WsServer', 'SimpleWebsocketClient']

@@ -7,7 +7,10 @@ MIDI library for Music Box
 __author__ = 'Yoichi Tanibayashi'
 __date__ = '2021/01'
 
+import json
+import time
 import midilib
+from websocket import create_connection
 from .my_logger import get_logger
 
 
@@ -196,3 +199,21 @@ class Midi:
         music_data2 = self.merge_ch(music_data)
 
         return music_data2
+
+    def send_music(self, music_data, url):
+        """
+        Parameters
+        ----------
+        music_data: list of MusicDataEnt
+        url: str
+        """
+        self.__log.debug('len(music_data)=%s, url=%s',
+                         len(music_data), url)
+
+        msg = {'cmd': 'music_load', 'music_data': music_data}
+
+        msg_json = json.dumps(msg)
+
+        ws = create_connection(url)
+        ws.send(msg_json)
+        ws.close()

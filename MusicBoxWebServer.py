@@ -16,7 +16,7 @@ $ ./MusicBoxWebServer.py -h
 
 """
 __author__ = 'Yoichi Tanibayashi'
-__date__   = '2020/12'
+__date__   = '2021/01'
 __version__ = '0.1'
 
 import os

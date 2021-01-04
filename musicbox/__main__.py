@@ -18,15 +18,23 @@ __date__ = '2021/01'
 
 class MidiApp:
     """ MidiApp """
-    def __init__(self, midi_file, channel=[], debug=False) -> None:
+    def __init__(self, midi_file, out_file=(), channel=[], ws_url='',
+                 debug=False) -> None:
         """ Constructor """
         self._dbg = debug
         self.__log = get_logger(self.__class__.__name__, self._dbg)
         self.__log.debug('midi_file=%s, channel=%s',
                          midi_file, channel)
+        self.__log.debug('out_file=%s', out_file)
+        self.__log.debug('ws_url=%s', ws_url)
 
         self._midi_file = midi_file
         self._channel = channel
+        self._out_file = ''
+        if out_file:
+            self._out_file = out_file[0]
+            self.__log.debug('out_file=%s', self._out_file)
+        self._ws_url = ws_url
 
         self._parser = Midi(debug=self._dbg)
 
@@ -36,10 +44,12 @@ class MidiApp:
 
         music_data = self._parser.parse(self._midi_file, self._channel)
 
-        print('music_data = \n%s' % (json.dumps(music_data, indent=4)))
+        if self._out_file:
+            with open(self._out_file, mode='w') as f:
+                json.dump(music_data, f, indent=4)
 
-        with open('music_data.json', mode='w') as f:
-            json.dump(music_data, f, indent=4)
+        if self._ws_url:
+            self._parser.send_music(music_data, self._ws_url)
 
 
 class RotationMotorApp:
@@ -386,14 +396,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.group(invoke_without_command=True,
              context_settings=CONTEXT_SETTINGS, help='''
-==========================
-
- Music Box Apps and Tests
-
---------------------------
-
-Usage: python3 -m musicbox [OPTIONS] COMMAND [OPTIONS] [ARGS] ...
-
+Music Box Apps and Tests
 ''')
 @click.pass_context
 def cli(ctx):
@@ -406,24 +409,25 @@ def cli(ctx):
         print()
         print(ctx.get_help())
     else:
-        print()
-        print('sub-command = %s' % subcmd)
-        print()
+        print('==========')
 
 
 @cli.command(context_settings=CONTEXT_SETTINGS, help="""
 MIDI parser test
 """)
 @click.argument('midi_file', type=click.Path(exists=True))
+@click.argument('out_file', type=click.Path(), nargs=-1)
 @click.option('--channel', '-c', 'channel', type=int, multiple=True,
               help='MIDI channel')
+@click.option('--send', '-s', 'ws_url', type=str,
+              help='websocket URL')
 @click.option('--debug', '-d', 'dbg', is_flag=True, default=False,
               help='debug flag')
-def midi(midi_file, channel, dbg) -> None:
+def midi(midi_file, out_file, channel, ws_url, dbg) -> None:
     """ parser main """
     log = get_logger(__name__, dbg)
 
-    app = MidiApp(midi_file, channel, debug=dbg)
+    app = MidiApp(midi_file, out_file, channel, ws_url, debug=dbg)
     try:
         app.main()
     finally:
@@ -580,4 +584,4 @@ def wsserver(port, wav_mode, debug):
 
 
 if __name__ == '__main__':
-    cli()  # pylint: disable=no-value-for-parameter
+    cli(prog_name='python3 -m musicbox')  # pylint: disable=no-value-for-parameter

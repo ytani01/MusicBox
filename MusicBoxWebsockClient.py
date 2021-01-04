@@ -146,6 +146,7 @@ class MusicBoxWebsockClient:
 
         cmd_data = {'cmd': 'music_load', 'music_data': music_data}
         json_str = json.dumps(cmd_data)
+        print(json_str)
         self._ws.send(json_str)
 
     def paper_tape(self, file):
