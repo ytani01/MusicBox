@@ -9,6 +9,7 @@ import click
 import cuilib
 from . import Parser, RotationMotor, Servo
 from . import Movement, MovementWavFile, MovementWavFileFull
+from . import Player
 from .my_logger import get_logger
 
 __author__ = 'Yoichi Tanibayashi'
@@ -35,7 +36,10 @@ class ParseApp:
 
         music_data = self._parser.parse(self._midi_file, self._channel)
 
-        print('music_data = %s' % (json.dumps(music_data, indent=4)))
+        print('music_data = \n%s' % (json.dumps(music_data, indent=4)))
+
+        with open('music_data.json', mode='w') as f:
+            json.dump(music_data, f, indent=4)
 
     def end(self) -> None:
         """ end: do nothing """

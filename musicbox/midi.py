@@ -111,6 +111,7 @@ class Parser:
 
         music_data = []
 
+        prev_abs_time = 0
         for note_info in note_data:
             if note_info.velocity == 0:
                 continue
@@ -121,7 +122,13 @@ class Parser:
             if ch < 0:
                 continue
 
-            ent = {'abs_time': round(abs_time, 3), 'ch': [ch]}
+            delay = round(abs_time - prev_abs_time, 3)
+            prev_abs_time = abs_time
+            
+            ent = {'abs_time': round(abs_time, 3),
+                   'ch': [ch],
+                   'delay': delay}
+            
             music_data.append(ent)
 
         return music_data
@@ -144,7 +151,9 @@ class Parser:
                 out_music_data[-1]['ch'] += ent['ch']
                 continue
 
-            ent2 = {'abs_time': ent['abs_time'], 'ch': ent['ch']}
+            ent2 = {'abs_time': ent['abs_time'],
+                    'ch': ent['ch'],
+                    'delay': ent['delay']}
             out_music_data.append(ent2)
             abs_time = ent['abs_time']
 

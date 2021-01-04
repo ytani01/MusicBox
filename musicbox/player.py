@@ -321,9 +321,12 @@ class Player:
         if type(self._music_th) == threading.Thread:
             self._music_active = False
 
+            count = 0
             while self._music_th.is_alive():
-                self._log.info('waiting music_th to end')
+                if count > 0:
+                    self._log.info('waiting music_th to end')
                 self._music_th.join(timeout=1)
+                count += 1
 
         self._log.debug('done: music_data_i=%s', self._music_data_i)
 
