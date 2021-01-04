@@ -11,7 +11,7 @@ import midilib
 from .my_logger import get_logger
 
 
-class Parser:
+class Midi:
     """
     MIDI parser for Music Box
     """

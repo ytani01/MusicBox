@@ -7,7 +7,7 @@ main for musicbox package
 import json
 import click
 import cuilib
-from . import Parser, RotationMotor, Servo
+from . import Midi, RotationMotor, Servo
 from . import Movement, MovementWav1, MovementWav2, MovementWav3
 from . import Player, WsServer
 from .my_logger import get_logger
@@ -28,7 +28,7 @@ class ParseApp:
         self._midi_file = midi_file
         self._channel = channel
 
-        self._parser = Parser(debug=self._dbg)
+        self._parser = Midi(debug=self._dbg)
 
     def main(self) -> None:
         """ main """
@@ -254,8 +254,8 @@ class PlayerApp:
         Player.WAVMODE_MIDI_FULL: 128
     }
 
-    def __init__(self, wav_mode,
-                 music_file, channel,
+    def __init__(self, music_file, channel,
+                 wav_mode,
                  rotation_speed,
                  push_interval, pull_interval,
                  debug=False):
@@ -263,9 +263,9 @@ class PlayerApp:
 
         Parameters
         ----------
-        wav_mode: int
-        music_file: str
+        music_file: list of str
         channel: list of int
+        wav_mode: int
         rotation_speed: int
         push_interval, pull_interval: float
 
@@ -288,7 +288,7 @@ class PlayerApp:
         self._note_n = self.NOTE_N[self._wav_mode]
         self.__log.debug('note_n=%s', self._note_n)
 
-        self._parser = Parser(debug=self._dbg)
+        self._parser = Midi(debug=self._dbg)
 
         self._player = Player(self._wav_mode,
                               self._rotation_speed, debug=self._dbg)
@@ -329,7 +329,7 @@ class PlayerApp:
 
         if self._music_file:
             music_data = self._parser.parse(
-                self._music_file,
+                self._music_file[0],
                 self._channel,
                 self.NOTE_BASE[self._wav_mode],
                 self.NOTE_N[self._wav_mode])
@@ -522,14 +522,12 @@ def movement(wav_mode, push_interval, pull_interval, speed, debug):
 @cli.command(context_settings=CONTEXT_SETTINGS, help="""
 Player test
 """)
+@click.argument('music_file', type=click.Path(exists=True), nargs=-1)
+@click.option('--channel', '-c', 'channel', type=int, multiple=True,
+              help='MIDI channel')
 @click.option('--wav_mode', '-w', 'wav_mode', type=int,
               default=0,
               help='Wav file mode')
-@click.option('--music_file', '-f', 'music_file',
-              type=click.Path(exists=True),
-              help='music file name')
-@click.option('--channel', '-c', 'channel', type=int, multiple=True,
-              help='MIDI channel')
 @click.option('--speed', '-s', 'speed', type=int,
               default=Player.ROTATION_SPEED,
               help='rotation speed')
@@ -543,12 +541,12 @@ Player test
                   Servo.DEF_PULL_INTERVAL))
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def player(wav_mode, music_file, channel,
+def player(music_file, channel, wav_mode,
            speed, push_interval, pull_interval, debug):
     """ player """
     log = get_logger(__name__, debug)
 
-    app = PlayerApp(wav_mode, music_file, channel, speed,
+    app = PlayerApp(music_file, channel, wav_mode, speed,
                     push_interval, pull_interval, debug=debug)
 
     try:
