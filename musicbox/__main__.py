@@ -225,6 +225,85 @@ class MovementApp:
         self._movement.end()
 
 
+class PlayerApp:
+    """ PlayerApp """
+
+    SERVO_KEY = '12345678qwertyu'
+    QUIT_KEY = ['KEY_ESCAPE', 'KEY_ENTER', '\x04']
+
+    def __init__(self, wav_mode,
+                 infile,
+                 rotation_speed,
+                 push_interval, pull_interval,
+                 debug=False):
+        """ Constructor
+
+        Parameters
+        ----------
+        wav_mode: int
+        infile: list of str
+        rotation_speed: int
+        push_interval, pull_interval: float
+
+        """
+        self._dbg = debug
+        self.__log = get_logger(__class__.__name__, self._dbg)
+        self.__log.debug('wav_mode=%s', wav_mode)
+        self.__log.debug('infile=%s', infile)
+        self.__log.debug('rotation_speed=%s', rotation_speed)
+        self.__log.debug('push/pull_interval=%s',
+                         (push_interval, pull_interval))
+
+        self._infile = infile
+        self._wav_mode = wav_mode
+        self._rotation_speed = rotation_speed
+
+        self._player = PlayerWavFile(debug=self._dbg)
+
+        self._cui = cuilib.Cui(debug=self._dbg)
+
+        self._cui.add(self.SERVO_KEY, self.single_play, 'single_play')
+        self._cui.add(self.QUIT_KEY, self.quit, 'quit')
+
+    def single_play(self, key_sym):
+        """
+        single_play
+        """
+        self.__log.debug('keysym=%s', key_sym)
+
+        ch = self.SERVO_KEY.index(key_sym)
+
+        if self._wav_mode == 2:
+            ch += 69
+
+        print('ch=%s' % (ch))
+
+        self._player.single_play([ch])
+
+    def quit(self, key_sym):
+        """ quit """
+        self.__log.debug('keysym=%s', key_sym)
+        print('*** Quit ***')
+        self._cui.end()
+
+    def main(self):
+        """ main """
+        self.__log.debug('')
+
+        self._player.rotation_speed(self._rotation_speed)
+
+        self._cui.start()
+        print('*** Start ***')
+        print('%s to quit' % (self.QUIT_KEY))
+
+        self._cui.join()
+
+    def end(self):
+        """ end """
+        self.__log.debug('')
+        self._player.end()
+
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
@@ -346,6 +425,40 @@ def movement(wav_mode, push_interval, pull_interval, speed, debug):
 
     app = MovementApp(wav_mode, speed,
                       push_interval, pull_interval, debug=debug)
+
+    try:
+        app.main()
+    finally:
+        log.debug('finally')
+        app.end()
+        log.info('end')
+
+
+@cli.command(context_settings=CONTEXT_SETTINGS, help="""
+Player test
+""")
+@click.option('--wav_mode', '-w', 'wav_mode', type=int,
+              default=0,
+              help='Wav file mode')
+@click.option('--speed', '-s', 'speed', type=int,
+              default=Player.ROTATION_SPEED,
+              help='rotation speed')
+@click.option('--push', '-p', 'push_interval', type=float,
+              default=Servo.DEF_PUSH_INTERVAL,
+              help='push interaval, default=%s sec' % (
+                  Servo.DEF_PUSH_INTERVAL))
+@click.option('--pull', '-P', 'pull_interval', type=float,
+              default=Servo.DEF_PULL_INTERVAL,
+              help='pull interaval, default=%s sec' % (
+                  Servo.DEF_PULL_INTERVAL))
+@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
+              help='debug flag')
+def player(wav_mode, push_interval, pull_interval, speed, debug):
+    """ player """
+    log = get_logger(__name__, debug)
+
+    app = PlayerApp(wav_mode, speed,
+                    push_interval, pull_interval, debug=debug)
 
     try:
         app.main()

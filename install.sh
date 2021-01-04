@@ -48,6 +48,7 @@ install_my_python_pkg() {
     fi
 
     cd_echo $_DIR
+    git pull
     pip install .
     echo
 }
