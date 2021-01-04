@@ -18,23 +18,18 @@ __date__ = '2021/01'
 
 class MidiApp:
     """ MidiApp """
-    def __init__(self, midi_file, out_file=(), channel=[], ws_url='',
+    def __init__(self, midi_file, destination=(), channel=[],
                  debug=False) -> None:
         """ Constructor """
         self._dbg = debug
         self.__log = get_logger(self.__class__.__name__, self._dbg)
         self.__log.debug('midi_file=%s, channel=%s',
                          midi_file, channel)
-        self.__log.debug('out_file=%s', out_file)
-        self.__log.debug('ws_url=%s', ws_url)
+        self.__log.debug('destination=%s', destination)
 
         self._midi_file = midi_file
+        self._destination = destination
         self._channel = channel
-        self._out_file = ''
-        if out_file:
-            self._out_file = out_file[0]
-            self.__log.debug('out_file=%s', self._out_file)
-        self._ws_url = ws_url
 
         self._parser = Midi(debug=self._dbg)
 
@@ -44,12 +39,13 @@ class MidiApp:
 
         music_data = self._parser.parse(self._midi_file, self._channel)
 
-        if self._out_file:
-            with open(self._out_file, mode='w') as f:
+        for dst in self._destination:
+            if dst.startswith('ws:/'):
+                self._parser.send_music(music_data, dst)
+                continue
+            
+            with open(dst, mode='w') as f:
                 json.dump(music_data, f, indent=4)
-
-        if self._ws_url:
-            self._parser.send_music(music_data, self._ws_url)
 
 
 class RotationMotorApp:
@@ -413,21 +409,21 @@ def cli(ctx):
 
 
 @cli.command(context_settings=CONTEXT_SETTINGS, help="""
-MIDI parser test
+MIDI parser
+
+  DESTINATION: file name or websock URL
 """)
 @click.argument('midi_file', type=click.Path(exists=True))
-@click.argument('out_file', type=click.Path(), nargs=-1)
+@click.argument('destination', type=str, nargs=-1)
 @click.option('--channel', '-c', 'channel', type=int, multiple=True,
               help='MIDI channel')
-@click.option('--send', '-s', 'ws_url', type=str,
-              help='websocket URL')
 @click.option('--debug', '-d', 'dbg', is_flag=True, default=False,
               help='debug flag')
-def midi(midi_file, out_file, channel, ws_url, dbg) -> None:
+def midi(midi_file, destination, channel, dbg) -> None:
     """ parser main """
     log = get_logger(__name__, dbg)
 
-    app = MidiApp(midi_file, out_file, channel, ws_url, debug=dbg)
+    app = MidiApp(midi_file, destination, channel, debug=dbg)
     try:
         app.main()
     finally:

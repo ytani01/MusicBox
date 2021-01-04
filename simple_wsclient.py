@@ -10,7 +10,11 @@ url = 'ws://localhost:%s' % (port)
 
 
 while True:
-    line = input('> ')
+    try:
+        line = input('> ')
+    except EOFError:
+        print('[EOF]')
+        break
 
     if not line:
         break
