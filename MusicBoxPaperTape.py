@@ -32,7 +32,7 @@ __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
 
 import json
-from MyLogger import get_logger
+from my_logger import get_logger
 
 
 class MusicBoxPaperTape:

@@ -3,17 +3,11 @@
 # (c) 2020 Yoichi Tanibayashi
 #
 """
-Music Box Web Server
+Music Box Web Interface for Calibration
 
 ### for detail and simple usage ###
 
 $ python3 -m pydoc MusicBoxWebServer
-
-
-### sample program ###
-
-$ ./MusicBoxWebServer.py -h
-
 """
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2021/01'
@@ -23,7 +17,7 @@ import os
 from pathlib import Path
 import tornado.ioloop
 import tornado.web
-from MyLogger import get_logger
+from my_logger import get_logger
 
 
 class MusicBoxWebHandler(tornado.web.RequestHandler):
