@@ -8,8 +8,9 @@ Music Box movement class
 
 MovementBase
  |
- +- Movement        : for servo motor
- +- MovementWavFile : for wav file
+ +- Movement            : for servo motor
+ +- MovementWavFile     : for wav file (15 notes)
+ +- MovementWavFileFull : for wav file (full notes)
 
 
 ### Module Architecture (server side)
@@ -17,7 +18,7 @@ MovementBase
          --------------------------------------------
         |           MusicBoxWebsockServer            |
         |-------------------------------+------------|
-        |          MusicBoxPlayer       |            |
+        |             Player            |            |
         |-------------------------------|            |
 This -->|            Movement           |            |
         |-------------------------------| websockets |
@@ -419,4 +420,5 @@ class MovementWavFileFull(MovementWavFile):
                  wav_prefix=WAV_FILE_PREFIX,
                  wav_suffix=WAV_FILE_SUFFIX,
                  debug=False):
+        """ Constructor """
         super().__init__(wav_dir, wav_prefix, wav_suffix, debug)
