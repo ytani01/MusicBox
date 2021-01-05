@@ -43,7 +43,7 @@ class Midi:
         note: int
             MIDI note number
         note_origin: int
-            base number of note
+            origin number of note
         note_n: int
 
         Returns
