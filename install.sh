@@ -87,6 +87,7 @@ echo "### insall/update pip etc. .."
 echo
 pip install -U pip setuptools wheel
 hash -r
+echo
 pip -V
 echo
 
