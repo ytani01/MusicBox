@@ -48,6 +48,7 @@ install_my_python_pkg() {
     fi
 
     cd_echo $_DIR
+    git pull
     pip install .
     echo
 }
@@ -92,9 +93,13 @@ install_my_python_pkg $MIDILIB_PKG $MIDILIB_DIR $MIDILIB_GIT
 install_my_python_pkg $CUILIB_PKG $CUILIB_DIR $CUILIB_GIT
 install_my_python_pkg $STEPMTR_PKG $STEPMTR_DIR $STEPMTR_GIT
 install_my_python_pkg $SERVO_PKG $SERVO_DIR $SERVO_GIT
+echo
 
 #
 # install musicbox package
 #
-cd $MYDIR
-#pip install .
+cd_echo $MYDIR
+pip install .
+
+echo
+echo "### Completed"

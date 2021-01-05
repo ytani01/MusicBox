@@ -25,22 +25,22 @@ Music Box 本体で演奏するモードと、
 
 ## 0. TL;DR
 
+Install
 ```bash
       $ sudo pigpiod
       $ cd ~
       $ python3 -m venv env1
       $ cd ~/env1
-      $ git clone https://github.com/ytani01/MusicBox.git
       $ source ./bin/activate
+
+(env1)$ git clone https://github.com/ytani01/MusicBox.git
 (env1)$ cd ~/env1/MusicBox
-(env1)$ pip install -r requirements.txt
-(env1)$ ./MusicBoxWebsockServer.py &
-(env1)$ ./MusicBoxWebsockClient.py ws://localhost:8881/ papaer_tape/kaeruno-uta.txt
-(env1)$ ./MusicBoxWebsockClient.py ws://localhost:8881/
-      > 0 2 4
-      > stop
-      > [Ctrl]-[D]
-(env1)$
+(env1)$ ./install.sh
+```
+
+Run servers
+```bash
+(env1)$ python -m musicbox wsserver
 ```
 
 ### 0.1 Client API: Simple Usage
