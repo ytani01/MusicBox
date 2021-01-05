@@ -102,4 +102,7 @@ cd_echo $MYDIR
 pip install .
 
 echo
-echo "### Completed"
+echo "#################"
+echo "### Completed ###"
+echo "#################"
+echo
