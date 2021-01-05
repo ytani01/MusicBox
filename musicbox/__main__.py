@@ -18,17 +18,17 @@ __date__ = '2021/01'
 
 class MidiApp:
     """ MidiApp """
-    def __init__(self, midi_file, destination=(), channel=[],
+    def __init__(self, midi_file, out_file_or_url=(), channel=[],
                  debug=False) -> None:
         """ Constructor """
         self._dbg = debug
         self.__log = get_logger(self.__class__.__name__, self._dbg)
         self.__log.debug('midi_file=%s, channel=%s',
                          midi_file, channel)
-        self.__log.debug('destination=%s', destination)
+        self.__log.debug('out_file_or_url=%s', out_file_or_url)
 
         self._midi_file = midi_file
-        self._destination = destination
+        self._out_file_or_url = out_file_or_url
         self._channel = channel
 
         self._parser = Midi(debug=self._dbg)
@@ -39,11 +39,11 @@ class MidiApp:
 
         music_data = self._parser.parse(self._midi_file, self._channel)
 
-        for dst in self._destination:
+        for dst in self._out_file_or_url:
             if dst.startswith('ws:/'):
                 self._parser.send_music(music_data, dst)
                 continue
-            
+
             with open(dst, mode='w') as f:
                 json.dump(music_data, f, indent=4)
 
@@ -400,6 +400,7 @@ def cli(ctx):
     subcmd = ctx.invoked_subcommand
 
     if subcmd is None:
+        print('==========')
         print()
         print('Please specify subcommand')
         print()
@@ -407,47 +408,28 @@ def cli(ctx):
     else:
         print('==========')
 
-@click.group()
-@click.pass_context
-def cli2(ctl):
-    """ click group """
-    subcmd = ctx.invoked_subcommand
 
-    if subcmd is None:
-        print()
-        print('Please specify subcommand')
-        print()
-        print(ctx.get_help())
-    else:
-        print('==========')
-
-@click.command()
-def sub1(ctx):
-    cli2(ctx)
-
-@cli.command(context_settings=CONTEXT_SETTINGS, help="""
+@cli.command(help="""
 MIDI parser
-
-  DESTINATION: file name or websock URL
 """)
 @click.argument('midi_file', type=click.Path(exists=True))
-@click.argument('destination', type=str, nargs=-1)
+@click.argument('out_file_or_url', type=str, nargs=-1)
 @click.option('--channel', '-c', 'channel', type=int, multiple=True,
               help='MIDI channel')
 @click.option('--debug', '-d', 'dbg', is_flag=True, default=False,
               help='debug flag')
-def midi(midi_file, destination, channel, dbg) -> None:
+def midi(midi_file, out_file_or_url, channel, dbg) -> None:
     """ parser main """
     log = get_logger(__name__, dbg)
 
-    app = MidiApp(midi_file, destination, channel, debug=dbg)
+    app = MidiApp(midi_file, out_file_or_url, channel, debug=dbg)
     try:
         app.main()
     finally:
         log.debug('finally')
 
 
-@cli.command(context_settings=CONTEXT_SETTINGS, help="""
+@cli.command(help="""
 Rotation motor test
 """)
 @click.argument('pin1', type=int)
@@ -471,7 +453,7 @@ def rotation(pin1, pin2, pin3, pin4, debug):
         log.info('end')
 
 
-@cli.command(context_settings=CONTEXT_SETTINGS, help="""
+@cli.command(help="""
 Servo motor test
 """)
 @click.option('--push', '-p', 'push_interval', type=float,
@@ -498,7 +480,7 @@ def servo(push_interval, pull_interval, debug):
         log.info('end')
 
 
-@cli.command(context_settings=CONTEXT_SETTINGS, help="""
+@cli.command(help="""
 Movement test
 """)
 @click.option('--wav_mode', '-w', 'wav_mode', type=int,
@@ -532,7 +514,7 @@ def movement(wav_mode, push_interval, pull_interval, speed, debug):
         log.info('end')
 
 
-@cli.command(context_settings=CONTEXT_SETTINGS, help="""
+@cli.command(help="""
 Player test
 """)
 @click.argument('music_file', type=click.Path(exists=True), nargs=-1)
@@ -570,7 +552,7 @@ def player(music_file, channel, wav_mode,
         log.info('end')
 
 
-@cli.command(context_settings=CONTEXT_SETTINGS, help="""
+@cli.command(help="""
 Music Box Websocket Server
 """)
 @click.option('--port', '-p', 'port', type=int,
@@ -596,5 +578,25 @@ def wsserver(port, wav_mode, debug):
         log.info('end')
 
 
+@click.group(help='subgroup1 test')
+@click.pass_context
+def subgroup1(ctx):
+    """ click group """
+    subcmd = ctx.invoked_subcommand
+    click.echo(subcmd)
+
+    if subcmd is None:
+        print()
+        print('Please specify subcommand')
+        print()
+        print(ctx.get_help())
+
+
+@subgroup1.command(help='sub2 test')
+def sub2():
+    click.echo('This is subgroup command test.')
+
+
 if __name__ == '__main__':
-    cli(prog_name='python3 -m musicbox')  # pylint: disable=no-value-for-parameter
+    cli.add_command(subgroup1)
+    cli(prog_name='python3 -m musicbox')
