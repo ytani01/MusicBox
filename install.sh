@@ -99,7 +99,7 @@ echo
 # install musicbox package
 #
 cd_echo $MYDIR
-#pip install .
-pip install -r requirements.txt 
+pip install .
 
+echo
 echo "### Completed"
