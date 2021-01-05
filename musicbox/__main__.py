@@ -4,11 +4,11 @@
 """
 main for musicbox package
 """
-import click
 import json
+import click
 from websocket import create_connection
 import cuilib
-from . import Midi, RotationMotor, Servo
+from . import PaperTape, Midi, RotationMotor, Servo
 from . import Movement, MovementWav1, MovementWav2, MovementWav3
 from . import Player, WsServer
 from .my_logger import get_logger
@@ -21,6 +21,40 @@ DEF_WS_PORT = WsServer.DEF_PORT
 DEF_WS_URL = 'ws://%s:%s/' % (DEF_WS_HOST, DEF_WS_PORT)
 
 
+class PaperTapeApp:
+    """ PaperTapeApp """
+    def __init__(self, paper_tape_file, out_file_or_ws_url=(),
+                 debug=False) -> None:
+        """ Constructor
+
+        Parameters
+        ----------
+        paper_tape_file: str
+        out_file_or_ws_url: str
+        """
+        self._dbg = debug
+        self._log = get_logger(self.__class__.__name__, self._dbg)
+
+        self._paper_tape_file = paper_tape_file
+        self._out_file_or_ws_url = out_file_or_ws_url
+
+        self._parser = PaperTape(debug=self._dbg)
+
+    def main(self):
+        """ main """
+        self._log.debug('')
+
+        music_data = self._parser.parse(self._paper_tape_file)
+
+        for dst in self._out_file_or_ws_url:
+            if ':/' in dst:
+                self._parser.send_music(music_data, dst)
+                continue
+
+            with open(dst, mode='w') as f:
+                json.dump(music_data, f, indent=4)
+
+
 class MidiApp:
     """ MidiApp """
     def __init__(self, midi_file,
@@ -30,8 +64,8 @@ class MidiApp:
                  debug=False) -> None:
         """ Constructor
 
-        Prameters
-        ---------
+        Parameters
+        ----------
         midi_file: str
         out_file_or_ws_url: str
         channel: list of int
@@ -40,13 +74,13 @@ class MidiApp:
         wav_mode: int
         """
         self._dbg = debug
-        self.__log = get_logger(self.__class__.__name__, self._dbg)
-        self.__log.debug('midi_file=%s, channel=%s',
-                         midi_file, channel)
-        self.__log.debug('out_file_or_ws_url=%s', out_file_or_ws_url)
-        self.__log.debug('note_origin=%s', note_origin)
-        self.__log.debug('no_note_offset_flag=%s', no_note_offset_flag)
-        self.__log.debug('wav_mode=%s', wav_mode)
+        self._log = get_logger(self.__class__.__name__, self._dbg)
+        self._log.debug('midi_file=%s, channel=%s',
+                        midi_file, channel)
+        self._log.debug('out_file_or_ws_url=%s', out_file_or_ws_url)
+        self._log.debug('note_origin=%s', note_origin)
+        self._log.debug('no_note_offset_flag=%s', no_note_offset_flag)
+        self._log.debug('wav_mode=%s', wav_mode)
 
         self._midi_file = midi_file
         self._out_file_or_ws_url = out_file_or_ws_url
@@ -60,14 +94,14 @@ class MidiApp:
         if wav_mode in (2, 3):
             self._note_origin = 0
             self._note_offset = []
-            self.__log.debug('[fix] note_origin=%s, note_offset=%s',
-                             self._note_origin, self._note_offset)
+            self._log.debug('[fix] note_origin=%s, note_offset=%s',
+                            self._note_origin, self._note_offset)
 
         self._parser = Midi(debug=self._dbg)
 
     def main(self) -> None:
         """ main """
-        self.__log.debug('')
+        self._log.debug('')
 
         music_data = self._parser.parse(self._midi_file,
                                         self._channel,
@@ -88,15 +122,15 @@ class RotationMotorApp:
     def __init__(self, pin1, pin2, pin3, pin4, debug=False):
         """ Constructor """
         self._dbg = debug
-        self.__log = get_logger(__class__.__name__, self._dbg)
-        self.__log.debug('pins=%s', (pin1, pin2, pin3, pin4))
+        self._log = get_logger(__class__.__name__, self._dbg)
+        self._log.debug('pins=%s', (pin1, pin2, pin3, pin4))
 
         self.mtr = RotationMotor(pin1, pin2, pin3, pin4,
                                  debug=self._dbg)
 
     def main(self):
         """ main """
-        self.__log.debug('')
+        self._log.debug('')
 
         self.mtr.set_speed(1)
 
@@ -108,9 +142,9 @@ class RotationMotorApp:
                 print('<EOF>')
                 break
             except Exception as ex:
-                self.__log.error('%s:%s', type(ex), ex)
+                self._log.error('%s:%s', type(ex), ex)
                 continue
-            self.__log.debug('line1=%a', line1)
+            self._log.debug('line1=%a', line1)
 
             if len(line1) == 0:
                 # end
@@ -119,19 +153,19 @@ class RotationMotorApp:
             try:
                 speed = int(line1)
             except Exception:
-                self.__log.error('invalid speed: %a', line1)
+                self._log.error('invalid speed: %a', line1)
                 continue
-            self.__log.debug('speed=%s', speed)
+            self._log.debug('speed=%s', speed)
 
             if speed < 0 or speed > 10:
-                self.__log.error('invalid speed: %s', speed)
+                self._log.error('invalid speed: %s', speed)
                 continue
 
             self.mtr.set_speed(speed)
 
     def end(self):
         """ end """
-        self.__log.debug('')
+        self._log.debug('')
         self.mtr.end()
 
 
@@ -144,9 +178,9 @@ class ServoMotorApp:
     def __init__(self, push_interval, pull_interval, debug=False):
         """ Constructor """
         self._dbg = debug
-        self.__log = get_logger(__class__.__name__, self._dbg)
-        self.__log.debug('push/pull_interval=%s',
-                         (push_interval, pull_interval))
+        self._log = get_logger(__class__.__name__, self._dbg)
+        self._log.debug('push/pull_interval=%s',
+                        (push_interval, pull_interval))
 
         self._servo = Servo(push_interval=push_interval,
                             pull_interval=pull_interval,
@@ -161,7 +195,7 @@ class ServoMotorApp:
         """
         tap
         """
-        self.__log.debug('keysym=%s', key_sym)
+        self._log.debug('keysym=%s', key_sym)
 
         ch = self.SERVO_KEY.index(key_sym)
         print('ch=%s' % (ch))
@@ -170,13 +204,13 @@ class ServoMotorApp:
 
     def quit(self, key_sym):
         """ quit """
-        self.__log.debug('keysym=%s', key_sym)
+        self._log.debug('keysym=%s', key_sym)
         print('*** Quit ***')
         self._cui.end()
 
     def main(self):
         """ main """
-        self.__log.debug('')
+        self._log.debug('')
 
         self._cui.start()
         print('*** Start ***')
@@ -186,7 +220,7 @@ class ServoMotorApp:
 
     def end(self):
         """ end """
-        self.__log.debug('')
+        self._log.debug('')
         self._servo.end()
 
 
@@ -202,11 +236,11 @@ class MovementApp:
                  debug=False):
         """ Constructor """
         self._dbg = debug
-        self.__log = get_logger(__class__.__name__, self._dbg)
-        self.__log.debug('wav_mode=%s', wav_mode)
-        self.__log.debug('rotation_speed=%s', rotation_speed)
-        self.__log.debug('push/pull_interval=%s',
-                         (push_interval, pull_interval))
+        self._log = get_logger(__class__.__name__, self._dbg)
+        self._log.debug('wav_mode=%s', wav_mode)
+        self._log.debug('rotation_speed=%s', rotation_speed)
+        self._log.debug('push/pull_interval=%s',
+                        (push_interval, pull_interval))
 
         self._wav_mode = wav_mode
         self._rotation_speed = rotation_speed
@@ -235,7 +269,7 @@ class MovementApp:
         """
         single_play
         """
-        self.__log.debug('keysym=%s', key_sym)
+        self._log.debug('keysym=%s', key_sym)
 
         ch = self.SERVO_KEY.index(key_sym)
 
@@ -250,13 +284,13 @@ class MovementApp:
 
     def quit(self, key_sym):
         """ quit """
-        self.__log.debug('keysym=%s', key_sym)
+        self._log.debug('keysym=%s', key_sym)
         print('*** Quit ***')
         self._cui.end()
 
     def main(self):
         """ main """
-        self.__log.debug('')
+        self._log.debug('')
 
         self._movement.rotation_speed(self._rotation_speed)
 
@@ -268,7 +302,7 @@ class MovementApp:
 
     def end(self):
         """ end """
-        self.__log.debug('')
+        self._log.debug('')
         self._movement.end()
 
 
@@ -309,14 +343,14 @@ class PlayerApp:
 
         """
         self._dbg = debug
-        self.__log = get_logger(__class__.__name__, self._dbg)
-        self.__log.debug('wav_mode=%s', wav_mode)
-        self.__log.debug('music_file=%s, channel=%s',
-                         music_file, channel)
-        self.__log.debug('channel=%s', channel)
-        self.__log.debug('rotation_speed=%s', rotation_speed)
-        self.__log.debug('push/pull_interval=%s',
-                         (push_interval, pull_interval))
+        self._log = get_logger(__class__.__name__, self._dbg)
+        self._log.debug('wav_mode=%s', wav_mode)
+        self._log.debug('music_file=%s, channel=%s',
+                        music_file, channel)
+        self._log.debug('channel=%s', channel)
+        self._log.debug('rotation_speed=%s', rotation_speed)
+        self._log.debug('push/pull_interval=%s',
+                        (push_interval, pull_interval))
 
         self._wav_mode = wav_mode
         self._music_file = music_file
@@ -324,7 +358,7 @@ class PlayerApp:
         self._rotation_speed = rotation_speed
 
         self._note_n = self.NOTE_N[self._wav_mode]
-        self.__log.debug('note_n=%s', self._note_n)
+        self._log.debug('note_n=%s', self._note_n)
 
         self._parser = Midi(debug=self._dbg)
 
@@ -340,7 +374,7 @@ class PlayerApp:
         """
         single_play
         """
-        self.__log.debug('keysym=%s', key_sym)
+        self._log.debug('keysym=%s', key_sym)
 
         ch = self.SERVO_KEY.index(key_sym)
 
@@ -355,13 +389,13 @@ class PlayerApp:
 
     def quit(self, key_sym):
         """ quit """
-        self.__log.debug('keysym=%s', key_sym)
+        self._log.debug('keysym=%s', key_sym)
         print('*** Quit ***')
         self._cui.end()
 
     def main(self):
         """ main """
-        self.__log.debug('')
+        self._log.debug('')
 
         self._player.rotation_speed(self._rotation_speed)
 
@@ -382,7 +416,7 @@ class PlayerApp:
 
     def end(self):
         """ end """
-        self.__log.debug('')
+        self._log.debug('')
         self._player.end()
 
 
@@ -397,7 +431,7 @@ class WsServerApp:
         wav_mode: int
         """
         self._dbg = debug
-        self.__log = get_logger(self.__class__.__name__, self._dbg)
+        self._log = get_logger(self.__class__.__name__, self._dbg)
 
         self._port = port
         self._wav_mode = wav_mode
@@ -407,19 +441,19 @@ class WsServerApp:
 
     def main(self):
         """ main """
-        self.__log.debug('start')
+        self._log.debug('start')
 
         self._svr.main()
 
-        self.__log.debug('done')
+        self._log.debug('done')
 
     def end(self):
         """ end: Call at the end of usage """
-        self.__log.debug('doing ..')
+        self._log.debug('doing ..')
 
         self._svr.end()
 
-        self.__log.debug('done')
+        self._log.debug('done')
 
 
 class WsCmdApp:
@@ -434,7 +468,7 @@ class WsCmdApp:
         cmd: str
         """
         self._dbg = debug
-        self.__log = get_logger(self.__class__.__name__, self._dbg)
+        self._log = get_logger(self.__class__.__name__, self._dbg)
 
         self._cmd = cmd
         self._url = url
@@ -447,10 +481,10 @@ class WsCmdApp:
         msg: dict
             command message
         """
-        self.__log.debug('msg=%s', msg)
+        self._log.debug('msg=%s', msg)
 
         msg_json = json.dumps(msg)
-        self.__log.debug('msg_json=%a', msg_json)
+        self._log.debug('msg_json=%a', msg_json)
 
         print('send %a to %a' % (msg_json, self._url))
         ws = create_connection(self._url)
@@ -497,6 +531,26 @@ def cli(ctx):
 
 
 @cli.command(help="""
+Paper Tape parser
+(and send music_data to websocket server)
+""")
+@click.argument('paper_tape_file', type=click.Path(exists=True))
+@click.argument('out_file_or_ws_url', type=str, nargs=-1)
+@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
+              help='debug flag')
+def papertape(paper_tape_file, out_file_or_ws_url, debug):
+    """ papertape """
+    log = get_logger(__name__, debug)
+
+    app = PaperTapeApp(paper_tape_file, out_file_or_ws_url,
+                       debug)
+    try:
+        app.main()
+    finally:
+        log.debug('done')
+
+
+@cli.command(help="""
 MIDI parser
 (send music_data to websocket server)
 """)
@@ -524,7 +578,7 @@ def midi(midi_file, out_file_or_ws_url, channel,
          note_origin, no_note_offset_flag,
          wav_mode,
          dbg) -> None:
-    """ parser main """
+    """ midi """
     log = get_logger(__name__, dbg)
 
     app = MidiApp(midi_file, out_file_or_ws_url, channel,

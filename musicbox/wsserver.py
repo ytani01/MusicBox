@@ -22,7 +22,7 @@ This -->|                  WsServer                  |
 
 """
 __author__ = 'Yoichi Tanibayashi'
-__date__   = '2021/01'
+__date__ = '2021/01'
 
 import json
 import asyncio
@@ -85,16 +85,15 @@ class WsServer:
             port number
         """
         self._dbg = debug
-        self.__log = get_logger(self.__class__.__name__, self._dbg)
-        self.__log.debug('wav_mode=%s', wav_mode)
-        self.__log.debug('host:port=%s:%s', host, port)
+        self._log = get_logger(self.__class__.__name__, self._dbg)
+        self._log.debug('wav_mode=%s', wav_mode)
+        self._log.debug('host:port=%s:%s', host, port)
 
         self._wav_mode = wav_mode
         self._port = port
         self._host = host
 
-        self._player = Player(wav_mode=self._wav_mode,
-                                      debug=self._dbg)
+        self._player = Player(wav_mode=self._wav_mode, debug=self._dbg)
 
         self._start_svr = websockets.serve(self.handle, host, port)
         self._loop = asyncio.get_event_loop()
@@ -102,22 +101,22 @@ class WsServer:
     def main(self):
         """ main
         """
-        self.__log.debug('')
+        self._log.debug('')
 
-        self.__log.info('start server ..')
+        self._log.info('start server ..')
         self._loop.run_until_complete(self._start_svr)
 
-        self.__log.info('run_forever() ..')
+        self._log.info('run_forever() ..')
         self._loop.run_forever()
 
     def end(self):
         """ Call at the end of program
         """
-        self.__log.debug('doing ..')
+        self._log.debug('doing ..')
 
         self._player.end()
 
-        self.__log.debug('done')
+        self._log.debug('done')
 
     async def handle(self, websock, path):
         """
@@ -128,32 +127,33 @@ class WsServer:
         websock: dict
         path: str
         """
-        self.__log.debug('websock=%s:%s, path=%s',
-                         websock.local_address, websock.host, path)
+        self._log.debug('websock=%s:%s, path=%s',
+                        websock.local_address, websock.host, path)
 
         msg = await websock.recv()
-        self.__log.debug('msg=%s', msg)
+        self._log.debug('msg=%s', msg)
 
         try:
             data = json.loads(msg)
-            self.__log.debug('data=%s', data)
+            self._log.debug('data=%s', data)
         except json.decoder.JSONDecodeError as ex:
-            self.__log.error('%s: %s. msg=%s', type(ex), ex, msg)
+            self._log.error('%s: %s. msg=%s', type(ex), ex, msg)
             return
 
-        self.__log.debug('data=%s', data)
+        self._log.info('received command: %a', data['cmd'])
+        self._log.debug('data=%s', data)
 
         try:
             cmd = data['cmd']
         except KeyError as ex:
-            self.__log.error('%s: %s. data=%s', type(ex), ex, data)
+            self._log.error('%s: %s. data=%s', type(ex), ex, data)
             return
 
         if cmd in ('single_play', 'single', 'play', 'P'):
             try:
                 ch_list = data['ch']
             except KeyError as ex:
-                self.__log.error('%s: %s. data=%s', type(ex), ex, data)
+                self._log.error('%s: %s. data=%s', type(ex), ex, data)
                 return
 
             self._player.single_play(ch_list)
@@ -163,7 +163,7 @@ class WsServer:
             try:
                 music_data = data['music_data']
             except KeyError as ex:
-                self.__log.error('%s: %s. data=%s', type(ex), ex, data)
+                self._log.error('%s: %s. data=%s', type(ex), ex, data)
                 return
 
             self._player.music_load(music_data)
@@ -196,7 +196,7 @@ class WsServer:
                 pw_diff = data['pw_diff']
                 tap = data['tap']
             except KeyError as ex:
-                self.__log.error('%s: %s. data=%s', type(ex), ex, data)
+                self._log.error('%s: %s. data=%s', type(ex), ex, data)
 
             self._player.calibrate(ch, on, pw_diff, tap)
             return

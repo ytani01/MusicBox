@@ -31,7 +31,7 @@ This -->|            Movement           |            |
 
 """
 __author__ = 'Yoichi Tanibayashi'
-__date__   = '2021/01'
+__date__ = '2021/01'
 
 import glob
 import threading
@@ -62,8 +62,8 @@ class MovementBase:
             number of channel from SubClass.super()__init__(ch_n=..)
         """
         self._dbg = debug
-        self.__log = get_logger(self.__class__.__name__, self._dbg)
-        self.__log.debug('ch_n=%s', ch_n)
+        self._log = get_logger(self.__class__.__name__, self._dbg)
+        self._log.debug('ch_n=%s', ch_n)
 
         # public
         self.ch_n = ch_n
@@ -73,20 +73,20 @@ class MovementBase:
         set rotation speed
         default: 0 (stop)
         """
-        self.__log.debug('*** do nothing *** (speed=%s)', speed)
+        self._log.debug('*** do nothing *** (speed=%s)', speed)
 
     def end(self):
         """
         Call at the end of program
         """
-        self.__log.debug('%s: doing ..', __class__.__name__)
-        self.__log.debug('%s: done.', __class__.__name__)
+        self._log.debug('%s: doing ..', __class__.__name__)
+        self._log.debug('%s: done.', __class__.__name__)
 
     def single_play(self, ch_list):
         """
         play One sound (in thread)
         """
-        self.__log.debug('ch_list=%s', ch_list)
+        self._log.debug('ch_list=%s', ch_list)
 
         # self.play_sound(ch_list)
         threading.Thread(target=self.play_sound,
@@ -96,8 +96,8 @@ class MovementBase:
         """
         Must be overridden
         """
-        self.__log.debug('ch_list=%s', ch_list)
-        self.__log.error('*** This method must be overridden ***')
+        self._log.debug('ch_list=%s', ch_list)
+        self._log.error('*** This method must be overridden ***')
 
     def set_onoff(self, ch, on=False, pw=None, tap=False,
                   conf_file=None):
@@ -119,11 +119,11 @@ class MovementBase:
         conf_file: str
             configuration file (path name)
         """
-        self.__log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
+        self._log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
                         ch, on, pw, tap, conf_file)
 
     def calibrate(self, ch, on=False, pw_diff=0, tap=False,
-                     conf_file=None):
+                  conf_file=None):
         """
         on/offパラメータ変更(差分指定)
 
@@ -142,7 +142,7 @@ class MovementBase:
         conf_file: str
             configuration file (path name)
         """
-        self.__log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
+        self._log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
                         ch, on, pw_diff, tap, conf_file)
 
 
@@ -185,9 +185,9 @@ class Movement(MovementBase):
             interval sec
         """
         self._dbg = debug
-        __class__.__log = get_logger(__class__.__name__, self._dbg)
-        self.__log.debug('rotation_gpio=%s', rotation_gpio)
-        self.__log.debug('rotation_speed=%s', rotation_speed)
+        self._log = get_logger(self.__class__.__name__, self._dbg)
+        self._log.debug('rotation_gpio=%s', rotation_gpio)
+        self._log.debug('rotation_speed=%s', rotation_speed)
 
         # start rotation
         self._mtr = RotationMotor(
@@ -210,12 +210,12 @@ class Movement(MovementBase):
         """
         Call at the end of program
         """
-        self.__log.debug('doing ..')
+        self._log.debug('doing ..')
         super().end()
 
         self._servo.end()
         self._mtr.end()
-        self.__log.debug('done')
+        self._log.debug('done')
 
     def play_sound(self, ch_list):
         """
@@ -224,22 +224,22 @@ class Movement(MovementBase):
         ch_list: list of int
             channel list
         """
-        self.__log.debug('ch_list=%s', ch_list)
+        self._log.debug('ch_list=%s', ch_list)
 
         if ch_list is None:
-            self.__log.debug('do nothing')
+            self._log.debug('do nothing')
             return
 
-        self.__log.debug('tap channels: %s', ch_list)
+        self._log.debug('tap channels: %s', ch_list)
         try:
             self._servo.tap(ch_list)
         except ValueError as err:
-            self.__log.warning('%s: %s', type(err), err)
+            self._log.warning('%s: %s', type(err), err)
 
-        self.__log.debug('done')
+        self._log.debug('done')
 
     def rotation_speed(self, speed=0):
-        self.__log.debug('speed=%s', speed)
+        self._log.debug('speed=%s', speed)
         self._mtr.set_speed(speed)
 
     def set_onoff(self, ch, on=False, pw=None, tap=False,
@@ -263,13 +263,13 @@ class Movement(MovementBase):
         conf_file: str
             configuration file (path name)
         """
-        self.__log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
+        self._log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
                         ch, on, pw, tap, conf_file)
 
         self._servo.set_onoff(ch, on, pw, tap, conf_file)
 
     def calibrate(self, ch, on=False, pw_diff=0, tap=False,
-                     conf_file=None):
+                  conf_file=None):
         """
         on/offパラメータ変更(差分指定)
 
@@ -289,7 +289,7 @@ class Movement(MovementBase):
         conf_file: str
             configuration file (path name)
         """
-        self.__log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
+        self._log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
                         ch, on, pw_diff, tap, conf_file)
 
         self._servo.calibrate(ch, on, pw_diff, tap, conf_file)
@@ -326,11 +326,11 @@ class MovementWav1(MovementBase):
         note_origin: int
         """
         self._dbg = debug
-        self.__log = get_logger(self.__class__.__name__, self._dbg)
-        self.__log.debug('wav_dir=%s', wav_dir)
-        self.__log.debug('wav_prefix=%s, wav_suffix=%s',
+        self._log = get_logger(self.__class__.__name__, self._dbg)
+        self._log.debug('wav_dir=%s', wav_dir)
+        self._log.debug('wav_prefix=%s, wav_suffix=%s',
                         wav_prefix, wav_suffix)
-        self.__log.debug('note_origin=%s', note_origin)
+        self._log.debug('note_origin=%s', note_origin)
 
         self._wav_dir = wav_dir
         self._wav_prefix = wav_prefix
@@ -350,10 +350,10 @@ class MovementWav1(MovementBase):
         """
         Call at the end of program
         """
-        self.__log.debug('doing ..')
+        self._log.debug('doing ..')
         super().end()
 
-        self.__log.debug('done')
+        self._log.debug('done')
 
     def load_wav(self, wav_dir=DEF_WAV_DIR,
                  wav_prefix=WAV_FILE_PREFIX,
@@ -370,10 +370,10 @@ class MovementWav1(MovementBase):
         """
         glob_pattern = "%s/%s*%s" % (
             wav_dir, wav_prefix, wav_suffix)
-        self.__log.debug('glob_pattern=%s', glob_pattern)
+        self._log.debug('glob_pattern=%s', glob_pattern)
 
         wav_files = sorted(glob.glob(glob_pattern))
-        self.__log.debug('wav_files=%s', wav_files)
+        self._log.debug('wav_files=%s', wav_files)
 
         return [pygame.mixer.Sound(f) for f in wav_files]
 
@@ -384,28 +384,28 @@ class MovementWav1(MovementBase):
         ch_list: list of int
             channel list
         """
-        self.__log.debug('ch_list=%s', ch_list)
+        self._log.debug('ch_list=%s', ch_list)
 
         if ch_list is None:
-            self.__log.debug('do nothing')
+            self._log.debug('do nothing')
             return
 
         if type(ch_list) != list:
-            self.__log.debug('invalid ch_list: %s', ch_list)
+            self._log.debug('invalid ch_list: %s', ch_list)
             return
 
-        self.__log.debug('play sounds')
+        self._log.debug('play sounds')
         for ch in ch_list:
             if ch is None:
-                self.__log.warning('ch=%s: ignored', ch)
+                self._log.warning('ch=%s: ignored', ch)
                 continue
 
             if ch < 0 or ch > self.ch_n - 1:
-                self.__log.warning('ch=%s: ignored', ch)
+                self._log.warning('ch=%s: ignored', ch)
                 continue
 
             snd_i = ch - self._note_origin
-            self.__log.debug('snd_i=%s', snd_i)
+            self._log.debug('snd_i=%s', snd_i)
 
             snd = self._sound[snd_i]
             snd.set_volume(0.2)   # 音割れ軽減
@@ -414,7 +414,7 @@ class MovementWav1(MovementBase):
             # 音が不自然になる
             snd.play(fade_ms=50, maxtime=400)
 
-        self.__log.debug('done')
+        self._log.debug('done')
 
 
 class MovementWav2(MovementWav1):
@@ -425,16 +425,14 @@ class MovementWav2(MovementWav1):
     WAV_FILE_PREFIX = 'piano'
     WAV_FILE_SUFFIX = '.wav'
 
-    NOTE_ORIGIN=21
+    NOTE_ORIGIN = 21
 
-    def __init__(self, wav_dir=DEF_WAV_DIR,
-                 wav_prefix=WAV_FILE_PREFIX,
-                 wav_suffix=WAV_FILE_SUFFIX,
-                 note_origin=NOTE_ORIGIN,
-                 debug=False):
-        super().__init__(wav_dir, wav_prefix, wav_suffix, note_origin,
-                         debug)
-
+    def __init__(self, debug=False):
+        super().__init__(wav_dir=self.DEF_WAV_DIR,
+                         wav_prefix=self.WAV_FILE_PREFIX,
+                         wav_suffix=self.WAV_FILE_SUFFIX,
+                         note_origin=self.NOTE_ORIGIN,
+                         debug=debug)
 
 class MovementWav3(MovementWav1):
     """
@@ -444,12 +442,11 @@ class MovementWav3(MovementWav1):
     WAV_FILE_PREFIX = 'note'
     WAV_FILE_SUFFIX = '.wav'
 
-    NOTE_ORIGIN=0
+    NOTE_ORIGIN = 0
 
-    def __init__(self, wav_dir=DEF_WAV_DIR,
-                 wav_prefix=WAV_FILE_PREFIX,
-                 wav_suffix=WAV_FILE_SUFFIX,
-                 note_origin=NOTE_ORIGIN,
-                 debug=False):
-        super().__init__(wav_dir, wav_prefix, wav_suffix, note_origin,
-                         debug)
+    def __init__(self, debug=False):
+        super().__init__(wav_dir=self.DEF_WAV_DIR,
+                         wav_prefix=self.WAV_FILE_PREFIX,
+                         wav_suffix=self.WAV_FILE_SUFFIX,
+                         note_origin=self.NOTE_ORIGIN,
+                         debug=debug)

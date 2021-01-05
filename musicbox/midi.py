@@ -12,10 +12,11 @@ import json
 import time
 import midilib
 from websocket import create_connection
+from .parser import Parser
 from .my_logger import get_logger
 
 
-class Midi:
+class Midi(Parser):
     """
     MIDI parser for Music Box
     """
@@ -26,12 +27,14 @@ class Midi:
     NOTE_ORIGIN_MIN = 0
     NOTE_ORIGIN_MAX = 127 - NOTE_OFFSET[-1]
 
-    def __init__(self, debug=False) -> None:
+    def __init__(self, debug=False):
         """ Constructor """
         self._dbg = debug
-        self.__log = get_logger(self.__class__.__name__, self._dbg)
+        self._log = get_logger(self.__class__.__name__, self._dbg)
 
         self._midilib_parser = midilib.Parser()
+
+        super().__init__(debug=self._dbg)
 
     def note2ch(self, note, note_origin=NOTE_ORIGIN_MIN,
                 note_offset=NOTE_OFFSET) -> int:
@@ -96,13 +99,13 @@ class Midi:
         note_data: list of midilib.NoteInfo
         note_offset: list of int
         """
-        self.__log.debug('len(note_data)=%s', len(note_data))
+        self._log.debug('len(note_data)=%s', len(note_data))
 
         best_note_origin = self.NOTE_ORIGIN_MIN
         best_ch_count = 0
 
         for note_origin in range(self.NOTE_ORIGIN_MIN,
-                               self.NOTE_ORIGIN_MAX + 1):
+                                 self.NOTE_ORIGIN_MAX + 1):
             ch_set = self.get_ch_set(note_data, note_origin, note_offset)
 
             if len(ch_set) > best_ch_count:
@@ -110,9 +113,9 @@ class Midi:
                 best_ch_count = len(ch_set)
 
             if len(ch_set) >= best_ch_count * 0.8 > 6:
-                self.__log.info('%s:%s (best %s:%s)',
-                                note_origin, len(ch_set),
-                                best_note_origin, best_ch_count)
+                self._log.info('%s:%s (best %s:%s)',
+                               note_origin, len(ch_set),
+                               best_note_origin, best_ch_count)
 
         return best_note_origin
 
@@ -194,16 +197,15 @@ class Midi:
         Returns
         -------
         music_data: list of MusicDataEnt
-
         """
-        self.__log.debug('midi_file=%s', midi_file)
+        self._log.debug('midi_file=%s', midi_file)
 
         parsed_midi = self._midilib_parser.parse(midi_file, channel)
 
         if note_origin < 0:
             note_origin = self.best_note_origin(parsed_midi['note_info'],
                                                 note_offset)
-        self.__log.info('best note_bas=%s', note_origin)
+        self._log.info('best note_bas=%s', note_origin)
 
         music_data = self.mk_music_data(parsed_midi['note_info'],
                                         note_origin, note_offset)
@@ -211,21 +213,3 @@ class Midi:
         music_data2 = self.merge_ch(music_data)
 
         return music_data2
-
-    def send_music(self, music_data, url):
-        """
-        Parameters
-        ----------
-        music_data: list of MusicDataEnt
-        url: str
-        """
-        self.__log.debug('len(music_data)=%s, url=%s',
-                         len(music_data), url)
-
-        msg = {'cmd': 'music_load', 'music_data': music_data}
-
-        msg_json = json.dumps(msg)
-
-        ws = create_connection(url)
-        ws.send(msg_json)
-        ws.close()

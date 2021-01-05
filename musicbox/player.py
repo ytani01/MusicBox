@@ -79,8 +79,6 @@ class Player:
     ROTATION_SPEED = 10
     ROTATION_GPIO = [5, 6, 13, 19]
 
-    _log = get_logger(__name__, False)
-
     def __init__(self,
                  wav_mode=WAVMODE_NONE,
                  rotation_speed=ROTATION_SPEED,
@@ -100,7 +98,7 @@ class Player:
             GPIO pin number of rotation motor (stepper motor)
         """
         self._dbg = debug
-        __class__._log = get_logger(__class__.__name__, self._dbg)
+        self._log = get_logger(self.__class__.__name__, self._dbg)
         self._log.debug('wav_mode=%s', wav_mode)
         self._log.debug('rotation_speed=%s', rotation_speed)
         self._log.debug('rotation_gpio=%s', rotation_gpio)
@@ -125,8 +123,7 @@ class Player:
             self._movement = MovementWav1(debug=self._dbg)
 
         elif self._wav_mode == self.WAVMODE_PIANO_FULL:
-            # self._movement = MovementWav2(debug=self._dbg)
-            self._movement = MovementWav2()
+            self._movement = MovementWav2(debug=self._dbg)
 
         elif self._wav_mode == self.WAVMODE_MIDI_FULL:
             self._movement = MovementWav3(debug=self._dbg)
