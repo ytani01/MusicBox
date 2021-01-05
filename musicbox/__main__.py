@@ -407,6 +407,23 @@ def cli(ctx):
     else:
         print('==========')
 
+@click.group()
+@click.pass_context
+def cli2(ctl):
+    """ click group """
+    subcmd = ctx.invoked_subcommand
+
+    if subcmd is None:
+        print()
+        print('Please specify subcommand')
+        print()
+        print(ctx.get_help())
+    else:
+        print('==========')
+
+@click.command()
+def sub1(ctx):
+    cli2(ctx)
 
 @cli.command(context_settings=CONTEXT_SETTINGS, help="""
 MIDI parser

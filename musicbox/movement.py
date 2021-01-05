@@ -449,10 +449,5 @@ class MovementWav3(MovementWav1):
                  wav_suffix=WAV_FILE_SUFFIX,
                  note_base=NOTE_BASE,
                  debug=False):
-<<<<<<< HEAD
-        """ Constructor """
-        super().__init__(wav_dir, wav_prefix, wav_suffix, debug)
-=======
         super().__init__(wav_dir, wav_prefix, wav_suffix, note_base,
                          debug)
->>>>>>> fecfe9059aca99fa69a6ff96a346f482c4367b3c
