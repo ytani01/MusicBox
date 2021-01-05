@@ -107,10 +107,7 @@ class MusicBoxWebServer:
         self.__log.debug('done')
 
 
-# --- 以下、サンプル ---
-
-
-class SampleApp:
+class WebApp:
     """ Sample application class
     """
     __log = get_logger(__name__, False)
@@ -167,7 +164,7 @@ def main(port, debug):
 
     __debug = debug
 
-    app = SampleApp(port, debug=debug)
+    app = WebApp(port, debug=debug)
     try:
         app.main()
     finally:
