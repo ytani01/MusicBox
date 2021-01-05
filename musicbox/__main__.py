@@ -23,18 +23,45 @@ DEF_WS_URL = 'ws://%s:%s/' % (DEF_WS_HOST, DEF_WS_PORT)
 
 class MidiApp:
     """ MidiApp """
-    def __init__(self, midi_file, out_file_or_ws_url=(), channel=[],
+    def __init__(self, midi_file,
+                 out_file_or_ws_url=(), channel=[],
+                 note_origin=-1, no_note_offset_flag=False,
+                 wav_mode=0,
                  debug=False) -> None:
-        """ Constructor """
+        """ Constructor
+
+        Prameters
+        ---------
+        midi_file: str
+        out_file_or_ws_url: str
+        channel: list of int
+        note_origin: int
+        no_note_offset_flag: bool
+        wav_mode: int
+        """
         self._dbg = debug
         self.__log = get_logger(self.__class__.__name__, self._dbg)
         self.__log.debug('midi_file=%s, channel=%s',
                          midi_file, channel)
         self.__log.debug('out_file_or_ws_url=%s', out_file_or_ws_url)
+        self.__log.debug('note_origin=%s', note_origin)
+        self.__log.debug('no_note_offset_flag=%s', no_note_offset_flag)
+        self.__log.debug('wav_mode=%s', wav_mode)
 
         self._midi_file = midi_file
         self._out_file_or_ws_url = out_file_or_ws_url
         self._channel = channel
+        self._note_origin = note_origin
+
+        self._note_offset = Midi.NOTE_OFFSET
+        if no_note_offset_flag:
+            self._note_offset = []
+
+        if wav_mode in (2, 3):
+            self._note_origin = 0
+            self._note_offset = []
+            self.__log.debug('[fix] note_origin=%s, note_offset=%s',
+                             self._note_origin, self._note_offset)
 
         self._parser = Midi(debug=self._dbg)
 
@@ -42,7 +69,10 @@ class MidiApp:
         """ main """
         self.__log.debug('')
 
-        music_data = self._parser.parse(self._midi_file, self._channel)
+        music_data = self._parser.parse(self._midi_file,
+                                        self._channel,
+                                        self._note_origin,
+                                        self._note_offset)
 
         for dst in self._out_file_or_ws_url:
             if ':/' in dst:
@@ -472,15 +502,34 @@ MIDI parser
 """)
 @click.argument('midi_file', type=click.Path(exists=True))
 @click.argument('out_file_or_ws_url', type=str, nargs=-1)
-@click.option('--channel', '-c', 'channel', type=int, multiple=True,
+@click.option('--channel', '-c', 'channel',
+              type=int, multiple=True,
               help='MIDI channel')
-@click.option('--debug', '-d', 'dbg', is_flag=True, default=False,
+@click.option('--note_origin', '--origin', '-o', 'note_origin',
+              type=int, default=-1,
+              help='Note origin, default=-1')
+@click.option('--no_note_offset', '-n', 'no_note_offset_flag',
+              is_flag=True, default=False,
+              help='No note offset flag, default=False(use offset)')
+@click.option('--wav_mode', '-w', 'wav_mode', type=int, default=0,
+              help="""Wav file mode, default=0\n
+0: Real Music Box\n
+1: Simulate Music Box with wav file\n
+2: Piano sound (note: 21 .. 108)\n
+3: Full notes""")
+@click.option('--debug', '-d', 'dbg',
+              is_flag=True, default=False,
               help='debug flag')
-def midi(midi_file, out_file_or_ws_url, channel, dbg) -> None:
+def midi(midi_file, out_file_or_ws_url, channel,
+         note_origin, no_note_offset_flag,
+         wav_mode,
+         dbg) -> None:
     """ parser main """
     log = get_logger(__name__, dbg)
 
-    app = MidiApp(midi_file, out_file_or_ws_url, channel, debug=dbg)
+    app = MidiApp(midi_file, out_file_or_ws_url, channel,
+                  note_origin, no_note_offset_flag,
+                  wav_mode, debug=dbg)
     try:
         app.main()
     finally:
@@ -541,9 +590,12 @@ def servo(push_interval, pull_interval, debug):
 @cli.command(help="""
 Movement test
 """)
-@click.option('--wav_mode', '-w', 'wav_mode', type=int,
-              default=0,
-              help='Wav file mode')
+@click.option('--wav_mode', '-w', 'wav_mode', type=int, default=0,
+              help="""Wav file mode, default=0\n
+0: Real Music Box\n
+1: Simulate Music Box with wav file\n
+2: Piano sound (note: 21 .. 108)\n
+3: Full notes""")
 @click.option('--speed', '-s', 'speed', type=int,
               default=Movement.ROTATION_SPEED,
               help='rotation speed')
@@ -578,9 +630,12 @@ Player test
 @click.argument('music_file', type=click.Path(exists=True), nargs=-1)
 @click.option('--channel', '-c', 'channel', type=int, multiple=True,
               help='MIDI channel')
-@click.option('--wav_mode', '-w', 'wav_mode', type=int,
-              default=0,
-              help='Wav file mode')
+@click.option('--wav_mode', '-w', 'wav_mode', type=int, default=0,
+              help="""Wav file mode, default=0\n
+0: Real Music Box\n
+1: Simulate Music Box with wav file\n
+2: Piano sound (note: 21 .. 108)\n
+3: Full notes""")
 @click.option('--speed', '-s', 'speed', type=int,
               default=Player.ROTATION_SPEED,
               help='rotation speed')
@@ -617,10 +672,12 @@ Music Box Websocket Server
               default=WsServer.DEF_PORT,
               help='port number, default=%s' % (
                   WsServer.DEF_PORT))
-@click.option('--wav_mode', '-w', 'wav_mode', type=int,
-              default=Player.WAVMODE_NONE,
-              help='Wav file mode, default=%s' % (
-                  Player.WAVMODE_NONE))
+@click.option('--wav_mode', '-w', 'wav_mode', type=int, default=0,
+              help="""Wav file mode, default=0\n
+0: Real Music Box\n
+1: Simulate Music Box with wav file\n
+2: Piano sound (note: 21 .. 108)\n
+3: Full notes""")
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
 def wsserver(port, wav_mode, debug):

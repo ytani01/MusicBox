@@ -101,7 +101,7 @@ class MusicBoxWebServer:
         self.__log.debug('')
 
         self._app.listen(self._port)
-        self.__log.debug('start server: run forever ..')
+        self.__log.info('start server: run forever ..')
         tornado.ioloop.IOLoop.current().start()
 
         self.__log.debug('done')

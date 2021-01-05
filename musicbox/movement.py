@@ -405,6 +405,8 @@ class MovementWav1(MovementBase):
                 continue
 
             snd_i = ch - self._note_origin
+            self.__log.debug('snd_i=%s', snd_i)
+
             snd = self._sound[snd_i]
             snd.set_volume(0.2)   # 音割れ軽減
             # snd.play(fade_ms=50)  # fade_time: ブツブツ音軽減
