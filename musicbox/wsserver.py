@@ -39,9 +39,8 @@ class WsServer:
     {"cmd": "single_play", "ch": [0,2,4]}  # single play
 
     {"cmd": "music_load",                 # load music and play
-     "music_data": [ {"ch": null,"delay": 500},
-                     {"ch": [0,2,4], "delay": null},
-                     {"ch": [], "delay": null}       ] }
+     "music_data": [ {"ch": null,"delay": 500},.. ]
+
 
     {"cmd": "music_start"}                 # (re)start music
     {"cmd": "music_pause"}

@@ -66,7 +66,11 @@ echo
 if [ -z $VIRTUAL_ENV ]; then
     if [ ! -f ../bin/activate ]; then
         echo
-        echo "ERROR: Please activate Python3 Virtualenv and run again"
+        echo "ERROR: Please create and activate Python3 Virtualenv(venv) and run again"
+        echo
+        echo "\$ cd ~"
+        echo "\$ python -m venv env1"
+        echo "\$ . ~/env1/bin/activate"
         echo
         exit 1
     fi

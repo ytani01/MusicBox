@@ -3,29 +3,27 @@
 【未完成】
 
 音楽データを読み込み演奏する。
-または、直接、チャンネル番号を指定して演奏することもできる。
+または、直接、番号を指定して演奏することもできる。
 
 Music Box 本体で演奏するモードと、
 スピーカーから擬似的な音を鳴らずモードがある。
 
 * クライアント・サーバ間の通信は、Websocket。
-  Client API(後述)を使えば、URL(ws://..)をしてするだけで、
-  Websocket通信やメッセージ形式を意識する必要はない。
 
 * サーバが受付けるコマンド・メッセージは JSON形式。
-  (後述)
   
-* サーバが解釈できる音楽形式は、Music Box に特化した、
-  独自の music_data。
-  (後述)
-
 * MIDIなどのファイルは、クライアント側でパージングし、
   music_data形式に変換して、サーバに送信する。
+
+* サーバ本体は、Music Box に特化した、
+  独自の music_data を解釈して演奏する。
+
 
 
 ## 0. TL;DR
 
-Install
+### Install
+
 ```bash
       $ sudo pigpiod
       $ cd ~
@@ -38,80 +36,51 @@ Install
 (env1)$ ./install.sh
 ```
 
-Run servers
+### 本体を制御するサーバの起動
+
+クライアント・サーバ・モデルになっており、
+まず、本体を直接制御するサーバを立ち上げる必要がある。
+
 ```bash
 (env1)$ python -m musicbox wsserver
 ```
 
-### 0.1 Client API: Simple Usage
+### サーボの調整
 
-内部では、Websocket通信を行っているが、
-この Client APIを使えば、
-ほとんど意識する必要は無い。
-
-```python
-from MusicBoxWebsockClient import MusicBoxWebsockClient
-
-cl = MusicBoxWebsockClient('ws://ipaddr:port/')
-
-cl.single_play([0,1, ..])
-cl.midi(filename)           # TBD
-cl.paper_tape(filename)
-cl.music_start()
-cl.music_pause()
-cl.music_rewind()
-cl.music_stop()
-
-cl.change_onoff(ch, on, pw_diff, tap)  # for calibration
-
-cl.end()     # Call at the end of program
-```
-
-APIのマニュアルは、以下で見ることができます。
+調整(キャリブレーション)をするための Webサーバを立ち上げ、
+ブラウザからアクセスして、サーボモータの調整を行う。
 
 ```bash
-$ . ~/env1/bin/activate
-(env1)$ cd ~/env1/MusicBox
-(env1)$ python3 -m pydoc MusicBoxWebsockClient.MusicBoxWebsockClient
+(env1)$ MusicBoxCalibration.py
+
+URL: http://IPaddress:10080/
 ```
 
 
-## 1. Install
-
+### Command line manual
 ```bash
-$ cd ~
-$ python3 -m venv env1
-$ cd ~/env1
-$ git clone https://github.com/ytani01/MusicBox.git
-$ cd ~/env1/MusicBox
-$ pip install -r requirements.txt
+(env1)$ python3 -m musicbox --help
 ```
 
-## 2. Execute
 
-クライアント・サーバ構成になっている。
-
-サーバーを起動してから、クライアントで制御する。
-
-クライアントのサンプルは、
-コマンドを単発で実行するモードと、
-対話的に実行するモードがある。
-
-
-### 2.1 Common
-
-クライアントもサーバーも、まずは以下を実行する。
-
+### API Manual
 ```bash
-      $ sudo pigpiod
-      $ source ~/env1/bin/activate
-(env1)$ cd ~/env1/MusicBox
+(env1)$ python3 -m pydoc musicbox.クラス名
 ```
 
-### 2.2 Server side: MusicBoxWebsockServer.py
+## 1. 少し解説
+
+
+### 1.1 Music Box Server
+
+Music Box 本体を直接制御するサーバ
+
+Websocketで通信して、
+Webインタフェースなどから、コマンドを受取り、
+曲を演奏したり、単発で音を鳴らしたりする。
 
 ```
-(env1)$ ./MusicBoxWebsockServer.py &
+(env1)$ python -m musicbox wsserver &
 ```
 
 Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合は、
@@ -120,88 +89,44 @@ Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合�
 
 Music Boxをシミュレートする
 ```
-(env1)$ ./MusicBoxWebsockServer.py -w 1 &
+(env1)$ ./python -m musicbox wsserver -w 1 &
 ```
 
 ピアノをシミュレートする (88音階)
 ```
-(env1)$ ./MusicBoxWebsockServer.py -w 2 &
+(env1)$ ./python -m musicbox wsserver -w 2 &
 ```
 
 sin波のサンプル音でシミュレートする (128音階)
 ```
-(env1)$ ./MusicBoxWebsockServer.py -w 3 &
+(env1)$ ./python -m musicbox wsserver -w 3 &
 ```
 
-### 2.3 Client side: MusicBoxWebsockClinet.py
 
-#### 2.3.1 サンプル実装: 単発実行
+### 1.2 Client side
 
-一つずつコマンドを実行 (サーバーに送信) する方法
-
+Paper Tape 形式の曲を再生
 ```bash
-(env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/ paper_tape paper_tape/kaeruno-uta.txt
-(env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/ midi midi/joy-4-62.midi -c 4
-(env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/ stop
+(env1)$ python -m musicbox papertape paper_tape/kaeruno-uta.txt ws://localhost:8881/
 ```
 
-#### 2.3.2 サンプル実装: Interactive mode
-
-インタラクティブ(対話)モード
-
+MIDI形式の曲を再生
 ```bash
-(env1)$ ./MusicBoxWebsockClinet.py ws://localhost:8881/
-> help
- :
-> 0 2 4
-> [Ctrl]-[D] to end
+(env1)$ python -m musicbox midi sample_midi/joy.mid ws://localhost:8881/
+```
+
+再生をストップ
+```bash
+(env1)$ python -m musicbox wscmd music_stop
 ```
 
 
-## 3. Command Message Format for MusicBoxWebsockServer.py
+## 2. Command Message Format for MusicBoxWebsockServer.py
 
 サーバが受付けるコマンド・メッセージの形式
 
 ```bash
-python3 -m pydoc MusicBoxWebSockServer
-```
-
-
-## 4. music_data Data Format
-
-Music Box に最適化した、独自の(単純な)音楽データ形式。
-
-* 基本的には、音階(channel)と遅延(delay)の配列形式
-
-* クライアント側で、MIDI, Paper Tape形式などのファイルを解析し、
-  この形式に変換して、サーバに送信する。
-
-* サーバは、以下の形式のデータを受取り再生する
-
-### 4.1 フォーマット定義
-
-```
-music_data := list of ``data_ent``
-
-data_ent := {'ch': ``ch_list``, 'delay': ``delay_msec``}
-
-ch_list := list of int
-    Music Box のチャンネル(サーボ番号)のリスト
-    
-delay_msec := int
-    音を鳴らした後の遅延 [msec]
-```
-
-### 4.2 例
-
-```
-(Python dict形式)
-[
-  {'ch': [0, 2, 4]: 'delay': 500},
-  {'ch': [1, 3]: 'delay': 5},
-  {'ch': [0], 'delay': 200},
-    :
-]
+python3 -m pydoc musicbox.WsServer
 ```
 
 
@@ -220,61 +145,8 @@ o-o-o----------
 --o-----o------
 ___o___o_____o_
 -o-o-o---------
---o---o-------- 400  # delayを指定することも可能(どう扱うかはアプリ依存)
+--o---o--------
 --*-O-o--------      # 'o', 'O', '*'は、どれも紙テープの穴とみなす
-```
-
-
-### 5.2 詳細
-
-* 紙テープと同様にどの音を鳴らすか、記号で指定する。
-
-* '-o-O- 600'のように、文字列のあとに delayを記述できる。
-
-* データに記述された delayをどう扱うか
-  (以降のデフォルト値を変更 or 一時的なdelay)
-  は、上位のアプリに依存。
-
-* '---------------'は、スリープ
-  ('-'のように一文字でも同様)
-
-* '#'以降は、コメント
-
-
-
-## 6. MIDIパーサー: MusicBoxMidi.py
-
-MIDIファイルを解析する。
-
-* トラック、チャンネルを選択することができる。
-
-  (``parse``メソッドの ``track``, ``channel``パラメータ)
-
-* キー(音程)を調整して、
-  なるべく多くの音が Music Box で再生できるよう自動調整する。
-  
-  (``parse``メソッドの ``base``パラメータ)
-  
-
-### 6.1 Simple Usaege
-
-```python
-from MusicBoxMidi import MusicBoxMidi
-
-parser = MusicBoxMidi()
-
-music_data = parser.parse(midi_file)
-
-  :
-
-parser.end()   # end of program
-```
-
-  
-### 6.2 MIDIパーサー API(詳細)
-
-```bash
-$ python3 -m pydoc MusicBoxMidi.MusicBoxMidi
 ```
 
 
@@ -308,6 +180,7 @@ MIDIデータ: [トラック1:チャンネル1]-[トラック1:チャンネル2]
 
 どれが主旋律かわからないので、自動選択は不可能。
 
+
 #### 6.3.2 (note_on + velocity=0) == note_off !!
 
 参考：[g200kg:Note Off ノートオフ](https://www.g200kg.com/jp/docs/dic/noteoff.html)
@@ -316,6 +189,7 @@ MIDIデータ: [トラック1:チャンネル1]-[トラック1:チャンネル2]
 #### 6.3.A その他
 
 * [情報処理学会:ピアノをMIDIで駆動する際のノート・オン・タイミングの補正について](https://ipsj.ixsq.nii.ac.jp/ej/index.php?active_action=repository_view_main_item_detail&page_id=13&block_id=8&item_id=55958&item_no=1)
+
 
 
 ## 10. Software
