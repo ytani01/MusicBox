@@ -42,10 +42,10 @@
           ws_send(msg);
       };
 
-      const change_onoff = function (ch, on, pw_diff, tap) {
-          console.log(`change_onoff()`);
+      const calibrate = function (ch, on, pw_diff, tap) {
+          console.log(`calibrate()`);
 
-          msg = {cmd: "change_onoff",
+          msg = {cmd: "calibrate",
                  ch: ch, on: on, pw_diff: pw_diff, tap: tap};
           ws_send(msg);
       };
@@ -67,12 +67,12 @@
                   <td align="center">
                     <button
                       type="button" 
-                      onClick="change_onoff({{ ch }},false,-10,true);">
+                      onClick="calibrate({{ ch }},false,-10,true);">
                       <i class="fas fa-caret-square-left"></i>
                     </button>
                     <button
                       type="button" 
-                      onClick="change_onoff({{ ch }},false,+10,true);">
+                      onClick="calibrate({{ ch }},false,+10,true);">
                       <i class="fas fa-caret-square-right"></i>
                     </button>
                   </td>
@@ -87,12 +87,12 @@
                   <td align="center">
                     <button
                       type="button" 
-                      onClick="change_onoff({{ ch }},true,-10,true);">
+                      onClick="calibrate({{ ch }},true,-10,true);">
                       <i class="fas fa-caret-square-left"></i>
                     </button>
                     <button
                       type="button"
-                      onClick="change_onoff({{ ch }},true,+10,true);">
+                      onClick="calibrate({{ ch }},true,+10,true);">
                       <i class="fas fa-caret-square-right"></i>
                     </button>
                   </td>
@@ -107,11 +107,11 @@
                   <td align="center">
                     <button
                       type="button" 
-                      onClick="change_onoff({{ ch }},false,+10,true);">
+                      onClick="calibrate({{ ch }},false,+10,true);">
                       <i class="fas fa-caret-square-left"></i></button>
                     <button
                       type="button" 
-                      onClick="change_onoff({{ ch }},false,-10,true);">
+                      onClick="calibrate({{ ch }},false,-10,true);">
                       <i class="fas fa-caret-square-right"></i></button>
                   </td>
                   <td align="center">
@@ -125,11 +125,11 @@
                   <td align="center">
                     <button
                       type="button" 
-                      onClick="change_onoff({{ ch }},true,+10,true);">
+                      onClick="calibrate({{ ch }},true,+10,true);">
                       <i class="fas fa-caret-square-left"></i></button>
                     <button
                       type="button" 
-                      onClick="change_onoff({{ ch }},true,-10,true);">
+                      onClick="calibrate({{ ch }},true,-10,true);">
                       <i class="fas fa-caret-square-right"></i></button>
                   </td>
                 </tr>

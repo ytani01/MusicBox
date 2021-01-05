@@ -122,7 +122,7 @@ class MovementBase:
         self.__log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
                         ch, on, pw, tap, conf_file)
 
-    def change_onoff(self, ch, on=False, pw_diff=0, tap=False,
+    def calibrate(self, ch, on=False, pw_diff=0, tap=False,
                      conf_file=None):
         """
         on/offパラメータ変更(差分指定)
@@ -268,7 +268,7 @@ class Movement(MovementBase):
 
         self._servo.set_onoff(ch, on, pw, tap, conf_file)
 
-    def change_onoff(self, ch, on=False, pw_diff=0, tap=False,
+    def calibrate(self, ch, on=False, pw_diff=0, tap=False,
                      conf_file=None):
         """
         on/offパラメータ変更(差分指定)
@@ -292,7 +292,7 @@ class Movement(MovementBase):
         self.__log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
                         ch, on, pw_diff, tap, conf_file)
 
-        self._servo.change_onoff(ch, on, pw_diff, tap, conf_file)
+        self._servo.calibrate(ch, on, pw_diff, tap, conf_file)
 
 
 class MovementWav1(MovementBase):

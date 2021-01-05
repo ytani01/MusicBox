@@ -69,7 +69,7 @@ class MusicBoxWebsockClient:
     cl.music_rewind()
     cl.music_stop()
 
-    cl.change_onoff(ch, on, pw_diff, tap)  # see definition
+    cl.calibrate(ch, on, pw_diff, tap)  # see definition
 
     cl.end()     # Call at the end of usage
     ============
@@ -203,7 +203,7 @@ class MusicBoxWebsockClient:
         json_str = json.dumps({'cmd': 'music_rewind'})
         self._ws.send(json_str)
 
-    def change_onoff(self, ch, on=True, pw_diff=0, tap=False):
+    def calibrate(self, ch, on=True, pw_diff=0, tap=False):
         """
         on/offパラメータ変更(差分指定)
 
@@ -225,7 +225,7 @@ class MusicBoxWebsockClient:
                          ch, on, pw_diff, tap)
 
         json_str = json.dumps({
-            'cmd': 'change_onoff',
+            'cmd': 'calibrate',
             'ch': ch,
             'on': on,
             'pw_diff': pw_diff,
@@ -251,7 +251,7 @@ class SampleApp:
         ['music_stop', 'stop', 'S'],
         ['music_pause', 'pause', 'p'],
         ['music_rewind', 'rewind', 'r'],
-        ['change_onoff', 'onoff'],
+        ['calibrate', 'onoff'],
         ['midi', 'm', 'M'],
         ['paper_tape', 'tape', 'paper', 'pt', 't', 'T'],
         ['sleep'],
@@ -388,7 +388,7 @@ class SampleApp:
             self._cl.music_rewind()
             return
 
-        if cmd == 'change_onoff':
+        if cmd == 'calibrate':
             try:
                 ch = int(args[0])
                 on = args[1] in ('on', 'On', 'ON')
@@ -401,7 +401,7 @@ class SampleApp:
                 self.__log.error('%s: %s.', type(ex).__name__, ex)
                 return
 
-            self._cl.change_onoff(ch, on, pw_diff, tap)
+            self._cl.calibrate(ch, on, pw_diff, tap)
             return
 
         self.__log.error('%s %s: invalid command line', cmd, args)

@@ -222,7 +222,7 @@ class Servo:
             time.sleep(0.5)
             self.tap1(ch)
 
-    def change_onoff(self, ch, on=False, pw_diff=0, tap=False,
+    def calibrate(self, ch, on=False, pw_diff=0, tap=False,
                      conf_file=None):
         """
         on/offパラメータ変更(差分指定)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # (c) 2020 Yoichi Tanibayashi
 #
@@ -169,7 +168,7 @@ class Player:
         ch_list: list of int
             list of channel number
         """
-        self._log.debug('ch_list=%s', ch_list)
+        self._log.info('ch_list=%s', ch_list)
 
         self._movement.single_play(ch_list)
 
@@ -189,7 +188,7 @@ class Player:
         ch_list=None,    delay=None}: do nothing (no delay)
 
         """
-        self._log.info('delay=%.2f, ch=list=%s', delay, ch_list)
+        self._log.debug('delay=%.2f, ch_list=%s', delay, ch_list)
 
         if ch_list is None:
             if delay is None:
@@ -404,7 +403,7 @@ class Player:
 
         self._movement.set_onoff(ch, on, pw, tap, conf_file)
 
-    def change_onoff(self, ch, on=False, pw_diff=0, tap=False,
+    def calibrate(self, ch, on=False, pw_diff=0, tap=False,
                      conf_file=None):
         """
         on/offパラメータ変更(差分指定)
@@ -428,4 +427,4 @@ class Player:
         self._log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
                         ch, on, pw_diff, tap, conf_file)
 
-        self._movement.change_onoff(ch, on, pw_diff, tap, conf_file)
+        self._movement.calibrate(ch, on, pw_diff, tap, conf_file)

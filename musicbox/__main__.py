@@ -4,8 +4,9 @@
 """
 main for musicbox package
 """
-import json
 import click
+import json
+from websocket import create_connection
 import cuilib
 from . import Midi, RotationMotor, Servo
 from . import Movement, MovementWav1, MovementWav2, MovementWav3
@@ -14,6 +15,10 @@ from .my_logger import get_logger
 
 __author__ = 'Yoichi Tanibayashi'
 __date__ = '2021/01'
+
+DEF_WS_HOST = 'localhost'
+DEF_WS_PORT = WsServer.DEF_PORT
+DEF_WS_URL = 'ws://%s:%s/' % (DEF_WS_HOST, DEF_WS_PORT)
 
 
 class MidiApp:
@@ -40,7 +45,7 @@ class MidiApp:
         music_data = self._parser.parse(self._midi_file, self._channel)
 
         for dst in self._out_file_or_url:
-            if dst.startswith('ws:/'):
+            if ':/' in dst:
                 self._parser.send_music(music_data, dst)
                 continue
 
@@ -387,6 +392,58 @@ class WsServerApp:
         self.__log.debug('done')
 
 
+class WsCmdApp:
+    """ Music Box Websocket Client App for simple command"""
+    def __init__(self, url, cmd, debug=False):
+        """ Constructor
+
+        Parameters
+        ----------
+        url: str
+            Websocket URL
+        cmd: str
+        """
+        self._dbg = debug
+        self.__log = get_logger(self.__class__.__name__, self._dbg)
+
+        self._cmd = cmd
+        self._url = url
+
+    def send(self, msg):
+        """ send message to websocket server
+
+        Parameters
+        ----------
+        msg: dict
+            command message
+        """
+        self.__log.debug('msg=%s', msg)
+
+        msg_json = json.dumps(msg)
+        self.__log.debug('msg_json=%a', msg_json)
+
+        print('send %a to %a' % (msg_json, self._url))
+        ws = create_connection(self._url)
+        ws.send(msg_json)
+        ws.close()
+
+    def main(self):
+        """ main """
+        if not self._cmd:
+            print('no command !?')
+            return
+
+        cmd_name = self._cmd[0]
+
+        msg = {'cmd': cmd_name}
+        if len(self._cmd) == 1:
+            self.send(msg)
+
+        if cmd_name == 'single_play':
+            msg['ch'] = [int(ch) for ch in self._cmd[1:]]
+            self.send(msg)
+
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
@@ -578,25 +635,27 @@ def wsserver(port, wav_mode, debug):
         log.info('end')
 
 
-@click.group(help='subgroup1 test')
-@click.pass_context
-def subgroup1(ctx):
-    """ click group """
-    subcmd = ctx.invoked_subcommand
-    click.echo(subcmd)
+@cli.command(help="""
+Send simple command to Music Box websocket server
 
-    if subcmd is None:
-        print()
-        print('Please specify subcommand')
-        print()
-        print(ctx.get_help())
+ex. `music_start`, `single_play 0 2 4`, etc ...
+""")
+@click.argument('cmd', type=str, nargs=-1)
+@click.option('--url', '-u', 'url', type=str,
+              default=DEF_WS_URL,
+              help='websocket URL, default=%a' % (DEF_WS_URL))
+@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
+              help='debug flag')
+def wscmd(cmd, url, debug):
+    """ wsserver """
+    log = get_logger(__name__, debug)
 
-
-@subgroup1.command(help='sub2 test')
-def sub2():
-    click.echo('This is subgroup command test.')
+    app = WsCmdApp(url, cmd, debug=debug)
+    try:
+        app.main()
+    finally:
+        log.debug('done')
 
 
 if __name__ == '__main__':
-    cli.add_command(subgroup1)
     cli(prog_name='python3 -m musicbox')

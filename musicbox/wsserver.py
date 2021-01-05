@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # (c) 2020 Yoichi Tanibayashi
 #
@@ -49,7 +48,7 @@ class WsServer:
     {"cmd": "music_rewind"}
     {"cmd": "music_stop"}
 
-    {"cmd": "change_onff",                 # change servo param
+    {"cmd": "calibrate",                # change servo param
      "ch": 5,
      "on": true,  # on:ture, off: false
      "pw_diff": -10,
@@ -190,7 +189,7 @@ class WsServer:
             self._player.music_wait()
             return
 
-        if cmd in ('change_onoff',):
+        if cmd in ('calibrate',):
             try:
                 ch = int(data['ch'])
                 on = data['on']
@@ -199,5 +198,5 @@ class WsServer:
             except KeyError as ex:
                 self.__log.error('%s: %s. data=%s', type(ex), ex, data)
 
-            self._player.change_onoff(ch, on, pw_diff, tap)
+            self._player.calibrate(ch, on, pw_diff, tap)
             return
