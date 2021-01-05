@@ -93,6 +93,7 @@ install_my_python_pkg $MIDILIB_PKG $MIDILIB_DIR $MIDILIB_GIT
 install_my_python_pkg $CUILIB_PKG $CUILIB_DIR $CUILIB_GIT
 install_my_python_pkg $STEPMTR_PKG $STEPMTR_DIR $STEPMTR_GIT
 install_my_python_pkg $SERVO_PKG $SERVO_DIR $SERVO_GIT
+echo
 
 #
 # install musicbox package

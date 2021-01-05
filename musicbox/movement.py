@@ -340,6 +340,9 @@ class MovementWav1(MovementBase):
         self._sound = self.load_wav(self._wav_dir,
                                     self._wav_prefix, self._wav_suffix)
 
+        if not self._sound:
+            raise RuntimeError('no wav file')
+
         super().__init__(ch_n=len(self._sound), debug=self._dbg)
 
     def end(self):
