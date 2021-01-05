@@ -22,8 +22,8 @@ class Midi:
 
     CH_N = len(NOTE_OFFSET)
 
-    NOTE_BASE_MIN = 0
-    NOTE_BASE_MAX = 127 - NOTE_OFFSET[-1]
+    NOTE_ORIGIN_MIN = 0
+    NOTE_ORIGIN_MAX = 127 - NOTE_OFFSET[-1]
 
     def __init__(self, debug=False) -> None:
         """ Constructor """
@@ -32,12 +32,18 @@ class Midi:
 
         self._midilib_parser = midilib.Parser()
 
-    def note2ch(self, note, note_base=NOTE_BASE_MIN, note_n=-1) -> int:
+    def note2ch(self, note, note_origin=NOTE_ORIGIN_MIN, note_n=-1) -> int:
         """
+        calculate servo ch from MIDI note
+
+        
+
         Parameters
         ----------
         note: int
-        note_base: int
+            MIDI note number
+        note_origin: int
+            base number of note
         note_n: int
 
         Returns
@@ -48,21 +54,21 @@ class Midi:
         ch = -1
 
         if note_n <= 0:
-            offset = note - note_base
+            offset = note - note_origin
 
             if offset in self.NOTE_OFFSET:
                 ch = self.NOTE_OFFSET.index(offset)
         else:
-            ch = note - note_base
+            ch = note - note_origin
 
         return ch
 
-    def get_ch_set(self, note_data, note_base=NOTE_BASE_MIN):
+    def get_ch_set(self, note_data, note_origin=NOTE_ORIGIN_MIN):
         """
         Parameters
         ----------
         note_data: list of midilib.NoteInfo
-        note_base: int
+        note_origin: int
 
         Returns
         -------
@@ -71,7 +77,7 @@ class Midi:
         ch_set = set()
 
         for note_info in note_data:
-            ch = self.note2ch(note_info.note, note_base)
+            ch = self.note2ch(note_info.note, note_origin)
             ch_set.add(ch)
 
         if -1 in ch_set:
@@ -79,7 +85,7 @@ class Midi:
 
         return ch_set
 
-    def best_note_base(self, note_data) -> int:
+    def best_note_origin(self, note_data) -> int:
         """
         Parameters
         ----------
@@ -87,30 +93,30 @@ class Midi:
         """
         self.__log.debug('len(note_data)=%s', len(note_data))
 
-        best_note_base = self.NOTE_BASE_MIN
+        best_note_origin = self.NOTE_ORIGIN_MIN
         best_ch_count = 0
 
-        for note_base in range(self.NOTE_BASE_MIN,
-                               self.NOTE_BASE_MAX + 1):
-            ch_set = self.get_ch_set(note_data, note_base)
+        for note_origin in range(self.NOTE_ORIGIN_MIN,
+                               self.NOTE_ORIGIN_MAX + 1):
+            ch_set = self.get_ch_set(note_data, note_origin)
 
             if len(ch_set) > best_ch_count:
-                best_note_base = note_base
+                best_note_origin = note_origin
                 best_ch_count = len(ch_set)
 
             if len(ch_set) >= best_ch_count * 0.8 > 6:
                 self.__log.info('%s:%s (best %s:%s)',
-                                note_base, len(ch_set),
-                                best_note_base, best_ch_count)
+                                note_origin, len(ch_set),
+                                best_note_origin, best_ch_count)
 
-        return best_note_base
+        return best_note_origin
 
-    def mk_music_data(self, note_data, note_base, note_n=-1):
+    def mk_music_data(self, note_data, note_origin, note_n=-1):
         """
         Parameters
         ----------
         note_data: list of midilib.NoteInfo
-        note_base: int
+        note_origin: int
         note_n: int
 
         Returns
@@ -126,7 +132,7 @@ class Midi:
                 continue
 
             abs_time = note_info.abs_time
-            ch = self.note2ch(note_info.note, note_base, note_n)
+            ch = self.note2ch(note_info.note, note_origin, note_n)
 
             if ch < 0:
                 continue
@@ -171,13 +177,13 @@ class Midi:
 
         return out_music_data
 
-    def parse(self, midi_file, channel=[], note_base=-1, note_n=-1):
+    def parse(self, midi_file, channel=[], note_origin=-1, note_n=-1):
         """
         Parameters
         ----------
         midi_file: str
         channel: list of int
-        note_base: int
+        note_origin: int
         note_n: int
 
         Returns
@@ -189,12 +195,12 @@ class Midi:
 
         parsed_midi = self._midilib_parser.parse(midi_file, channel)
 
-        if note_base < 0:
-            note_base = self.best_note_base(parsed_midi['note_info'])
-        self.__log.info('best note_bas=%s', note_base)
+        if note_origin < 0:
+            note_origin = self.best_note_origin(parsed_midi['note_info'])
+        self.__log.info('best note_bas=%s', note_origin)
 
         music_data = self.mk_music_data(parsed_midi['note_info'],
-                                        note_base, note_n)
+                                        note_origin, note_n)
 
         music_data2 = self.merge_ch(music_data)
 

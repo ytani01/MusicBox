@@ -308,12 +308,12 @@ class MovementWav1(MovementBase):
     WAV_FILE_PREFIX = 'ch'
     WAV_FILE_SUFFIX = '.wav'
 
-    NOTE_BASE = 0
+    NOTE_ORIGIN = 0
 
     def __init__(self, wav_dir=DEF_WAV_DIR,
                  wav_prefix=WAV_FILE_PREFIX,
                  wav_suffix=WAV_FILE_SUFFIX,
-                 note_base=NOTE_BASE,
+                 note_origin=NOTE_ORIGIN,
                  debug=False):
         """ Constructor
 
@@ -323,19 +323,19 @@ class MovementWav1(MovementBase):
             directory name
         wav_prefix: str
         wav_suffix: str
-        note_base: int
+        note_origin: int
         """
         self._dbg = debug
         self.__log = get_logger(self.__class__.__name__, self._dbg)
         self.__log.debug('wav_dir=%s', wav_dir)
         self.__log.debug('wav_prefix=%s, wav_suffix=%s',
                         wav_prefix, wav_suffix)
-        self.__log.debug('note_base=%s', note_base)
+        self.__log.debug('note_origin=%s', note_origin)
 
         self._wav_dir = wav_dir
         self._wav_prefix = wav_prefix
         self._wav_suffix = wav_suffix
-        self._note_base = note_base
+        self._note_origin = note_origin
 
         pygame.mixer.init()
         self._sound = self.load_wav(self._wav_dir,
@@ -404,7 +404,7 @@ class MovementWav1(MovementBase):
                 self.__log.warning('ch=%s: ignored', ch)
                 continue
 
-            snd_i = ch - self._note_base
+            snd_i = ch - self._note_origin
             snd = self._sound[snd_i]
             snd.set_volume(0.2)   # 音割れ軽減
             # snd.play(fade_ms=50)  # fade_time: ブツブツ音軽減
@@ -423,14 +423,14 @@ class MovementWav2(MovementWav1):
     WAV_FILE_PREFIX = 'piano'
     WAV_FILE_SUFFIX = '.wav'
 
-    NOTE_BASE=21
+    NOTE_ORIGIN=21
 
     def __init__(self, wav_dir=DEF_WAV_DIR,
                  wav_prefix=WAV_FILE_PREFIX,
                  wav_suffix=WAV_FILE_SUFFIX,
-                 note_base=NOTE_BASE,
+                 note_origin=NOTE_ORIGIN,
                  debug=False):
-        super().__init__(wav_dir, wav_prefix, wav_suffix, note_base,
+        super().__init__(wav_dir, wav_prefix, wav_suffix, note_origin,
                          debug)
 
 
@@ -442,12 +442,12 @@ class MovementWav3(MovementWav1):
     WAV_FILE_PREFIX = 'note'
     WAV_FILE_SUFFIX = '.wav'
 
-    NOTE_BASE=0
+    NOTE_ORIGIN=0
 
     def __init__(self, wav_dir=DEF_WAV_DIR,
                  wav_prefix=WAV_FILE_PREFIX,
                  wav_suffix=WAV_FILE_SUFFIX,
-                 note_base=NOTE_BASE,
+                 note_origin=NOTE_ORIGIN,
                  debug=False):
-        super().__init__(wav_dir, wav_prefix, wav_suffix, note_base,
+        super().__init__(wav_dir, wav_prefix, wav_suffix, note_origin,
                          debug)
