@@ -97,5 +97,8 @@ install_my_python_pkg $SERVO_PKG $SERVO_DIR $SERVO_GIT
 #
 # install musicbox package
 #
-cd $MYDIR
+cd_echo $MYDIR
 #pip install .
+pip install -r requirements.txt 
+
+echo "### Completed"
