@@ -23,17 +23,17 @@ DEF_WS_URL = 'ws://%s:%s/' % (DEF_WS_HOST, DEF_WS_PORT)
 
 class MidiApp:
     """ MidiApp """
-    def __init__(self, midi_file, out_file_or_url=(), channel=[],
+    def __init__(self, midi_file, out_file_or_ws_url=(), channel=[],
                  debug=False) -> None:
         """ Constructor """
         self._dbg = debug
         self.__log = get_logger(self.__class__.__name__, self._dbg)
         self.__log.debug('midi_file=%s, channel=%s',
                          midi_file, channel)
-        self.__log.debug('out_file_or_url=%s', out_file_or_url)
+        self.__log.debug('out_file_or_ws_url=%s', out_file_or_ws_url)
 
         self._midi_file = midi_file
-        self._out_file_or_url = out_file_or_url
+        self._out_file_or_ws_url = out_file_or_ws_url
         self._channel = channel
 
         self._parser = Midi(debug=self._dbg)
@@ -44,7 +44,7 @@ class MidiApp:
 
         music_data = self._parser.parse(self._midi_file, self._channel)
 
-        for dst in self._out_file_or_url:
+        for dst in self._out_file_or_ws_url:
             if ':/' in dst:
                 self._parser.send_music(music_data, dst)
                 continue
@@ -468,18 +468,19 @@ def cli(ctx):
 
 @cli.command(help="""
 MIDI parser
+(send music_data to websocket server)
 """)
 @click.argument('midi_file', type=click.Path(exists=True))
-@click.argument('out_file_or_url', type=str, nargs=-1)
+@click.argument('out_file_or_ws_url', type=str, nargs=-1)
 @click.option('--channel', '-c', 'channel', type=int, multiple=True,
               help='MIDI channel')
 @click.option('--debug', '-d', 'dbg', is_flag=True, default=False,
               help='debug flag')
-def midi(midi_file, out_file_or_url, channel, dbg) -> None:
+def midi(midi_file, out_file_or_ws_url, channel, dbg) -> None:
     """ parser main """
     log = get_logger(__name__, dbg)
 
-    app = MidiApp(midi_file, out_file_or_url, channel, debug=dbg)
+    app = MidiApp(midi_file, out_file_or_ws_url, channel, debug=dbg)
     try:
         app.main()
     finally:
