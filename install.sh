@@ -51,7 +51,7 @@ install_my_python_pkg() {
 
     cd_echo $VIRTUAL_ENV
 
-    echo "### installing $_PKG"
+    echo "### install/update $_PKG"
     echo
 
     if [ ! -d $_DIR ]; then
@@ -124,13 +124,12 @@ install_my_python_pkg $MIDILIB_PKG $MIDILIB_DIR $MIDILIB_GIT
 install_my_python_pkg $CUILIB_PKG $CUILIB_DIR $CUILIB_GIT
 install_my_python_pkg $STEPMTR_PKG $STEPMTR_DIR $STEPMTR_GIT
 install_my_python_pkg $SERVO_PKG $SERVO_DIR $SERVO_GIT
-echo
 
 #
 # install musicbox package
 #
-echo "### install main python package"
 cd_echo $MYDIR
+echo "### install main python package"
 echo
 pip install .
 echo

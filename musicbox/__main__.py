@@ -563,7 +563,7 @@ def cli(ctx):
 
 
 @cli.command(help="""
-Paper Tape format parser
+Paper Tape Text format parser
 (and save and/or send music_data to websocket server)
 """)
 @click.argument('paper_tape_file', type=click.Path(exists=True))

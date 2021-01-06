@@ -10,17 +10,13 @@ Music Box 本体で演奏するモードと、
 
 * クライアント・サーバ間の通信は、Websocket。
 
-* サーバが受付けるコマンド・メッセージは JSON形式。
+* サーバは、JSON形式のコマンドを受取り、本体を制御する。
   
-* MIDIなどのファイルは、クライアント側でパージングし、
-  music_data形式に変換して、サーバに送信する。
-
-* サーバ本体は、Music Box に特化した、
-  独自の music_data を解釈して演奏する。
+* MIDIなどの楽曲ファイルは、クライアント側でパージングし、
+  独自の ``music_data`` 形式に変換して、サーバに送信する。
 
 
-
-## 0. TL;DR
+## 手順まとめ
 
 ### Install
 
@@ -36,35 +32,18 @@ Music Box 本体で演奏するモードと、
 (env1)$ ./install.sh
 ```
 
-### 自動起動の設定
-
-see sample.crontab
-
-
-### 本体を制御するサーバの起動
-
-クライアント・サーバ・モデルになっており、
-まず、本体を直接制御するサーバを立ち上げる必要がある。
-
-```bash
-(env1)$ MusicBox wsserver
-```
-
 ### サーボの調整
 
-調整(キャリブレーション)をするための Webサーバを立ち上げ、
 ブラウザからアクセスして、サーボモータの調整を行う。
 
-```bash
-(env1)$ MusicBoxCalibration.py
-
+```
 URL: http://IPaddress:10080/
 ```
 
 
 ### Command line manual
 ```bash
-(env1)$ python3 -m musicbox --help
+(env1)$ MusicBox サブコマンド名 --help
 ```
 
 
@@ -85,7 +64,7 @@ Webインタフェースなどから、コマンドを受取り、
 曲を演奏したり、単発で音を鳴らしたりする。
 
 ```
-(env1)$ MusicBox wsserver &
+(env1)$ MusicBox svr &
 ```
 
 Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合は、
@@ -94,35 +73,35 @@ Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合�
 
 Music Boxをシミュレートする
 ```
-(env1)$ ./MusicBox wsserver -w 1 &
+(env1)$ ./MusicBox svr -w 1 &
 ```
 
 ピアノをシミュレートする (88音階)
 ```
-(env1)$ ./MusicBox wsserver -w 2 &
+(env1)$ ./MusicBox svr -w 2 &
 ```
 
 sin波のサンプル音でシミュレートする (128音階)
 ```
-(env1)$ ./MusicBox wsserver -w 3 &
+(env1)$ ./MusicBox svr -w 3 &
 ```
 
 
 ### 1.2 Client side
 
-Paper Tape 形式の曲を再生
+Paper Tape 形式(テキスト・ファイル)の曲を再生
 ```bash
-(env1)$ MusicBox papertape paper_tape/kaeruno-uta.txt ws://localhost:8881/
+(env1)$ MusicBox txt kaeruno-uta.txt ws://localhost:8880/
 ```
 
 MIDI形式の曲を再生
 ```bash
-(env1)$ MusicBox midi sample_midi/joy.mid ws://localhost:8881/
+(env1)$ MusicBox midi joy.mid ws://localhost:8880/
 ```
 
 再生をストップ
 ```bash
-(env1)$ MusicBox wscmd music_stop
+(env1)$ MusicBox cmd music_stop
 ```
 
 
