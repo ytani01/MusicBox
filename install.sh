@@ -5,6 +5,10 @@
 MYNAME=`basename $0`
 MYDIR=`dirname $0`
 
+BINDIR="$HOME/bin"
+
+WRAPPER_SCRIPT="MusicBox"
+
 SERVO_CONF="musicbox-servo.conf"
 VENVDIR_FILE="musicbox-venvdir"
 
@@ -121,6 +125,15 @@ if [ ! -f $HOME/$SERVO_CONF ]; then
     cp -v sample.$SERVO_CONF $HOME/$SERVO_CONF
     echo
 fi
+
+#
+# install wrapper shell script
+#
+if [ ! -d $BINDIR ]; then
+    mkdir -pv $BINDIR
+fi
+cp -fv $WRAPPER_SCRIPT $BINDIR
+echo
 
 echo "### Completed"
 echo

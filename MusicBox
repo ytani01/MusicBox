@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# (c) 2021 Yoichi Tanibayashi
+#
+if [ -z $VIRTUAL_ENV ]; then
+   if [ -f ~/musicbox-venvdir ]; then
+       VENVDIR=`cat ~/musicbox-venvdir`
+       . $VENVDIR/bin/activate
+   else
+       echo
+       echo "ERROR(venv): can not activate python3 Virtualenv"
+       echo
+    exit 1
+   fi
+fi
+   
+exec python -m musicbox $*
+
+### Local Variables: ***
+### mode:shell-script ***
+### End: ***

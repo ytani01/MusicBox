@@ -818,4 +818,4 @@ def calibration(port, webdir, debug):
 
 
 if __name__ == '__main__':
-    cli(prog_name='python3 -m musicbox')
+    cli(prog_name='MusicBox')
