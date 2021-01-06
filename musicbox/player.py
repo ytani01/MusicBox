@@ -83,6 +83,7 @@ class Player:
                  wav_mode=WAVMODE_NONE,
                  rotation_speed=ROTATION_SPEED,
                  rotation_gpio=ROTATION_GPIO,
+                 wavdir='wav',
                  debug=False):
         """ Constructor
         initialize and start rotation
@@ -96,16 +97,19 @@ class Player:
             0: stop rotation motor
         rotation_gpio: list of int
             GPIO pin number of rotation motor (stepper motor)
+        wavdir: str
         """
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
         self._log.debug('wav_mode=%s', wav_mode)
         self._log.debug('rotation_speed=%s', rotation_speed)
         self._log.debug('rotation_gpio=%s', rotation_gpio)
+        self._log.debug('wavdir=%s', wavdir)
 
         self._wav_mode = wav_mode
         self._rotation_speed = rotation_speed
         self._rotation_gpio = rotation_gpio
+        self._wavdir = wavdir
 
         self._def_delay = self.DEF_DELAY
 
@@ -120,13 +124,16 @@ class Player:
                 debug=self._dbg)
 
         elif self._wav_mode == self.WAVMODE_PIANO:
-            self._movement = MovementWav1(debug=self._dbg)
+            self._movement = MovementWav1(wav_topdir=self._wavdir,
+                                          debug=self._dbg)
 
         elif self._wav_mode == self.WAVMODE_PIANO_FULL:
-            self._movement = MovementWav2(debug=self._dbg)
+            self._movement = MovementWav2(wav_topdir=self._wavdir,
+                                          debug=self._dbg)
 
         elif self._wav_mode == self.WAVMODE_MIDI_FULL:
-            self._movement = MovementWav3(debug=self._dbg)
+            self._movement = MovementWav3(wav_topdir=self._wavdir,
+                                          debug=self._dbg)
 
         else:
             msg = 'invalid wav_mode: %s' % self._wav_mode

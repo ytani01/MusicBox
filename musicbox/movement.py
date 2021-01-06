@@ -33,6 +33,7 @@ This -->|            Movement           |            |
 __author__ = 'Yoichi Tanibayashi'
 __date__ = '2021/01'
 
+from pathlib import Path
 import glob
 import threading
 import time
@@ -303,14 +304,16 @@ class MovementWav1(MovementBase):
     """
     _log = get_logger(__name__, False)
 
-    DEF_WAV_DIR = './piano_wav'
+    DEF_WAV_TOPDIR = 'wav'
+    DEF_WAV_SUBDIR = 'piano'
 
     WAV_FILE_PREFIX = 'ch'
     WAV_FILE_SUFFIX = '.wav'
 
     NOTE_ORIGIN = 0
 
-    def __init__(self, wav_dir=DEF_WAV_DIR,
+    def __init__(self,
+                 wav_topdir=DEF_WAV_TOPDIR, wav_subdir=DEF_WAV_SUBDIR,
                  wav_prefix=WAV_FILE_PREFIX,
                  wav_suffix=WAV_FILE_SUFFIX,
                  note_origin=NOTE_ORIGIN,
@@ -319,7 +322,8 @@ class MovementWav1(MovementBase):
 
         Parameters
         ----------
-        wav_dir: str
+        wav_topdir: str
+        wav_subdir: str
             directory name
         wav_prefix: str
         wav_suffix: str
@@ -327,22 +331,30 @@ class MovementWav1(MovementBase):
         """
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
-        self._log.debug('wav_dir=%s', wav_dir)
+        self._log.debug('wav_topdir=%s, wav_subdir=%s',
+                        wav_topdir, wav_subdir)
         self._log.debug('wav_prefix=%s, wav_suffix=%s',
                         wav_prefix, wav_suffix)
         self._log.debug('note_origin=%s', note_origin)
 
-        self._wav_dir = wav_dir
+        self._wav_topdir = wav_topdir
+        self._wav_subdir = wav_subdir
         self._wav_prefix = wav_prefix
         self._wav_suffix = wav_suffix
         self._note_origin = note_origin
+
+        wav_path = Path('%s/%s' % (self._wav_topdir, self._wav_subdir))
+        self._wav_dir = str(wav_path.expanduser())
+        self._log.debug('wav_dir=%s', self._wav_dir)
 
         pygame.mixer.init()
         self._sound = self.load_wav(self._wav_dir,
                                     self._wav_prefix, self._wav_suffix)
 
         if not self._sound:
-            raise RuntimeError('no wav file')
+            msg = 'no wav file'
+            self._log.error(msg)
+            raise RuntimeError(msg)
 
         super().__init__(ch_n=len(self._sound), debug=self._dbg)
 
@@ -355,7 +367,7 @@ class MovementWav1(MovementBase):
 
         self._log.debug('done')
 
-    def load_wav(self, wav_dir=DEF_WAV_DIR,
+    def load_wav(self, wav_dir,
                  wav_prefix=WAV_FILE_PREFIX,
                  wav_suffix=WAV_FILE_SUFFIX):
         """
@@ -421,14 +433,17 @@ class MovementWav2(MovementWav1):
     """
     ピアノの音階 (21 .. 108)
     """
-    DEF_WAV_DIR = './piano_wav'
+    DEF_WAV_TOPDIR = 'wav'
+    DEF_WAV_SUBDIR = 'piano'
     WAV_FILE_PREFIX = 'piano'
     WAV_FILE_SUFFIX = '.wav'
 
     NOTE_ORIGIN = 21
 
-    def __init__(self, debug=False):
-        super().__init__(wav_dir=self.DEF_WAV_DIR,
+    def __init__(self,
+                 wav_topdir=DEF_WAV_TOPDIR, wav_subdir=DEF_WAV_SUBDIR,
+                 debug=False):
+        super().__init__(wav_topdir=wav_topdir, wav_subdir=wav_subdir,
                          wav_prefix=self.WAV_FILE_PREFIX,
                          wav_suffix=self.WAV_FILE_SUFFIX,
                          note_origin=self.NOTE_ORIGIN,
@@ -436,16 +451,19 @@ class MovementWav2(MovementWav1):
 
 class MovementWav3(MovementWav1):
     """
-    MIDIの全音階
+    MIDIの全音階 (0 .. 127)
     """
-    DEF_WAV_DIR = './midi_wav'
+    DEF_WAV_TOPDIR = 'wav'
+    DEF_WAV_SUBDIR = 'midi'
     WAV_FILE_PREFIX = 'note'
     WAV_FILE_SUFFIX = '.wav'
 
     NOTE_ORIGIN = 0
 
-    def __init__(self, debug=False):
-        super().__init__(wav_dir=self.DEF_WAV_DIR,
+    def __init__(self,
+                 wav_topdir=DEF_WAV_TOPDIR, wav_subdir=DEF_WAV_SUBDIR,
+                 debug=False):
+        super().__init__(wav_topdir=wav_topdir, wav_subdir=wav_subdir,
                          wav_prefix=self.WAV_FILE_PREFIX,
                          wav_suffix=self.WAV_FILE_SUFFIX,
                          note_origin=self.NOTE_ORIGIN,

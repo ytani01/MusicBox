@@ -71,6 +71,7 @@ class WsServer:
     def __init__(self,
                  wav_mode=Player.WAVMODE_NONE,
                  host="0.0.0.0", port=DEF_PORT,
+                 wavdir='wav',
                  debug=False):
         """constructor
 
@@ -82,17 +83,22 @@ class WsServer:
             host
         port: int
             port number
+        wavdir: str
+            wav file directory
         """
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
         self._log.debug('wav_mode=%s', wav_mode)
         self._log.debug('host:port=%s:%s', host, port)
+        self._log.debug('wavdir=%s', wavdir)
 
         self._wav_mode = wav_mode
         self._port = port
         self._host = host
+        self._wavdir = wavdir
 
-        self._player = Player(wav_mode=self._wav_mode, debug=self._dbg)
+        self._player = Player(wav_mode=self._wav_mode,
+                              wavdir=self._wavdir, debug=self._dbg)
 
         self._start_svr = websockets.serve(self.handle, host, port)
         self._loop = asyncio.get_event_loop()

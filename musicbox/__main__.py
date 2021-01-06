@@ -10,7 +10,7 @@ from websocket import create_connection
 import cuilib
 from . import PaperTape, Midi, RotationMotor, Servo
 from . import Movement, MovementWav1, MovementWav2, MovementWav3
-from . import Player, WsServer
+from . import Player, WsServer, CalibrationWebServer
 from .my_logger import get_logger
 
 __author__ = 'Yoichi Tanibayashi'
@@ -233,6 +233,7 @@ class MovementApp:
     def __init__(self, wav_mode,
                  rotation_speed,
                  push_interval, pull_interval,
+                 wavdir,
                  debug=False):
         """ Constructor """
         self._dbg = debug
@@ -241,18 +242,22 @@ class MovementApp:
         self._log.debug('rotation_speed=%s', rotation_speed)
         self._log.debug('push/pull_interval=%s',
                         (push_interval, pull_interval))
+        self._log.debug('wavdir=%s', wavdir)
 
         self._wav_mode = wav_mode
         self._rotation_speed = rotation_speed
 
         if self._wav_mode == 1:
-            self._movement = MovementWav1(debug=self._dbg)
+            self._movement = MovementWav1(wav_topdir=wavdir,
+                                          debug=self._dbg)
 
         elif self._wav_mode == 2:
-            self._movement = MovementWav2(debug=self._dbg)
+            self._movement = MovementWav2(wav_topdir=wavdir,
+                                          debug=self._dbg)
 
         elif self._wav_mode == 3:
-            self._movement = MovementWav3(debug=self._dbg)
+            self._movement = MovementWav3(wav_topdir=wavdir,
+                                          debug=self._dbg)
 
         else:
             self._movement = Movement(rotation_speed=rotation_speed,
@@ -330,6 +335,7 @@ class PlayerApp:
                  wav_mode,
                  rotation_speed,
                  push_interval, pull_interval,
+                 wavdir,
                  debug=False):
         """ Constructor
 
@@ -340,7 +346,7 @@ class PlayerApp:
         wav_mode: int
         rotation_speed: int
         push_interval, pull_interval: float
-
+        wavdir: str
         """
         self._dbg = debug
         self._log = get_logger(__class__.__name__, self._dbg)
@@ -351,11 +357,13 @@ class PlayerApp:
         self._log.debug('rotation_speed=%s', rotation_speed)
         self._log.debug('push/pull_interval=%s',
                         (push_interval, pull_interval))
+        self._log.debug('wavdir=%s', wavdir)
 
         self._wav_mode = wav_mode
         self._music_file = music_file
         self._channel = channel
         self._rotation_speed = rotation_speed
+        self._wavdir = wavdir
 
         self._note_n = self.NOTE_N[self._wav_mode]
         self._log.debug('note_n=%s', self._note_n)
@@ -363,7 +371,9 @@ class PlayerApp:
         self._parser = Midi(debug=self._dbg)
 
         self._player = Player(self._wav_mode,
-                              self._rotation_speed, debug=self._dbg)
+                              self._rotation_speed,
+                              wavdir=self._wavdir,
+                              debug=self._dbg)
 
         self._cui = cuilib.Cui(debug=self._dbg)
 
@@ -422,22 +432,25 @@ class PlayerApp:
 
 class WsServerApp:
     """ Music Box Websocket Server App """
-    def __init__(self, port, wav_mode, debug=False):
+    def __init__(self, port, wav_mode, wavdir, debug=False):
         """ Constructor
 
         Parameters
         ----------
         port: int
         wav_mode: int
+        wavdir: str
         """
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
 
         self._port = port
         self._wav_mode = wav_mode
+        self._wavdir = wavdir
 
         self._svr = WsServer(wav_mode=self._wav_mode,
-                             port=self._port, debug=self._dbg)
+                             port=self._port, wavdir=self._wavdir,
+                             debug=self._dbg)
 
     def main(self):
         """ main """
@@ -662,14 +675,18 @@ Movement test
               default=Servo.DEF_PULL_INTERVAL,
               help='pull interaval, default=%s sec' % (
                   Servo.DEF_PULL_INTERVAL))
+@click.option('--wavdir', '-D', 'wavdir', type=click.Path(exists=True),
+              default='wav',
+              help='wav file directory')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def movement(wav_mode, push_interval, pull_interval, speed, debug):
+def movement(wav_mode, push_interval, pull_interval, speed,
+             wavdir, debug):
     """ movement """
     log = get_logger(__name__, debug)
 
     app = MovementApp(wav_mode, speed,
-                      push_interval, pull_interval, debug=debug)
+                      push_interval, pull_interval, wavdir, debug=debug)
 
     try:
         app.main()
@@ -702,15 +719,18 @@ Player test
               default=Servo.DEF_PULL_INTERVAL,
               help='pull interaval, default=%s sec' % (
                   Servo.DEF_PULL_INTERVAL))
+@click.option('--wavdir', '-D', 'wavdir', type=click.Path(exists=True),
+              default='wav',
+              help='wav file directory')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
 def player(music_file, channel, wav_mode,
-           speed, push_interval, pull_interval, debug):
+           speed, push_interval, pull_interval, wavdir, debug):
     """ player """
     log = get_logger(__name__, debug)
 
     app = PlayerApp(music_file, channel, wav_mode, speed,
-                    push_interval, pull_interval, debug=debug)
+                    push_interval, pull_interval, wavdir, debug=debug)
 
     try:
         app.main()
@@ -721,7 +741,7 @@ def player(music_file, channel, wav_mode,
 
 
 @cli.command(help="""
-Music Box Websocket Server
+Music Box Main Websocket Server
 """)
 @click.option('--port', '-p', 'port', type=int,
               default=WsServer.DEF_PORT,
@@ -733,13 +753,16 @@ Music Box Websocket Server
 1: Simulate Music Box with wav file\n
 2: Piano sound (note: 21 .. 108)\n
 3: Full notes""")
+@click.option('--wavdir', '-D', 'wavdir', type=click.Path(exists=True),
+              default='wav',
+              help='wav file directory')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def wsserver(port, wav_mode, debug):
+def wsserver(port, wav_mode, wavdir, debug):
     """ wsserver """
     log = get_logger(__name__, debug)
 
-    app = WsServerApp(port, wav_mode, debug=debug)
+    app = WsServerApp(port, wav_mode, wavdir, debug=debug)
     try:
         app.main()
     finally:
@@ -749,7 +772,7 @@ def wsserver(port, wav_mode, debug):
 
 
 @cli.command(help="""
-Send simple command to Music Box websocket server
+Send a command to Music Box websocket server
 
 ex. `music_start`, `single_play 0 2 4`, etc ...
 """)
@@ -764,6 +787,30 @@ def wscmd(cmd, url, debug):
     log = get_logger(__name__, debug)
 
     app = WsCmdApp(url, cmd, debug=debug)
+    try:
+        app.main()
+    finally:
+        log.debug('done')
+
+
+@cli.command(help="""
+Web application for calibration
+""")
+@click.option('--port', '-p', 'port', type=int,
+              default=CalibrationWebServer.DEF_PORT,
+              help='port number, default=%s' % (
+                  CalibrationWebServer.DEF_PORT))
+@click.option('--webdir', '-w', 'webdir', type=click.Path(exists=True),
+              default=CalibrationWebServer.DEF_WEBDIR,
+              help="webdir, default=%s" % (
+                  CalibrationWebServer.DEF_WEBDIR))
+@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
+              help='debug flag')
+def calibration(port, webdir, debug):
+    """ wsserver """
+    log = get_logger(__name__, debug)
+
+    app = CalibrationWebServer(port, webdir, debug=debug)
     try:
         app.main()
     finally:
