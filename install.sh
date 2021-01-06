@@ -5,6 +5,9 @@
 MYNAME=`basename $0`
 MYDIR=`dirname $0`
 
+SERVO_CONF="musicbox-servo.conf"
+VENVDIR_FILE="musicbox-venvdir"
+
 GITHUB_TOP="https://github.com/ytani01"
 
 MIDILIB_PKG="midilib"
@@ -78,6 +81,9 @@ if [ -z $VIRTUAL_ENV ]; then
     . ../bin/activate
 fi
 cd_echo $VIRTUAL_ENV
+
+echo "### create $HOME/$VENVDIR_FILE"
+echo $VIRTUAL_ENV > $HOME/$VENVDIR_FILE
 echo
 
 #
@@ -105,7 +111,16 @@ echo
 #
 cd_echo $MYDIR
 pip install .
-
 echo
+
+#
+# copy musicbox-servo.conf
+#
+if [ ! -f $HOME/$SERVO_CONF ]; then
+    echo "### copy $SERVO_CONF"
+    cp -v sample.$SERVO_CONF $HOME/$SERVO_CONF
+    echo
+fi
+
 echo "### Completed"
 echo

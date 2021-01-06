@@ -80,6 +80,7 @@ class MusicBoxWebServer:
         self._port = port
 
         self._mydir = Path(__file__).resolve().parents[0]
+        self._mydir = Path('./web-caribration')
         self._app = tornado.web.Application(
             [ (r"/", MusicBoxWebHandler), ],
             autoreload=True,

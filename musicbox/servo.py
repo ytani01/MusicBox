@@ -41,7 +41,7 @@ class Servo:
     """
     _log = get_logger(__name__, False)
 
-    DEF_CONF_FNAME = "music-box-servo.conf"
+    DEF_CONF_FNAME = "musicbox-servo.conf"
     DEF_CONF_DIR = os.environ['HOME']
     DEF_CONFFILE = DEF_CONF_DIR + '/' + DEF_CONF_FNAME
 

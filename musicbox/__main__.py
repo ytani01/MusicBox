@@ -528,6 +528,7 @@ def cli(ctx):
         print(ctx.get_help())
     else:
         print('==========')
+        print()
 
 
 @cli.command(help="""
