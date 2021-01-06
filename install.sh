@@ -139,7 +139,7 @@ echo
 if [ ! -f $HOME/$SERVO_CONF ]; then
     echo "### copy $SERVO_CONF"
     echo
-    cp -v sample.$SERVO_CONF $HOME/$SERVO_CONF
+    cp -v sample-$SERVO_CONF $HOME/$SERVO_CONF
     echo
 fi
 
