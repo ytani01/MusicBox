@@ -7,9 +7,6 @@ PaperTape library for Music Box
 __author__ = 'Yoichi Tanibayashi'
 __data__ = '2021/01'
 
-import json
-import time
-from websocket import create_connection
 from .parser import Parser
 from .my_logger import get_logger
 
@@ -27,6 +24,8 @@ class PaperTape(Parser):
         """ Constructor """
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
+
+        super().__init__(debug=self._dbg)
 
     def parse(self, infile):
         """
@@ -53,7 +52,7 @@ class PaperTape(Parser):
             comment_i = None
             try:
                 comment_i = line.index(self.COMMENT_CHR)
-            except ValueError as ex:
+            except ValueError:
                 pass  # ignore
 
             if comment_i is not None:
@@ -61,7 +60,7 @@ class PaperTape(Parser):
 
             word = line.split()
 
-            if len(word) == 0:
+            if not word:
                 # comment or empty line
                 continue
 

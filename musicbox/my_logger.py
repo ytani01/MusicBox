@@ -21,6 +21,7 @@ CONSOLE_HANDLER = StreamHandler()
 CONSOLE_HANDLER.setFormatter(HANDLER_FMT)
 CONSOLE_HANDLER.setLevel(DEBUG)
 
+
 def get_logger(name, dbg=False):
     """
     get logger

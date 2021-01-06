@@ -449,6 +449,7 @@ class MovementWav2(MovementWav1):
                          note_origin=self.NOTE_ORIGIN,
                          debug=debug)
 
+
 class MovementWav3(MovementWav1):
     """
     MIDIの全音階 (0 .. 127)

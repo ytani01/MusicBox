@@ -1,0 +1,3 @@
+# begin MusicBox
+@reboot	sleep 20; $HOME/bin/boot-musicbox.sh >> /tmp/boot-musicbox.log 2>&1 &
+# end MusicBox

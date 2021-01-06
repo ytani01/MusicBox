@@ -8,7 +8,6 @@ __author__ = 'Yoichi Tanibayashi'
 __data__ = '2021/01'
 
 import json
-import time
 from websocket import create_connection
 from .my_logger import get_logger
 
@@ -54,4 +53,4 @@ class Parser:
 
         ws = create_connection(url)
         ws.send(msg_json)
-        ws.close()        
+        ws.close()

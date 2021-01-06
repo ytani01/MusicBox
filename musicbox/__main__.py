@@ -28,6 +28,7 @@ ENV_WEBDIR_CALIBRATION = 'MUSICBOX_WEBDIR_CALIBRATION'
 DEF_WEBDIR_CALIBRATION = os.environ.get(
     ENV_WEBDIR_CALIBRATION, './web-calibration')
 
+
 class PaperTapeApp:
     """ PaperTapeApp """
     def __init__(self, paper_tape_file, out_file_or_ws_url=(),
@@ -67,6 +68,7 @@ class PaperTapeApp:
                 json.dump(music_data, f, indent=4)
 
         print()
+
 
 class MidiApp:
     """ MidiApp """
@@ -135,6 +137,7 @@ class MidiApp:
                 json.dump(music_data, f, indent=4)
 
         print()
+
 
 class RotationMotorApp:
     """ RotationMotorApp """
@@ -560,14 +563,14 @@ def cli(ctx):
 
 
 @cli.command(help="""
-Paper Tape parser
-(and send music_data to websocket server)
+Paper Tape format parser
+(and save and/or send music_data to websocket server)
 """)
 @click.argument('paper_tape_file', type=click.Path(exists=True))
 @click.argument('out_file_or_ws_url', type=str, nargs=-1)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def papertape(paper_tape_file, out_file_or_ws_url, debug):
+def txt(paper_tape_file, out_file_or_ws_url, debug):
     """ papertape """
     log = get_logger(__name__, debug)
 
@@ -696,7 +699,7 @@ Movement test
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
 def z_movement(wav_mode, push_interval, pull_interval, speed,
-             wavdir, debug):
+               wavdir, debug):
     """ movement """
     log = get_logger(__name__, debug)
 
@@ -740,7 +743,7 @@ Player test
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
 def z_player(music_file, channel, wav_mode,
-           speed, push_interval, pull_interval, wavdir, debug):
+             speed, push_interval, pull_interval, wavdir, debug):
     """ player """
     log = get_logger(__name__, debug)
 
@@ -773,8 +776,8 @@ Music Box Main Websocket Server
               help='wav file directory, default=%a' % DEF_WAVDIR)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def wsserver(port, wav_mode, wavdir, debug):
-    """ wsserver """
+def svr(port, wav_mode, wavdir, debug):
+    """ websocket server """
     log = get_logger(__name__, debug)
 
     app = WsServerApp(port, wav_mode, wavdir, debug=debug)
@@ -797,8 +800,8 @@ ex. `music_start`, `single_play 0 2 4`, etc ...
               help='websocket URL, default=%a' % (DEF_WS_URL))
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def wscmd(cmd, url, debug):
-    """ wsserver """
+def send(cmd, url, debug):
+    """ send a cmd to server """
     log = get_logger(__name__, debug)
 
     app = WsCmdApp(url, cmd, debug=debug)

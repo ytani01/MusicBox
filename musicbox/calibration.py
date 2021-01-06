@@ -10,7 +10,6 @@ __date__   = '2021/01'
 __version__ = '0.1'
 
 import os
-from pathlib import Path
 import tornado.ioloop
 import tornado.web
 from .my_logger import get_logger
@@ -74,7 +73,7 @@ class CalibrationWebServer:
         self._log.debug('webdir=%s', self._webdir)
 
         self._app = tornado.web.Application(
-            [(r"/", CalibrationWebHandler),],
+            [(r"/", CalibrationWebHandler), ],
             autoreload=True,
             debug=self._dbg,
             static_path=os.path.join(self._webdir, "static"),

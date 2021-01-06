@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 #
 # (c) 2021 Yoichi Tanibayashi
 #
@@ -8,6 +8,8 @@ MYDIR=`dirname $0`
 BINDIR="$HOME/bin"
 
 WRAPPER_SCRIPT="MusicBox"
+BOOT_SCRIPT="boot-musicbox.sh"
+BIN_FILES="$WRAPPER_SCRIPT $BOOT_SCRIPT"
 
 PKGS_TXT="pkgs.txt"
 ENV_FILE="musicbox-env"
@@ -58,7 +60,7 @@ install_my_python_pkg() {
 
     cd_echo $_DIR
     git pull
-    pip install . &
+    pip install .
     echo
 }
 
@@ -139,7 +141,7 @@ echo
 if [ ! -f $HOME/$SERVO_CONF ]; then
     echo "### copy $SERVO_CONF"
     echo
-    cp -v sample-$SERVO_CONF $HOME/$SERVO_CONF
+    cp -v sample.$SERVO_CONF $HOME/$SERVO_CONF
     echo
 fi
 
@@ -153,13 +155,14 @@ echo
 CRONTAB_BAK=/tmp/crontab.bak
 CRONTAB_OLD=/tmp/crontab.old
 CRONTAB_NEW=/tmp/crontab.new
-CRONTAB_SAMPLE=sample-crontab
+CRONTAB_SAMPLE=sample.crontab
 
 crontab -l > $CRONTAB_BAK
 echo "## backup crontab"
 echo
 cat $CRONTAB_BAK
 echo
+sleep 2
 
 echo "## edit crontab"
 echo
@@ -168,16 +171,17 @@ cat $CRONTAB_OLD $CRONTAB_SAMPLE > $CRONTAB_NEW
 crontab $CRONTAB_NEW
 crontab -l
 echo
+sleep 2
 
 #
-# install wrapper shell script
+# install scripts
 #
-echo "### install $WRAPPER_SCRIPT"
+echo "### install scripts"
 echo
 if [ ! -d $BINDIR ]; then
     mkdir -pv $BINDIR
 fi
-cp -fv $WRAPPER_SCRIPT $BINDIR
+cp -fv $BIN_FILES $BINDIR
 echo
 
 echo "### usage"

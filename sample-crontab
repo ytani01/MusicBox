@@ -1,8 +1,0 @@
-# begin MusicBox
-@reboot	sleep 20; sudo pigpiod
-@reboot	sleep 21; $HOME/bin/MusicBox wsserver >> /tmp/wsserver.log 2>&1 &
-@reboot	sleep 22; $HOME/bin/MusicBox wsserver -w 1 -p 8881 >> /tmp/wsserver1.log 2>&1 &
-@reboot	sleep 23; $HOME/bin/MusicBox wsserver -w 2 -p 8882 >> /tmp/wsserver2.log 2>&1 &
-@reboot	sleep 24; $HOME/bin/MusicBox wsserver -w 3 -p 8883 >> /tmp/wsserver3.log 2>&1 &
-@reboot	sleep 25; $HOME/bin/MusicBox calibration >> /tmp/calibration.log 2>&1 &
-# end MusicBox

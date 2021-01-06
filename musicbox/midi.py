@@ -8,10 +8,7 @@ __author__ = 'Yoichi Tanibayashi'
 __date__ = '2021/01'
 
 import copy
-import json
-import time
 import midilib
-from websocket import create_connection
 from .parser import Parser
 from .my_logger import get_logger
 
