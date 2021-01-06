@@ -46,7 +46,7 @@ class Parser:
         url: str
         """
         self._log.debug('len(music_data)=%s, url=%s',
-                         len(music_data), url)
+                        len(music_data), url)
 
         msg = {'cmd': 'music_load', 'music_data': music_data}
 

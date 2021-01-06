@@ -36,13 +36,18 @@ Music Box 本体で演奏するモードと、
 (env1)$ ./install.sh
 ```
 
+### 自動起動の設定
+
+see sample.crontab
+
+
 ### 本体を制御するサーバの起動
 
 クライアント・サーバ・モデルになっており、
 まず、本体を直接制御するサーバを立ち上げる必要がある。
 
 ```bash
-(env1)$ python -m musicbox wsserver
+(env1)$ MusicBox wsserver
 ```
 
 ### サーボの調整
@@ -80,7 +85,7 @@ Webインタフェースなどから、コマンドを受取り、
 曲を演奏したり、単発で音を鳴らしたりする。
 
 ```
-(env1)$ python -m musicbox wsserver &
+(env1)$ MusicBox wsserver &
 ```
 
 Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合は、
@@ -89,17 +94,17 @@ Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合�
 
 Music Boxをシミュレートする
 ```
-(env1)$ ./python -m musicbox wsserver -w 1 &
+(env1)$ ./MusicBox wsserver -w 1 &
 ```
 
 ピアノをシミュレートする (88音階)
 ```
-(env1)$ ./python -m musicbox wsserver -w 2 &
+(env1)$ ./MusicBox wsserver -w 2 &
 ```
 
 sin波のサンプル音でシミュレートする (128音階)
 ```
-(env1)$ ./python -m musicbox wsserver -w 3 &
+(env1)$ ./MusicBox wsserver -w 3 &
 ```
 
 
@@ -107,17 +112,17 @@ sin波のサンプル音でシミュレートする (128音階)
 
 Paper Tape 形式の曲を再生
 ```bash
-(env1)$ python -m musicbox papertape paper_tape/kaeruno-uta.txt ws://localhost:8881/
+(env1)$ MusicBox papertape paper_tape/kaeruno-uta.txt ws://localhost:8881/
 ```
 
 MIDI形式の曲を再生
 ```bash
-(env1)$ python -m musicbox midi sample_midi/joy.mid ws://localhost:8881/
+(env1)$ MusicBox midi sample_midi/joy.mid ws://localhost:8881/
 ```
 
 再生をストップ
 ```bash
-(env1)$ python -m musicbox wscmd music_stop
+(env1)$ MusicBox wscmd music_stop
 ```
 
 

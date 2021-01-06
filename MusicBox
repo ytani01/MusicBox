@@ -2,9 +2,18 @@
 #
 # (c) 2021 Yoichi Tanibayashi
 #
+
+ENV_FILE="$HOME/musicbox-env"
+
+. $ENV_FILE
+
+export MUSICBOX_WAVDIR=$MUSICBOX_DIR/wav
+export MUSICBOX_WEBDIR_CALIBRATION=$MUSICBOX_DIR/web-calibration
+
+export PYGAME_HIDE_SUPPORT_PROMPT=hide
+
 if [ -z $VIRTUAL_ENV ]; then
-   if [ -f ~/musicbox-venvdir ]; then
-       VENVDIR=`cat ~/musicbox-venvdir`
+   if [ -f $ENV_FILE ]; then
        . $VENVDIR/bin/activate
    else
        echo
@@ -13,7 +22,8 @@ if [ -z $VIRTUAL_ENV ]; then
     exit 1
    fi
 fi
-   
+
+# cd $MUSICBOX_DIR
 exec python -m musicbox $*
 
 ### Local Variables: ***

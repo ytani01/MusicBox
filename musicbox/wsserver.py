@@ -60,13 +60,13 @@ class WsServer:
     from websocket import create_connection
     # [Important!] 'websocket' is not 'websockets'
 
-    ws = create_connection('ws://localhost:8881/')
+    ws = create_connection('ws://localhost:8880/')
     ws.send('message')
     ws.close()
     ```
 
     """
-    DEF_PORT = 8881
+    DEF_PORT = 8880
 
     def __init__(self,
                  wav_mode=Player.WAVMODE_NONE,

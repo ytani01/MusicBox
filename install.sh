@@ -9,8 +9,9 @@ BINDIR="$HOME/bin"
 
 WRAPPER_SCRIPT="MusicBox"
 
+PKGS_TXT="pkgs.txt"
+ENV_FILE="musicbox-env"
 SERVO_CONF="musicbox-servo.conf"
-VENVDIR_FILE="musicbox-venvdir"
 
 GITHUB_TOP="https://github.com/ytani01"
 
@@ -38,6 +39,7 @@ MUSICBOX_PKG="musicbox"
 cd_echo() {
     cd $1
     echo "### [ `pwd` ]"
+    echo
 }
 
 install_my_python_pkg() {
@@ -65,6 +67,15 @@ install_my_python_pkg() {
 #
 cd_echo $MYDIR
 MYDIR=`pwd`
+echo "MYDIR=$MYDIR"
+echo
+
+#
+# install Linux packages
+#
+echo "### install Linux packages"
+echo
+sudo apt install `cat $PKGS_TXT`
 echo
 
 #
@@ -86,8 +97,11 @@ if [ -z $VIRTUAL_ENV ]; then
 fi
 cd_echo $VIRTUAL_ENV
 
-echo "### create $HOME/$VENVDIR_FILE"
-echo $VIRTUAL_ENV > $HOME/$VENVDIR_FILE
+echo "### create $HOME/$ENV_FILE"
+echo "MUSICBOX_DIR=$MYDIR" > $HOME/$ENV_FILE
+echo "VENVDIR=$VIRTUAL_ENV" >> $HOME/$ENV_FILE
+echo
+cat $HOME/$ENV_FILE
 echo
 
 #
@@ -113,7 +127,9 @@ echo
 #
 # install musicbox package
 #
+echo "### install main python package"
 cd_echo $MYDIR
+echo
 pip install .
 echo
 
@@ -122,18 +138,34 @@ echo
 #
 if [ ! -f $HOME/$SERVO_CONF ]; then
     echo "### copy $SERVO_CONF"
+    echo
     cp -v sample.$SERVO_CONF $HOME/$SERVO_CONF
     echo
 fi
 
 #
+# setup crontab for auto start
+#
+# [TBD]
+echo "### current crontab"
+
+CRONTAB_BAK=/tmp/crontab.bak
+crontab -l > $CRONTAB_BAK
+cat $CRONTAB_BAK
+echo
+
+#
 # install wrapper shell script
 #
+echo "### install $WRAPPER_SCRIPT"
+echo
 if [ ! -d $BINDIR ]; then
     mkdir -pv $BINDIR
 fi
 cp -fv $WRAPPER_SCRIPT $BINDIR
 echo
 
-echo "### Completed"
+echo "### usage"
+echo
+$WRAPPER_SCRIPT
 echo

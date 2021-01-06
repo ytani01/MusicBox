@@ -4,6 +4,7 @@
 """
 main for musicbox package
 """
+import os
 import json
 import click
 from websocket import create_connection
@@ -20,6 +21,12 @@ DEF_WS_HOST = 'localhost'
 DEF_WS_PORT = WsServer.DEF_PORT
 DEF_WS_URL = 'ws://%s:%s/' % (DEF_WS_HOST, DEF_WS_PORT)
 
+ENV_WAVDIR = 'MUSICBOX_WAVDIR'
+DEF_WAVDIR = os.environ.get(ENV_WAVDIR, './wav')
+
+ENV_WEBDIR_CALIBRATION = 'MUSICBOX_WEBDIR_CALIBRATION'
+DEF_WEBDIR_CALIBRATION = os.environ.get(
+    ENV_WEBDIR_CALIBRATION, './web-calibration')
 
 class PaperTapeApp:
     """ PaperTapeApp """
@@ -47,13 +54,19 @@ class PaperTapeApp:
         music_data = self._parser.parse(self._paper_tape_file)
 
         for dst in self._out_file_or_ws_url:
+            print()
             if ':/' in dst:
+                print('send music_data[%s] to %s' % (
+                    len(music_data), dst))
                 self._parser.send_music(music_data, dst)
                 continue
 
+            print('save music_data[%s] to %s' % (
+                len(music_data), dst))
             with open(dst, mode='w') as f:
                 json.dump(music_data, f, indent=4)
 
+        print()
 
 class MidiApp:
     """ MidiApp """
@@ -109,13 +122,19 @@ class MidiApp:
                                         self._note_offset)
 
         for dst in self._out_file_or_ws_url:
+            print()
             if ':/' in dst:
+                print('send music_data[%s] to %s' % (
+                    len(music_data), dst))
                 self._parser.send_music(music_data, dst)
                 continue
 
+            print('save music_data[%s] to %s' % (
+                len(music_data), dst))
             with open(dst, mode='w') as f:
                 json.dump(music_data, f, indent=4)
 
+        print()
 
 class RotationMotorApp:
     """ RotationMotorApp """
@@ -534,13 +553,9 @@ def cli(ctx):
     subcmd = ctx.invoked_subcommand
 
     if subcmd is None:
-        print('==========')
-        print()
-        print('Please specify subcommand')
         print()
         print(ctx.get_help())
     else:
-        print('==========')
         print()
 
 
@@ -613,7 +628,7 @@ Rotation motor test
 @click.argument('pin4', type=int)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def rotation(pin1, pin2, pin3, pin4, debug):
+def z_rotation(pin1, pin2, pin3, pin4, debug):
     """ rotation_motor """
     log = get_logger(__name__, debug)
     log.debug('pins=%s', (pin1, pin2, pin3, pin4))
@@ -641,7 +656,7 @@ Servo motor test
                   Servo.DEF_PULL_INTERVAL))
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def servo(push_interval, pull_interval, debug):
+def z_servo(push_interval, pull_interval, debug):
     """ servo_motor """
     log = get_logger(__name__, debug)
 
@@ -676,11 +691,11 @@ Movement test
               help='pull interaval, default=%s sec' % (
                   Servo.DEF_PULL_INTERVAL))
 @click.option('--wavdir', '-D', 'wavdir', type=click.Path(exists=True),
-              default='wav',
-              help='wav file directory')
+              default=DEF_WAVDIR,
+              help='wav file directory, default=%a' % DEF_WAVDIR)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def movement(wav_mode, push_interval, pull_interval, speed,
+def z_movement(wav_mode, push_interval, pull_interval, speed,
              wavdir, debug):
     """ movement """
     log = get_logger(__name__, debug)
@@ -720,11 +735,11 @@ Player test
               help='pull interaval, default=%s sec' % (
                   Servo.DEF_PULL_INTERVAL))
 @click.option('--wavdir', '-D', 'wavdir', type=click.Path(exists=True),
-              default='wav',
-              help='wav file directory')
+              default=DEF_WAVDIR,
+              help='wav file directory, default=%a' % DEF_WAVDIR)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def player(music_file, channel, wav_mode,
+def z_player(music_file, channel, wav_mode,
            speed, push_interval, pull_interval, wavdir, debug):
     """ player """
     log = get_logger(__name__, debug)
@@ -754,8 +769,8 @@ Music Box Main Websocket Server
 2: Piano sound (note: 21 .. 108)\n
 3: Full notes""")
 @click.option('--wavdir', '-D', 'wavdir', type=click.Path(exists=True),
-              default='wav',
-              help='wav file directory')
+              default=DEF_WAVDIR,
+              help='wav file directory, default=%a' % DEF_WAVDIR)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
 def wsserver(port, wav_mode, wavdir, debug):
@@ -801,9 +816,9 @@ Web application for calibration
               help='port number, default=%s' % (
                   CalibrationWebServer.DEF_PORT))
 @click.option('--webdir', '-w', 'webdir', type=click.Path(exists=True),
-              default=CalibrationWebServer.DEF_WEBDIR,
-              help="webdir, default=%s" % (
-                  CalibrationWebServer.DEF_WEBDIR))
+              default=DEF_WEBDIR_CALIBRATION,
+              help="Web file directory, default=%a" % (
+                  DEF_WEBDIR_CALIBRATION))
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
 def calibration(port, webdir, debug):
