@@ -147,11 +147,26 @@ fi
 # setup crontab for auto start
 #
 # [TBD]
-echo "### current crontab"
+echo "### setup crontab"
+echo
 
 CRONTAB_BAK=/tmp/crontab.bak
+CRONTAB_OLD=/tmp/crontab.old
+CRONTAB_NEW=/tmp/crontab.new
+CRONTAB_SAMPLE=sample-crontab
+
 crontab -l > $CRONTAB_BAK
+echo "## backup crontab"
+echo
 cat $CRONTAB_BAK
+echo
+
+echo "## edit crontab"
+echo
+crontab -l | sed '/^# begin MusicBox/,/^# end MusicBox/d' > $CRONTAB_OLD
+cat $CRONTAB_OLD $CRONTAB_SAMPLE > $CRONTAB_NEW
+crontab $CRONTAB_NEW
+crontab -l
 echo
 
 #
