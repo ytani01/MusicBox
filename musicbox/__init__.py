@@ -14,7 +14,8 @@ from .servo import Servo
 from .movement import Movement, MovementWav1, MovementWav2, MovementWav3
 from .player import Player
 from .wsserver import WsServer
-from .calibration import CalibrationWebServer, CalibrationWebHandler
+from .webapp import WebServer
+from .calibration import CalibrationWebHandler
 
 __all__ = [
     'PaperTape', 'Midi',
@@ -22,5 +23,5 @@ __all__ = [
     'Movement', 'MovementWav1', 'MovementWav2', 'MovementWav3',
     'Player',
     'WsServer',
-    'CalibrationWebServer', 'CalibrationWebHandler'
+    'WebServer', 'CalibrationWebHandler'
 ]

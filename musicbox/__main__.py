@@ -11,7 +11,7 @@ from websocket import create_connection
 import cuilib
 from . import PaperTape, Midi, RotationMotor, Servo
 from . import Movement, MovementWav1, MovementWav2, MovementWav3, Player
-from . import WsServer, CalibrationWebServer, CalibrationWebHandler
+from . import WsServer, WebServer
 from .my_logger import get_logger
 
 __author__ = 'Yoichi Tanibayashi'
@@ -21,12 +21,12 @@ DEF_WS_HOST = 'localhost'
 DEF_WS_PORT = WsServer.DEF_PORT
 DEF_WS_URL = 'ws://%s:%s/' % (DEF_WS_HOST, DEF_WS_PORT)
 
-DEF_WAVDIR = os.environ.get(
-    'MUSICBOX_WAVDIR', './wav')
+DEF_WAV_DIR = os.environ.get(
+    'MUSICBOX_WAV_DIR', './wav')
 
-DEF_WEBDIR_CALIBRATION = os.environ.get(
-    'MUSICBOX_WEBDIR_CALIBRATION', './web-root')
-DEF_CALIBRATION_PORT = CalibrationWebServer.DEF_PORT
+DEF_WEB_DIR = os.environ.get(
+    'MUSICBOX_WEB_DIR', './web-root')
+DEF_WEB_PORT = WebServer.DEF_PORT
 
 
 class PaperTapeApp:
@@ -564,7 +564,7 @@ def cli(ctx):
 
 @cli.command(help="""
 Paper Tape Text format parser
-(and save and/or send music_data to websocket server)
+(send music_data to Music Box Server and/or save music_data to file)
 """)
 @click.argument('paper_tape_file', type=click.Path(exists=True))
 @click.argument('out_file_or_ws_url', type=str, nargs=-1)
@@ -584,7 +584,7 @@ def ptt(paper_tape_file, out_file_or_ws_url, debug):
 
 @cli.command(help="""
 MIDI parser
-(send music_data to websocket server)
+(send music_data to Music Box Server and/or save music_data to file)
 """)
 @click.argument('midi_file', type=click.Path(exists=True))
 @click.argument('out_file_or_ws_url', type=str, nargs=-1)
@@ -694,8 +694,8 @@ Movement test
               help='pull interaval, default=%s sec' % (
                   Servo.DEF_PULL_INTERVAL))
 @click.option('--wavdir', '-D', 'wavdir', type=click.Path(exists=True),
-              default=DEF_WAVDIR,
-              help='wav file directory, default=%a' % DEF_WAVDIR)
+              default=DEF_WAV_DIR,
+              help='wav file directory, default=%a' % DEF_WAV_DIR)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
 def z_movement(wav_mode, push_interval, pull_interval, speed,
@@ -738,8 +738,8 @@ Player test
               help='pull interaval, default=%s sec' % (
                   Servo.DEF_PULL_INTERVAL))
 @click.option('--wavdir', '-D', 'wavdir', type=click.Path(exists=True),
-              default=DEF_WAVDIR,
-              help='wav file directory, default=%a' % DEF_WAVDIR)
+              default=DEF_WAV_DIR,
+              help='wav file directory, default=%a' % DEF_WAV_DIR)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
 def z_player(music_file, channel, wav_mode,
@@ -759,7 +759,7 @@ def z_player(music_file, channel, wav_mode,
 
 
 @cli.command(help="""
-Music Box Main Websocket Server
+Music Box Server
 """)
 @click.option('--port', '-p', 'port', type=int,
               default=WsServer.DEF_PORT,
@@ -772,8 +772,8 @@ Music Box Main Websocket Server
 2: Piano sound (note: 21 .. 108)\n
 3: Full notes""")
 @click.option('--wavdir', '-D', 'wavdir', type=click.Path(exists=True),
-              default=DEF_WAVDIR,
-              help='wav file directory, default=%a' % DEF_WAVDIR)
+              default=DEF_WAV_DIR,
+              help='wav file directory, default=%a' % DEF_WAV_DIR)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
 def server(port, wav_mode, wavdir, debug):
@@ -812,23 +812,23 @@ def send(cmd, url, debug):
 
 
 @cli.command(help="""
-Web application for calibration
+Web application
 """)
 @click.option('--port', '-p', 'port', type=int,
-              default=CalibrationWebServer.DEF_PORT,
+              default=WebServer.DEF_PORT,
               help='port number, default=%s' % (
-                  CalibrationWebServer.DEF_PORT))
+                  WebServer.DEF_PORT))
 @click.option('--webdir', '-w', 'webdir', type=click.Path(exists=True),
-              default=DEF_WEBDIR_CALIBRATION,
-              help="Web file directory, default=%a" % (
-                  DEF_WEBDIR_CALIBRATION))
+              default=DEF_WEB_DIR,
+              help="Web directory, default=%a" % (
+                  DEF_WEB_DIR))
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def calibration(port, webdir, debug):
-    """ wsserver """
+def webapp(port, webdir, debug):
+    """ webapp """
     log = get_logger(__name__, debug)
 
-    app = CalibrationWebServer(port, webdir, debug=debug)
+    app = WebServer(port, webdir, debug=debug)
     try:
         app.main()
     finally:

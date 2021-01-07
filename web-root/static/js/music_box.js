@@ -1,21 +1,40 @@
 /**
+ * Music Box Web App
  *
+ * (c) 2021 Yoichi Tanibayashi
  */
-const dst_host = location.hostname;
-const dst_port = 8880;
-const dst_url = `ws://${dst_host}:${dst_port}/`;
-console.log(`dst_url=${dst_url}`);
+const WsHost = location.hostname;
+const DefWsPort = 8880;
+console.log(`WsHost:DefWsPort=${WsHost}:${DefWsPort}`);
 
-const ws_send = function (msg) {
-    msg_str = JSON.stringify(msg);
-    //console.log(`ws_send(${msg_str})`);
+/**
+ * @param {number} port
+ */
+const get_url = function (port) {
+    let url = `ws://${WsHost}:${port}/`;
+    return url;
+};
 
-    let ws = new WebSocket(dst_url);
+/**
+ * @param {object} msg
+ * @param {number} port
+ */
+const ws_send = function (msg, port) {
+    let msg_str = JSON.stringify(msg);
+    console.log(`ws_send(${msg_str}, ${port})`);
+
+    if ( port === undefined ) {
+        port = DefWsPort;
+    }
+
+    let url = get_url(port);
+    console.log(`url=${url}`);
+
+    let ws = new WebSocket(url);
 
     ws.onopen = function () {
-        // console.log(`ws.onopen()`);
         ws.send(msg_str);
-        console.log(`ws.send(${msg_str})`);
+        console.log(`onopen(): ws.send(${msg_str})`);
     };
 
     ws.onclose = function () {
@@ -23,17 +42,28 @@ const ws_send = function (msg) {
     };
 };
 
-const single_play = function (ch_list) {
-    console.log(`single_play([${ch_list}])`);
+/**
+ * @param {Array.<number>} ch_list
+ * @param {number} port
+ */
+const single_play = function (ch_list, port) {
+    console.log(`single_play([${ch_list}], ${port})`);
 
-    msg = {cmd: "single_play", ch: ch_list};
-    ws_send(msg);
+    let msg = {cmd: "single_play", ch: ch_list};
+    ws_send(msg, port);
 };
 
-const calibrate = function (ch, on, pw_diff, tap) {
-    console.log(`calibrate(${ch},${on},${pw_diff},${tap})`);
+/**
+ * @param {number} ch
+ * @param {boolean} on
+ * @param {number} pw_diff
+ * @param {boolean} tap
+ * @param {number} port
+ */
+const calibrate = function (ch, on, pw_diff, tap, port) {
+    console.log(`calibrate(${ch},${on},${pw_diff},${tap},${port})`);
 
-    msg = {cmd: "calibrate",
-           ch: ch, on: on, pw_diff: pw_diff, tap: tap};
-    ws_send(msg);
+    let msg = {cmd: "calibrate",
+               ch: ch, on: on, pw_diff: pw_diff, tap: tap};
+    ws_send(msg, port);
 };
