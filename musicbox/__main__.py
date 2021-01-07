@@ -10,8 +10,8 @@ import click
 from websocket import create_connection
 import cuilib
 from . import PaperTape, Midi, RotationMotor, Servo
-from . import Movement, MovementWav1, MovementWav2, MovementWav3
-from . import Player, WsServer, CalibrationWebServer
+from . import Movement, MovementWav1, MovementWav2, MovementWav3, Player
+from . import WsServer, CalibrationWebServer, CalibrationWebHandler
 from .my_logger import get_logger
 
 __author__ = 'Yoichi Tanibayashi'
@@ -21,12 +21,12 @@ DEF_WS_HOST = 'localhost'
 DEF_WS_PORT = WsServer.DEF_PORT
 DEF_WS_URL = 'ws://%s:%s/' % (DEF_WS_HOST, DEF_WS_PORT)
 
-ENV_WAVDIR = 'MUSICBOX_WAVDIR'
-DEF_WAVDIR = os.environ.get(ENV_WAVDIR, './wav')
+DEF_WAVDIR = os.environ.get(
+    'MUSICBOX_WAVDIR', './wav')
 
-ENV_WEBDIR_CALIBRATION = 'MUSICBOX_WEBDIR_CALIBRATION'
 DEF_WEBDIR_CALIBRATION = os.environ.get(
-    ENV_WEBDIR_CALIBRATION, './web-calibration')
+    'MUSICBOX_WEBDIR_CALIBRATION', './web-root')
+DEF_CALIBRATION_PORT = CalibrationWebServer.DEF_PORT
 
 
 class PaperTapeApp:
@@ -570,7 +570,7 @@ Paper Tape Text format parser
 @click.argument('out_file_or_ws_url', type=str, nargs=-1)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def txt(paper_tape_file, out_file_or_ws_url, debug):
+def ptt(paper_tape_file, out_file_or_ws_url, debug):
     """ papertape """
     log = get_logger(__name__, debug)
 
@@ -776,7 +776,7 @@ Music Box Main Websocket Server
               help='wav file directory, default=%a' % DEF_WAVDIR)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def svr(port, wav_mode, wavdir, debug):
+def server(port, wav_mode, wavdir, debug):
     """ websocket server """
     log = get_logger(__name__, debug)
 

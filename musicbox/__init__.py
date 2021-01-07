@@ -14,13 +14,13 @@ from .servo import Servo
 from .movement import Movement, MovementWav1, MovementWav2, MovementWav3
 from .player import Player
 from .wsserver import WsServer
-from .calibration import CalibrationWebServer
+from .calibration import CalibrationWebServer, CalibrationWebHandler
 
 __all__ = [
     'PaperTape', 'Midi',
     'RotationMotor', 'Servo',
     'Movement', 'MovementWav1', 'MovementWav2', 'MovementWav3',
     'Player',
-    'WsServer', 'SimpleWebsocketClient',
-    'CalibrationWebServer'
+    'WsServer',
+    'CalibrationWebServer', 'CalibrationWebHandler'
 ]

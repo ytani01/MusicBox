@@ -64,7 +64,7 @@ Webインタフェースなどから、コマンドを受取り、
 曲を演奏したり、単発で音を鳴らしたりする。
 
 ```
-(env1)$ MusicBox svr &
+(env1)$ MusicBox server &
 ```
 
 Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合は、
@@ -73,25 +73,25 @@ Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合�
 
 Music Boxをシミュレートする
 ```
-(env1)$ ./MusicBox svr -w 1 &
+(env1)$ ./MusicBox server -w 1 &
 ```
 
 ピアノをシミュレートする (88音階)
 ```
-(env1)$ ./MusicBox svr -w 2 &
+(env1)$ ./MusicBox server -w 2 &
 ```
 
 sin波のサンプル音でシミュレートする (128音階)
 ```
-(env1)$ ./MusicBox svr -w 3 &
+(env1)$ ./MusicBox server -w 3 &
 ```
 
 
 ### 1.2 Client side
 
-Paper Tape 形式(テキスト・ファイル)の曲を再生
+``Paper Tape Text``形式(独自)の曲を再生
 ```bash
-(env1)$ MusicBox txt kaeruno-uta.txt ws://localhost:8880/
+(env1)$ MusicBox ptt kaeruno-uta.txt ws://localhost:8880/
 ```
 
 MIDI形式の曲を再生

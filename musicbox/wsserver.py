@@ -89,7 +89,7 @@ class WsServer:
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
         self._log.debug('wav_mode=%s', wav_mode)
-        self._log.debug('host:port=%s:%s', host, port)
+        self._log.info('host:port=%s:%s', host, port)
         self._log.debug('wavdir=%s', wavdir)
 
         self._wav_mode = wav_mode
@@ -108,7 +108,7 @@ class WsServer:
         """
         self._log.debug('')
 
-        self._log.info('start server ..')
+        self._log.debug('start server ..')
         self._loop.run_until_complete(self._start_svr)
 
         self._log.info('run_forever() ..')
@@ -136,7 +136,7 @@ class WsServer:
                         websock.local_address, websock.host, path)
 
         msg = await websock.recv()
-        self._log.debug('msg=%s', msg)
+        self._log.info('msg=%s', msg)
 
         try:
             data = json.loads(msg)
@@ -145,7 +145,7 @@ class WsServer:
             self._log.error('%s: %s. msg=%s', type(ex), ex, msg)
             return
 
-        self._log.info('received command: %a', data['cmd'])
+        self._log.debug('received command: %a', data['cmd'])
         self._log.debug('data=%s', data)
 
         try:

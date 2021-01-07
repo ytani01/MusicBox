@@ -6,7 +6,7 @@
 Music Box Web Interface for Calibration
 """
 __author__ = 'Yoichi Tanibayashi'
-__date__   = '2021/01'
+__date__ = '2021/01'
 __version__ = '0.1'
 
 import os
@@ -19,6 +19,8 @@ class CalibrationWebHandler(tornado.web.RequestHandler):
     """
     Web handler
     """
+    HTML_FILE = 'calibration.html'
+
     CH_N = 15
     CH_CENTER = 7
 
@@ -35,7 +37,7 @@ class CalibrationWebHandler(tornado.web.RequestHandler):
         """
         self._mylog.debug('request=%s', self.request)
 
-        self.render("index.html",
+        self.render(self.HTML_FILE,
                     title="Robot Music Box Calibration",
                     author="FabLab Kannai",
                     version=__version__,
@@ -52,7 +54,7 @@ class CalibrationWebServer:
     Web server
     """
     DEF_PORT = 10080
-    DEF_WEBDIR = './web-calibration'
+    DEF_WEBDIR = './web-root'
 
     def __init__(self, port=DEF_PORT, webdir=DEF_WEBDIR, debug=False):
         """ Constructor
@@ -64,13 +66,10 @@ class CalibrationWebServer:
         """
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
-        self._log.debug('port=%s, webdir=%s', port, webdir)
+        self._log.info('port=%s, webdir=%s', port, webdir)
 
         self._port = port
         self._webdir = webdir
-
-        # self._webdir = Path(__file__).resolve().parents[0]
-        self._log.debug('webdir=%s', self._webdir)
 
         self._app = tornado.web.Application(
             [(r"/", CalibrationWebHandler), ],
