@@ -100,7 +100,7 @@ class MovementBase:
         self._log.debug('ch_list=%s', ch_list)
         self._log.error('*** This method must be overridden ***')
 
-    def set_onoff(self, ch, on=False, pw=None, tap=False,
+    def set_onoff(self, ch_, on_=False, pw_=None, tap=False,
                   conf_file=None):
         """
         on/offパラメータ設定(絶対値指定)
@@ -109,21 +109,21 @@ class MovementBase:
 
         Parameters
         ----------
-        ch: int
+        ch_: int
             servo channel
-        on: bool
+        on_: bool
             True: on, False: off
-        pw: int
+        pw_: int
             pulse width
         tap: bool
             after change, execute tap()
         conf_file: str
             configuration file (path name)
         """
-        self._log.debug('ch=%s, on=%s, pw=%s, tap=%s, conf_file=%s',
-                        ch, on, pw, tap, conf_file)
+        self._log.debug('ch_=%s, on_=%s, pw_=%s, tap=%s, conf_file=%s',
+                        ch_, on_, pw_, tap, conf_file)
 
-    def calibrate(self, ch, on=False, pw_diff=0, tap=False,
+    def calibrate(self, ch_, on_=False, pw_diff=0, tap=False,
                   conf_file=None):
         """
         on/offパラメータ変更(差分指定)
@@ -132,9 +132,9 @@ class MovementBase:
 
         Parameters
         ----------
-        ch: int
+        ch_: int
             servo channel
-        on: bool
+        on_: bool
             True: on, False: off
         tap: bool
             after change, execute tap()
@@ -143,8 +143,9 @@ class MovementBase:
         conf_file: str
             configuration file (path name)
         """
-        self._log.debug('ch=%s, on=%s, pw_diff=%s, tap=%s, conf_file=%s',
-                        ch, on, pw_diff, tap, conf_file)
+        self._log.debug(
+            'ch_=%s, on_=%s, pw_diff=%s, tap=%s, conf_file=%s',
+            ch_, on_, pw_diff, tap, conf_file)
 
 
 class Movement(MovementBase):
@@ -407,16 +408,16 @@ class MovementWav1(MovementBase):
             return
 
         self._log.debug('play sounds')
-        for ch in ch_list:
-            if ch is None:
-                self._log.warning('ch=%s: ignored', ch)
+        for ch_ in ch_list:
+            if ch_ is None:
+                self._log.warning('ch_=%s: ignored', ch_)
                 continue
 
-            if ch < 0 or ch > self.ch_n - 1:
-                self._log.warning('ch=%s: ignored', ch)
+            if ch_ < 0 or ch_ > self.ch_n - 1:
+                self._log.warning('ch_=%s: ignored', ch_)
                 continue
 
-            snd_i = ch - self._note_origin
+            snd_i = ch_ - self._note_origin
             self._log.debug('snd_i=%s', snd_i)
 
             snd = self._sound[snd_i]
