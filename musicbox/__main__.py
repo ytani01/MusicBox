@@ -623,7 +623,7 @@ def midi(midi_file, out_file_or_ws_url, channel,
 
 
 @cli.command(help="""
-Rotation motor test
+Test Rotation motor
 """)
 @click.argument('pin1', type=int)
 @click.argument('pin2', type=int)
@@ -647,7 +647,7 @@ def z_rotation(pin1, pin2, pin3, pin4, debug):
 
 
 @cli.command(help="""
-Servo motor test
+Test Servo motors
 """)
 @click.option('--push', '-p', 'push_interval', type=float,
               default=Servo.DEF_PUSH_INTERVAL,
@@ -674,7 +674,7 @@ def z_servo(push_interval, pull_interval, debug):
 
 
 @cli.command(help="""
-Movement test
+Test Movement
 """)
 @click.option('--wav_mode', '-w', 'wav_mode', type=int, default=0,
               help="""Wav file mode, default=0\n
@@ -715,7 +715,7 @@ def z_movement(wav_mode, push_interval, pull_interval, speed,
 
 
 @cli.command(help="""
-Player test
+Test Player
 """)
 @click.argument('music_file', type=click.Path(exists=True), nargs=-1)
 @click.option('--channel', '-c', 'channel', type=int, multiple=True,
@@ -790,7 +790,7 @@ def server(port, wav_mode, wavdir, debug):
 
 
 @cli.command(help="""
-Send a command to Music Box websocket server
+Send a command to Music Box Server
 
 ex. `music_start`, `single_play 0 2 4`, etc ...
 """)
