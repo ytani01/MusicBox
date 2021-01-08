@@ -75,11 +75,17 @@ sleep 1
 echo_do "${MUSICBOX_CMD} webapp >> $LOGDIR/webapp.log 2>&1 &"
 sleep 1
 
-echo_do "${MUSICBOX_CMD} server -w 0 -p 8880 >> $LOGDIR/server.log 2>&1 &"
-sleep 1
+echo_do "${MUSICBOX_CMD} server -w 0 -p 8880 >> $LOGDIR/server0.log 2>&1 &"
+sleep 2
 echo_do "${MUSICBOX_CMD} server -w 1 -p 8881 >> $LOGDIR/server1.log 2>&1 &"
-sleep 1
+sleep 2
 echo_do "${MUSICBOX_CMD} server -w 2 -p 8882 >> $LOGDIR/server2.log 2>&1 &"
-sleep 1
+sleep 2
 echo_do "${MUSICBOX_CMD} server -w 3 -p 8883 >> $LOGDIR/server3.log 2>&1 &"
-sleep 1
+
+sleep 5
+
+echo_do "${MUSICBOX_CMD} send -p 8882 single_play 69"
+echo_do "${MUSICBOX_CMD} send -p 8882 single_play 73"
+echo_do "${MUSICBOX_CMD} send -p 8882 single_play 76"
+echo_do "${MUSICBOX_CMD} send -p 8882 single_play 69 73 76"

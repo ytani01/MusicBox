@@ -43,7 +43,7 @@ URL: http://IPaddress:10080/
 
 ### Command line manual
 ```bash
-(env1)$ MusicBox サブコマンド名 --help
+$ MusicBox サブコマンド名 -h
 ```
 
 
@@ -63,51 +63,81 @@ Websocketで通信して、
 Webインタフェースなどから、コマンドを受取り、
 曲を演奏したり、単発で音を鳴らしたりする。
 
-```
-(env1)$ MusicBox server &
+以下は、基本的な使い方のみ。
+オプションの詳細については、下記、リファレンスを参照
+```bash
+$ MusicBox server -h
 ```
 
-Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合は、
+#### 通常の起動
+
+```bash
+$ MusicBox server &
+```
+
+#### Music Boxを鳴らす代わりに、スピーカーから音を鳴らす場合
+
 ``-w N``オプションをつける。
 (N = 1, 2, 3)
 
 Music Boxをシミュレートする
-```
-(env1)$ ./MusicBox server -w 1 &
+```bash
+$ ./MusicBox server -w 1 &
 ```
 
 ピアノをシミュレートする (88音階)
-```
-(env1)$ ./MusicBox server -w 2 &
+```bash
+$ ./MusicBox server -w 2 &
 ```
 
 sin波のサンプル音でシミュレートする (128音階)
-```
-(env1)$ ./MusicBox server -w 3 &
+```bash
+$ ./MusicBox server -w 3 &
 ```
 
 
 ### 1.2 Client side
 
-``Paper Tape Text``形式(独自)の曲を再生
+### 1回音を鳴らす (下記の例では、和音)
 ```bash
-(env1)$ MusicBox ptt kaeruno-uta.txt ws://localhost:8880/
+$ MusicBox send single_play 0 2 4
 ```
 
-MIDI形式の曲を再生
+
+#### ``Paper Tape Text``形式(独自)の曲を再生
 ```bash
-(env1)$ MusicBox midi joy.mid ws://localhost:8880/
+$ MusicBox ptt kaeruno-uta.txt ws://localhost:8880/
 ```
 
-再生をストップ
+
+#### MIDI形式の曲を再生
 ```bash
-(env1)$ MusicBox cmd music_stop
+$ MusicBox midi joy.mid ws://localhost:8880/
+```
+
+
+#### 再生をストップ/再開/シーク
+
+```bash
+$ MusicBox send music_stop
+$ MusicBox send music_start
+$ MusicBox send music_seek 30
+```
+
+
+#### パージング結果をファイルに保存し、それをサーバに送信
+
+この方法だと、パージング処理を毎回しないで済む。
+```bash
+$ MusicBox midi midi_file  music_data.json
+$ MusicBox send music_load  music_data.json
 ```
 
 
 ## 2. Command Message Format for MusicBoxWebsockServer.py
 
-サーバが受付けるコマンド・メッセージの形式
+サーバが受付けるコマンド・メッセージの形式などについては、
+下記を参照。
 
 ```bash
 python3 -m pydoc musicbox.WsServer
@@ -134,9 +164,9 @@ ___o___o_____o_
 ```
 
 
-### 6.3 MIDIに関するメモ
+## 9 MIDIに関するメモ
 
-#### 6.3.1 トラック、チャンネル
+### 9.1 トラック、チャンネル
 
 * トラック: 楽譜に相当
 * チャンネル: 楽器に相当
@@ -165,19 +195,17 @@ MIDIデータ: [トラック1:チャンネル1]-[トラック1:チャンネル2]
 どれが主旋律かわからないので、自動選択は不可能。
 
 
-#### 6.3.2 (note_on + velocity=0) == note_off !!
+### 9.2 (note_on + velocity=0) == note_off !!
 
 参考：[g200kg:Note Off ノートオフ](https://www.g200kg.com/jp/docs/dic/noteoff.html)
 
 
-#### 6.3.A その他
+### 9.9 その他
 
 * [情報処理学会:ピアノをMIDIで駆動する際のノート・オン・タイミングの補正について](https://ipsj.ixsq.nii.ac.jp/ej/index.php?active_action=repository_view_main_item_detail&page_id=13&block_id=8&item_id=55958&item_no=1)
 
 
 
-## 10. Software
-
-### Module Architecture
+## 10. Module Architecture
 
 ![Module Architecture](module-architecture.png)
