@@ -26,7 +26,7 @@ class WsClient:
 
         self._url = url
 
-    def mk_url(self, host_or_ip, port):
+    def ws_url(self, host_or_ip, port):
         """
         Parameters
         ----------
@@ -86,4 +86,4 @@ class WsClientHostPort(WsClient):
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
 
-        super().__init__(self.mk_url(host, port), debug=self._dbg)
+        super().__init__(self.ws_url(host, port), debug=self._dbg)

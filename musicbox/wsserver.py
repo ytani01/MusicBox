@@ -42,10 +42,11 @@ class WsServer:
      "music_data": [ {"ch": null,"delay": 500},.. ]
 
 
-    {"cmd": "music_start"}                 # (re)start music
-    {"cmd": "music_pause"}
-    {"cmd": "music_rewind"}
+    {"cmd": "music_play"}                 # (re)start music
     {"cmd": "music_stop"}
+    {"cmd": "music_pause"}
+    {"cmd": "music_seek", "pos": 30.5}
+    {"cmd": "music_rewind"}
 
     {"cmd": "calibrate",                # change servo param
      "ch": 5,
@@ -191,8 +192,8 @@ class WsServer:
             self._player.music_load(music_data)
             return
 
-        if cmd in ('music_start', 'start', 's'):
-            self._player.music_start()
+        if cmd in ('music_play', 'start', 's'):
+            self._player.music_play()
             return
 
         if cmd in ('music_pause', 'pause', 'p'):
@@ -201,6 +202,10 @@ class WsServer:
 
         if cmd in ('music_rewind', 'rewind', 'r'):
             self._player.music_rewind()
+            return
+
+        if cmd in ('music_seek', 'seek'):
+            self._player.music_seek_percent(data['pos'])
             return
 
         if cmd in ('music_stop', 'stop', 'S'):

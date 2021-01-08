@@ -55,7 +55,7 @@ class Player:
     #
     player.music_load(music_data)
 
-    player.music_start()
+    player.music_play()
     player.music_pause()
     player.music_rewind()
     player.music_stop()
@@ -247,7 +247,7 @@ class Player:
             self._music_data_i = 0
 
         if start_flag:
-            self.music_start()
+            self.music_play()
 
     def music_th(self, music_data_i, repeat=True):
         """ music thread function
@@ -296,7 +296,7 @@ class Player:
 
         self._log.debug('done')
 
-    def music_start(self):
+    def music_play(self):
         """ start music
 
         This function starts sub-thread and returns immidiately
@@ -346,9 +346,8 @@ class Player:
         self._log.debug('done')
 
     def music_seek(self, idx=0):
-        """ seek music
-        """
-        self._log.debug('idx=%s', idx)
+        """ seek music """
+        self._log.debug('idx=%s/%s', idx, len(self._music_data) - 1)
 
         if self._music_data is None:
             self._log.warning('_music_data=%s', self._music_data)
@@ -365,7 +364,42 @@ class Player:
         self._music_data_i = idx
 
         if active:
-            self.music_start()
+            self.music_play()
+
+    def music_seek_percent(self, percent: float =0):
+        """ seek percent
+
+        Parameters
+        ----------
+        percent: float
+        """
+        self._log.debug('percent=%s', percent)
+
+        if not self._music_data:
+            self._log.error('no music data')
+            return
+
+        if percent > 100:
+            self._log.error('invalid percent: %s', percent)
+            return
+        
+        music_length = self._music_data[-1]['abs_time']
+        self._log.debug('music_length=%s sec', music_length)
+
+        pos_sec = music_length * percent / 100.0
+        self._log.debug('pos_sec=%s sec', pos_sec)
+
+        idx = -1
+        for idx, data in enumerate(self._music_data):
+            if data['abs_time'] >= pos_sec:
+                break
+
+        if idx < 0:
+            self._log.error('invalid pos:%s %%', percent)
+            return
+
+        idx = int(len(self._music_data) * percent / 100.0)
+        self.music_seek(idx)
 
     def music_rewind(self):
         """ rewind music

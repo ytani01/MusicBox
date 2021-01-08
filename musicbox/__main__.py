@@ -484,25 +484,27 @@ class WsServerApp:
 
 class WsCmdApp:
     """ Music Box Websocket Client App for simple command"""
-    def __init__(self, server_host, port, cmd, debug=False):
+    def __init__(self, server_host, server_port, cmd, debug=False):
         """ Constructor
 
         Parameters
         ----------
         server_host: str
-        port: int
+        server_port: int
         cmd: str
         """
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
-        self._log.debug('server_host:port=%s:%s', server_host, port)
+        self._log.debug('server_host:server_port=%s:%s',
+                        server_host, server_port)
         self._log.debug('cmd=%s', cmd)
 
         self._server_host = server_host
-        self._port = port
+        self._server_port = server_port
         self._cmd = cmd
 
-        self._client = WsClientHostPort(self._server_host, self._port,
+        self._client = WsClientHostPort(self._server_host,
+                                        self._server_port,
                                         debug=self._dbg)
 
     def main(self):
@@ -525,6 +527,11 @@ class WsCmdApp:
             self._client.send_music_file(music_data_file)
             return
 
+        if cmd_name == 'music_seek':
+            msg['pos'] = float(self._cmd[1])
+            self._log.debug('msg=%s', msg)
+            self._client.send(msg)
+
         self._client.send(msg)
 
 
@@ -536,7 +543,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 Music Box Apps and Tests command
 """)
 @click.pass_context
-def cli(ctx, prog_name=''):
+def cli(ctx):
     """ command group """
     subcmd = ctx.invoked_subcommand
 
@@ -772,23 +779,25 @@ def server(port, wav_mode, wavdir, debug):
 @cli.command(help="""
 Send a command to Music Box Server
 
-ex. `music_start`, `single_play 0 2 4`, etc ...
+ex. `music_play`, `single_play 0 2 4`, etc ...
 """)
 @click.argument('cmd', type=str, nargs=-1)
-@click.option('--server', '-s', 'server', type=str, default=DEF_WS_HOST,
+@click.option('--server', '-s', 'server_host', type=str,
+              default=DEF_WS_HOST,
               help='%s, default=%s' % (
                   'hostname or IP address of Music Box server',
                   DEF_WS_HOST))
-@click.option('--port', '-p', 'port', type=int, default=DEF_WS_PORT,
+@click.option('--port', '-p', 'server_port', type=int,
+              default=DEF_WS_PORT,
               help='port number of Music Box server, default=%s' % (
                   DEF_WS_PORT))
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def send(cmd, server, port, debug):
+def send(cmd, server_host, server_port, debug):
     """ send a cmd to server """
     log = get_logger(__name__, debug)
 
-    app = WsCmdApp(server, port, cmd, debug=debug)
+    app = WsCmdApp(server_host, server_port, cmd, debug=debug)
     try:
         app.main()
     finally:
