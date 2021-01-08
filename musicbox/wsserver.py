@@ -54,8 +54,20 @@ class WsServer:
      "tap": ture }
 
 
-    FYI: Simple websocket client example
-    ------------------------------------
+    Simple client example(1)
+    ---------------------------------------
+    ```python3
+    from musicbox import WsClientHostPort
+
+    msg = {'cmd': ...}
+
+    client = WsClientHostPort('localhost', 8880)
+    client.send(msg)
+    ```
+
+    [FYI]
+    Simple websocket client example(2)
+    ----------------------------------
     ```python3
     # [Important!] 'websocket' is not 'websockets'
 

@@ -20,30 +20,26 @@ DEF_WS_HOST = 'localhost'
 DEF_WS_PORT = WsServer.DEF_PORT
 DEF_WS_URL = 'ws://%s:%s/' % (DEF_WS_HOST, DEF_WS_PORT)
 
-DEF_WAV_DIR = os.environ.get(
-    'MUSICBOX_WAV_DIR', './wav')
-
-DEF_WEB_DIR = os.environ.get(
-    'MUSICBOX_WEB_DIR', './web-root')
+DEF_WAV_DIR = os.environ.get('MUSICBOX_WAV_DIR', './wav')
+DEF_WEB_DIR = os.environ.get('MUSICBOX_WEB_DIR', './web-root')
 DEF_WEB_PORT = WebServer.DEF_PORT
 
 
 class PaperTapeApp:
     """ PaperTapeApp """
-    def __init__(self, paper_tape_file, out_file_or_ws_url=(),
-                 debug=False) -> None:
+    def __init__(self, paper_tape_file, dst=(), debug=False) -> None:
         """ Constructor
 
         Parameters
         ----------
         paper_tape_file: str
-        out_file_or_ws_url: str
+        dst: str
         """
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
 
         self._paper_tape_file = paper_tape_file
-        self._out_file_or_ws_url = out_file_or_ws_url
+        self._dst = dst
 
         self._parser = PaperTape(debug=self._dbg)
 
@@ -53,7 +49,7 @@ class PaperTapeApp:
 
         music_data = self._parser.parse(self._paper_tape_file)
 
-        for dst in self._out_file_or_ws_url:
+        for dst in self._dst:
             print()
             if ':/' in dst:
                 print('send music_data[%s] to %s' % (
@@ -71,8 +67,7 @@ class PaperTapeApp:
 
 class MidiApp:
     """ MidiApp """
-    def __init__(self, midi_file,
-                 out_file_or_ws_url=(), channel=[],
+    def __init__(self, midi_file, dst=(), channel=[],
                  note_origin=-1, no_note_offset_flag=False,
                  wav_mode=0,
                  debug=False) -> None:
@@ -81,7 +76,7 @@ class MidiApp:
         Parameters
         ----------
         midi_file: str
-        out_file_or_ws_url: str
+        dst: str
         channel: list of int
         note_origin: int
         no_note_offset_flag: bool
@@ -91,13 +86,13 @@ class MidiApp:
         self._log = get_logger(self.__class__.__name__, self._dbg)
         self._log.debug('midi_file=%s, channel=%s',
                         midi_file, channel)
-        self._log.debug('out_file_or_ws_url=%s', out_file_or_ws_url)
+        self._log.debug('dst=%s', dst)
         self._log.debug('note_origin=%s', note_origin)
         self._log.debug('no_note_offset_flag=%s', no_note_offset_flag)
         self._log.debug('wav_mode=%s', wav_mode)
 
         self._midi_file = midi_file
-        self._out_file_or_ws_url = out_file_or_ws_url
+        self._dst = dst
         self._channel = channel
         self._note_origin = note_origin
 
@@ -117,12 +112,11 @@ class MidiApp:
         """ main """
         self._log.debug('')
 
-        music_data = self._parser.parse(self._midi_file,
-                                        self._channel,
-                                        self._note_origin,
-                                        self._note_offset)
+        music_data = self._parser.parse(
+            self._midi_file, self._channel,
+            self._note_origin, self._note_offset)
 
-        for dst in self._out_file_or_ws_url:
+        for dst in self._dst:
             print()
             if ':/' in dst:
                 print('send music_data[%s] to %s' % (
@@ -213,9 +207,7 @@ class ServoMotorApp:
         self._cui.add(self.QUIT_KEY, self.quit, 'quit')
 
     def tap(self, key_sym):
-        """
-        tap
-        """
+        """ tap """
         self._log.debug('keysym=%s', key_sym)
 
         ch = self.SERVO_KEY.index(key_sym)
@@ -492,22 +484,26 @@ class WsServerApp:
 
 class WsCmdApp:
     """ Music Box Websocket Client App for simple command"""
-    def __init__(self, url, cmd, debug=False):
+    def __init__(self, server_host, port, cmd, debug=False):
         """ Constructor
 
         Parameters
         ----------
-        url: str
-            Websocket URL
+        server_host: str
+        port: int
         cmd: str
         """
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
+        self._log.debug('server_host:port=%s:%s', server_host, port)
+        self._log.debug('cmd=%s', cmd)
 
+        self._server_host = server_host
+        self._port = port
         self._cmd = cmd
-        self._url = url
 
-        self._client = WsClient(self._url)
+        self._client = WsClientHostPort(self._server_host, self._port,
+                                        debug=self._dbg)
 
     def main(self):
         """ main """
@@ -518,28 +514,29 @@ class WsCmdApp:
         cmd_name = self._cmd[0]
 
         msg = {'cmd': cmd_name}
-        if len(self._cmd) == 1:
-            self._client.send(msg)
 
         if cmd_name == 'single_play':
             msg['ch'] = [int(ch) for ch in self._cmd[1:]]
             self._client.send(msg)
+            return
 
         if cmd_name == 'music_load':
             music_data_file = self._cmd[1]
-
             self._client.send_music_file(music_data_file)
+            return
+
+        self._client.send(msg)
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 @click.group(invoke_without_command=True,
-             context_settings=CONTEXT_SETTINGS, help='''
+             context_settings=CONTEXT_SETTINGS, help="""
 Music Box Apps and Tests command
-''')
+""")
 @click.pass_context
-def cli(ctx):
+def cli(ctx, prog_name=''):
     """ command group """
     subcmd = ctx.invoked_subcommand
 
@@ -573,8 +570,7 @@ MIDI parser
 """)
 @click.argument('midi_file', type=click.Path(exists=True))
 @click.argument('out_file_or_ws_url', type=str, nargs=-1)
-@click.option('--channel', '-c', 'channel',
-              type=int, multiple=True,
+@click.option('--channel', '-c', 'channel', type=int, multiple=True,
               help='MIDI channel')
 @click.option('--note_origin', '--origin', '-o', 'note_origin',
               type=int, default=-1,
@@ -588,8 +584,7 @@ MIDI parser
 1: Simulate Music Box with wav file\n
 2: Piano sound (note: 21 .. 108)\n
 3: Full notes""")
-@click.option('--debug', '-d', 'dbg',
-              is_flag=True, default=False,
+@click.option('--debug', '-d', 'dbg', is_flag=True, default=False,
               help='debug flag')
 def midi(midi_file, out_file_or_ws_url, channel,
          note_origin, no_note_offset_flag,
@@ -780,16 +775,20 @@ Send a command to Music Box Server
 ex. `music_start`, `single_play 0 2 4`, etc ...
 """)
 @click.argument('cmd', type=str, nargs=-1)
-@click.option('--url', '-u', 'url', type=str,
-              default=DEF_WS_URL,
-              help='websocket URL, default=%a' % (DEF_WS_URL))
+@click.option('--server', '-s', 'server', type=str, default=DEF_WS_HOST,
+              help='%s, default=%s' % (
+                  'hostname or IP address of Music Box server',
+                  DEF_WS_HOST))
+@click.option('--port', '-p', 'port', type=int, default=DEF_WS_PORT,
+              help='port number of Music Box server, default=%s' % (
+                  DEF_WS_PORT))
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def send(cmd, url, debug):
+def send(cmd, server, port, debug):
     """ send a cmd to server """
     log = get_logger(__name__, debug)
 
-    app = WsCmdApp(url, cmd, debug=debug)
+    app = WsCmdApp(server, port, cmd, debug=debug)
     try:
         app.main()
     finally:
