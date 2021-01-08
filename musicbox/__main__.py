@@ -542,24 +542,29 @@ class WsCmdApp:
             msg['ch'] = [int(ch) for ch in self._cmd[1:]]
             self.send(msg)
 
+        if cmd_name == 'music_load':
+            music_data_file = self._cmd[1]
+
+            with open(music_data_file) as f:
+                msg['music_data'] = json.load(f)
+
+            self.send(msg)
+
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 @click.group(invoke_without_command=True,
              context_settings=CONTEXT_SETTINGS, help='''
-Music Box Apps and Tests
+Music Box Apps and Tests command
 ''')
 @click.pass_context
 def cli(ctx):
-    """ click group """
+    """ command group """
     subcmd = ctx.invoked_subcommand
 
     if subcmd is None:
-        print()
         print(ctx.get_help())
-    else:
-        print()
 
 
 @cli.command(help="""
