@@ -14,6 +14,7 @@ from .servo import Servo
 from .movement import Movement, MovementWav1, MovementWav2, MovementWav3
 from .player import Player
 from .wsserver import WsServer
+from .wsclient import WsClient, WsClientHostPort
 from .webapp import WebServer
 from .calibration import CalibrationWebHandler
 
@@ -22,6 +23,6 @@ __all__ = [
     'RotationMotor', 'Servo',
     'Movement', 'MovementWav1', 'MovementWav2', 'MovementWav3',
     'Player',
-    'WsServer',
+    'WsServer', 'WsClient', 'WsClientHostPort',
     'WebServer', 'CalibrationWebHandler'
 ]

@@ -7,11 +7,10 @@ main for musicbox package
 import os
 import json
 import click
-from websocket import create_connection
 import cuilib
 from . import PaperTape, Midi, RotationMotor, Servo
 from . import Movement, MovementWav1, MovementWav2, MovementWav3, Player
-from . import WsServer, WebServer
+from . import WsServer, WsClient, WsClientHostPort, WebServer
 from .my_logger import get_logger
 
 __author__ = 'Yoichi Tanibayashi'
@@ -59,7 +58,7 @@ class PaperTapeApp:
             if ':/' in dst:
                 print('send music_data[%s] to %s' % (
                     len(music_data), dst))
-                self._parser.send_music(music_data, dst)
+                WsClient(dst).send_music(music_data)
                 continue
 
             print('save music_data[%s] to %s' % (
@@ -128,7 +127,7 @@ class MidiApp:
             if ':/' in dst:
                 print('send music_data[%s] to %s' % (
                     len(music_data), dst))
-                self._parser.send_music(music_data, dst)
+                WsClient(dst).send_music(music_data)
                 continue
 
             print('save music_data[%s] to %s' % (
@@ -508,23 +507,7 @@ class WsCmdApp:
         self._cmd = cmd
         self._url = url
 
-    def send(self, msg):
-        """ send message to websocket server
-
-        Parameters
-        ----------
-        msg: dict
-            command message
-        """
-        self._log.debug('msg=%s', msg)
-
-        msg_json = json.dumps(msg)
-        self._log.debug('msg_json=%a', msg_json)
-
-        print('send %a to %a' % (msg_json, self._url))
-        ws = create_connection(self._url)
-        ws.send(msg_json)
-        ws.close()
+        self._client = WsClient(self._url)
 
     def main(self):
         """ main """
@@ -536,19 +519,16 @@ class WsCmdApp:
 
         msg = {'cmd': cmd_name}
         if len(self._cmd) == 1:
-            self.send(msg)
+            self._client.send(msg)
 
         if cmd_name == 'single_play':
             msg['ch'] = [int(ch) for ch in self._cmd[1:]]
-            self.send(msg)
+            self._client.send(msg)
 
         if cmd_name == 'music_load':
             music_data_file = self._cmd[1]
 
-            with open(music_data_file) as f:
-                msg['music_data'] = json.load(f)
-
-            self.send(msg)
+            self._client.send_music_file(music_data_file)
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])

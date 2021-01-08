@@ -9,7 +9,6 @@ __author__ = 'Yoichi Tanibayashi'
 __date__ = '2021/01'
 __version__ = '0.2'
 
-import os
 import tornado.web
 from .my_logger import get_logger
 
