@@ -57,11 +57,16 @@ class WsServer:
     FYI: Simple websocket client example
     ------------------------------------
     ```python3
-    from websocket import create_connection
     # [Important!] 'websocket' is not 'websockets'
 
+    import json
+    from websocket import create_connection
+
+    msg = {'cmd': ...}
+    msg_json = json.dumps(msg)
+
     ws = create_connection('ws://localhost:8880/')
-    ws.send('message')
+    ws.send(msg_json)
     ws.close()
     ```
 
@@ -73,7 +78,7 @@ class WsServer:
                  host="0.0.0.0", port=DEF_PORT,
                  wavdir='wav',
                  debug=False):
-        """constructor
+        """ Constructor
 
         Parameters
         ----------
