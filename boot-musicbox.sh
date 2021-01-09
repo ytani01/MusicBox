@@ -33,7 +33,7 @@ usage() {
 }
 
 get_musicbox_pid() {
-    echo `ps x | grep python | sed '/musicbox/s/ *//' | cut -d ' ' -f 1`
+    echo `ps x | grep python | sed -n '/musicbox/s/ *//p' | cut -d ' ' -f 1`
 }
 
 #
@@ -60,6 +60,7 @@ while [ ! -z "$PIDS" ]; do
     sleep 1
     PIDS=`get_musicbox_pid`
 done
+sleep 2
 
 if [ $BOOT_FLAG -eq 0 ]; then
     # don't boot, kill only
