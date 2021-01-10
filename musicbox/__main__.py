@@ -783,7 +783,7 @@ def server(port, wav_mode, wavdir, debug):
 @cli.command(help="""
 Send a command to Music Box Server
 
-ex. `music_play`, `single_play 0 2 4`, etc ...
+ex. `music_play`, `single_play 0 2 4`, `music_load json_file`, etc ...
 """)
 @click.argument('cmd', type=str, nargs=-1)
 @click.option('--server', '-s', 'server_host', type=str,

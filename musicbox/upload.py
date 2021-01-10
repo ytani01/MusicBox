@@ -77,8 +77,10 @@ class UploadWebHandler(tornado.web.RequestHandler):
         self._mylog.debug('upfilename=%s', upfilename)
 
         upload_path_name = '%s/%s' % (self._upload_dir, upfilename)
-        musicdata_path = '%s/%s.%s' % (
-            self._musicdata_dir, upfilename, 'musicdata')
+        musicdata_path = '%s/%s-%s.%s' % (
+            self._musicdata_dir, upfilename, svr_port, 'json')
+
+        # [TBD] musicdata_pathの存在を確認し、パージング処理を省略？
 
         with open(upload_path_name, mode='wb') as f:
             f.write(upfile['body'])
