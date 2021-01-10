@@ -26,7 +26,9 @@ class WebServer:
     DEF_MUSICDATA_DIR = '/tmp'
 
     def __init__(self, port=DEF_PORT,
-                 webdir=DEF_WEBDIR, musicdata_dir=DEF_MUSICDATA_DIR,
+                 webdir=DEF_WEBDIR,
+                 upload_dir=DEF_UPDIR,
+                 musicdata_dir=DEF_MUSICDATA_DIR,
                  debug=False):
         """ Constructor
 
@@ -41,6 +43,7 @@ class WebServer:
 
         self._port = port
         self._webdir = webdir
+        self._upload_dir = upload_dir
         self._musicdata_dir = musicdata_dir
 
         self._app = tornado.web.Application(

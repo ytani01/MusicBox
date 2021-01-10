@@ -63,7 +63,7 @@ class UploadWebHandler(tornado.web.RequestHandler):
         with open('/tmp/' + upfilename, mode='wb') as f:
             f.write(upfile['body'])
 
-        self.get(msg='「%s」をアップロードしました' % (upfilename))
+        self.get(msg='File: %s' % (upfilename))
 
         #self.write('Content-Type: text/html\n')
         #self.finish('「%s」をアップロードしました' % (upfilename))

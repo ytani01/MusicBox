@@ -12,34 +12,19 @@
     <script type="text/javascript"
             src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
     <script type="text/javascript" src="/static/js/music_box.js"></script>
-    <script type="text/javascript">
-      function file_upload()
-      {
-        // フォームデータを取得
-        var formdata = new FormData(document.getElementById("my_form"));
-
-        // XMLHttpRequestによるアップロード処理
-        var xhttpreq = new XMLHttpRequest();
-        xhttpreq.onreadystatechange = function() {
-          if (xhttpreq.readyState == 4 && xhttpreq.status == 200) {
-            alert(xhttpreq.responseText);
-          }
-        };
-        xhttpreq.open("POST", "http://rpi4b-2:10080/upload", true);
-        xhttpreq.send(formdata);
-      }
-    </script>
-      
   </head>
   <body style="background-color: lightgrey;">
     <header>
       <h1 class="text-center">{{ title }}</h1>
-      <hr />
-      <h3 class="text-center">{{ msg }} </h3>
-      <hr />
     </header>
     <main>
+      <hr />
       <div class="container-fluid">
+        <div class="row">
+          <div class = "col">
+            <h3 class="text-center">{{ msg }} </h3>
+          </div>
+        </div> <!-- row -->
         <div class="row">
           <div class="col-12 text-center">
             <form enctype="multipart/form-data"
@@ -48,8 +33,37 @@
               <input type="file" name="file1">
               <input type="submit" value="Upload" />
             </form>
-          </div>
-        </div>
+          </div> <!-- col -->
+        </div> <!-- row -->
+        <hr />
+        <div class="row">
+          <div class = "col-12 text-left">
+            <select id="svr_port" name="svr_port"
+                    style="font-size: xx-large;">
+              <option value="8880">8880</option>
+              <option value="8881">8881</option>
+              <option value="8882">8882</option>
+              <option value="8883">8883</option>
+            </select>
+          </div> <!-- col -->
+        </div> <!-- row -->
+        <hr />
+        <div class="row">
+          <div class = "col-12 text-center">
+            <button id="music_rewind">
+              <i class="fas fa-step-backward fa-2x"></i></button>
+            <button id="music_backward">
+              <i class="fas fa-backward fa-2x"></i></button>
+            <button id="music_stop">
+              <i class="fas fa-stop fa-2x"></i></button>
+            <button id="music_play">
+              <i class="fas fa-play fa-2x"></i></button>
+            <button id="music_pause">
+              <i class="fas fa-pause fa-2x"></i></button>
+            <button id="music_forward">
+              <i class="fas fa-forward fa-2x"></i></button>
+          </div> <!-- col -->
+        </div> <!-- row -->
       </div> <!-- container -->
     </main>
     <footer>
