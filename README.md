@@ -32,6 +32,21 @@ Music Box 本体で演奏するモードと、
 (env1)$ ./install.sh
 ```
 
+
+### 全サービスの起動(再起動)
+
+メインサーバとWebサーバを起動する。
+既に起動している場合は、全て終了(kill)してから、再起動する。
+
+```bash
+$ boot-musicbox.sh
+```
+
+全サービスを終了(kill)する場合は、
+```bash
+$ boot-musicbox.sh -k
+```
+
 ### サーボの調整
 
 ブラウザからアクセスして、サーボモータの調整を行う。
@@ -41,16 +56,18 @@ URL: http://IPaddress:10080/
 ```
 
 
-### Command line manual
-```bash
-$ MusicBox サブコマンド名 -h
-```
-
+## マニュアル
 
 ### API Manual
 ```bash
 (env1)$ python3 -m pydoc musicbox.クラス名
 ```
+
+### Command line manual
+```bash
+$ MusicBox サブコマンド名 -h
+```
+
 
 ## 1. 少し解説
 
