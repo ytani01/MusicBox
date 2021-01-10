@@ -31,17 +31,17 @@ class CalibrationWebHandler(tornado.web.RequestHandler):
 
         super().__init__(app, req)
 
-    def get(self):
+    def get(self, msg=''):
         """
         GET method and rendering
         """
         self._mylog.debug('request=%s', self.request)
 
         self.render(self.HTML_FILE,
-                    title="Robot Music Box Calibration",
+                    title="Robot Music Box <Calibration>",
                     author="FabLab Kannai",
                     version=__version__,
-
+                    msg=msg,
                     ch_list1=['%02d' % (i) for i in range(
                         0, self.CH_CENTER)],
 

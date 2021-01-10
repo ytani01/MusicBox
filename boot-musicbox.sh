@@ -6,8 +6,12 @@
 #
 MYNAME=`basename $0`
 
-LOGDIR=/tmp
 MUSICBOX_CMD=$HOME/bin/MusicBox
+
+ENV_FILE=$HOME/musicbox-env
+. $ENV_FILE
+
+LOGDIR=$MUSICBOX_LOG_DIR
 
 BOOT_FLAG=1
 

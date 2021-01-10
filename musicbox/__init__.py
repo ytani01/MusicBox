@@ -17,6 +17,7 @@ from .wsserver import WsServer
 from .wsclient import WsClient, WsClientHostPort
 from .webapp import WebServer
 from .calibration import CalibrationWebHandler
+from .upload import UploadWebHandler
 
 __all__ = [
     'PaperTape', 'Midi',
@@ -24,5 +25,5 @@ __all__ = [
     'Movement', 'MovementWav1', 'MovementWav2', 'MovementWav3',
     'Player',
     'WsServer', 'WsClient', 'WsClientHostPort',
-    'WebServer', 'CalibrationWebHandler'
+    'WebServer'
 ]

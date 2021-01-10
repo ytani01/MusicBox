@@ -15,7 +15,10 @@
   </head>
   <body style="background-color: lightgrey;">
     <header>
-    <h1 class="text-center">{{ title }} Ver. {{ version }}</h1>
+      <h1 class="text-center">{{ title }}</h1>
+      <hr />
+      <h3 class="text-center">{{ msg }} </h3>
+      <hr />
     </header>
     <main>
       <div class="container-fluid">
@@ -108,9 +111,16 @@
     </main>
     <footer>
       <hr />
-      <p class="text-right">
-        (c) 2020 <strong>{{ author }}</strong> &nbsp;
-      </p>
+      <div class="container">
+        <div class="row">
+          <div class="col-6">
+            Version {{ version }}
+          </div>
+          <div class="col-6 text-right">
+            (c) 2020 <strong>{{ author }}</strong>
+          </div>
+        </div>
+      </div>
     </footer>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
             integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"

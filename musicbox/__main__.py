@@ -21,8 +21,12 @@ DEF_WS_PORT = WsServer.DEF_PORT
 DEF_WS_URL = 'ws://%s:%s/' % (DEF_WS_HOST, DEF_WS_PORT)
 
 DEF_WAV_DIR = os.environ.get('MUSICBOX_WAV_DIR', './wav')
+
 DEF_WEB_DIR = os.environ.get('MUSICBOX_WEB_DIR', './web-root')
 DEF_WEB_PORT = WebServer.DEF_PORT
+
+DEF_UPLOAD_DIR = os.environ.get('MUSICBOX_UPLOAD_DIR', '/tmp')
+DEF_MUSICDATA_DIR = os.environ.get('MUSICBOX_MUSICDATA_DIR', '/tmp')
 
 
 class PaperTapeApp:
@@ -813,15 +817,22 @@ Web application
                   WebServer.DEF_PORT))
 @click.option('--webdir', '-w', 'webdir', type=click.Path(exists=True),
               default=DEF_WEB_DIR,
-              help="Web directory, default=%a" % (
-                  DEF_WEB_DIR))
+              help='Web directory, default=%a' % (DEF_WEB_DIR))
+@click.option('--upload_dir', '-u', 'upload_dir',
+              type=click.Path(exists=True), default=DEF_UPLOAD_DIR,
+              help='upload files directory, default=%a' % (
+                  DEF_UPLOAD_DIR))
+@click.option('--data_dir', '-D', 'data_dir',
+              type=click.Path(exists=True), default=DEF_MUSICDATA_DIR,
+              help='parsed files directory, default=%a' % (
+                  DEF_MUSICDATA_DIR))
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def webapp(port, webdir, debug):
+def webapp(port, webdir, upload_dir, data_dir, debug):
     """ webapp """
     log = get_logger(__name__, debug)
 
-    app = WebServer(port, webdir, debug=debug)
+    app = WebServer(port, webdir, upload_dir, data_dir, debug=debug)
     try:
         app.main()
     finally:

@@ -1,17 +1,62 @@
 #!/bin/sh -e
 #
-# (c) 2021 Yoichi Tanibayashi
+# Robot Music Box install script
 #
+#   (c) 2021 Yoichi Tanibayashi
+#
+############################################################
+# インストール後のディレクトリ構造
+#
+# $HOME/ ... ホームディレクトリ
+#    |
+#    +- bin/ ... シェルスクリプトなど
+#    |   |
+#    |   +- MusicBox ... メイン・コマンド・スクリプト (wrapper script)
+#    |   +- boot-musicbox.sh ... 起動スクリプト
+#    |
+#    +- musicbox-env ... 環境変数設定ファイル【インストール時に作成】
+#    |    【環境変数】
+#    |    MUSICBOX_DIR ... git clone されたディレクトリ
+#    |    MUSICBOX_WORK ... 作業用ディレクトリ ($HOME/msucibox_work/)
+#    |    VENVDIR ... python3 Virtualenv ディレクトリ ($HOME/env1/ など)
+#    |    (etc.)
+#    |
+#    +- musicbox-servo.conf ... サーボ調整パラメータ保存ファイル
+#    |
+#    +- musicbox_work/ ... 作業用ディレクトリ
+#    |   |
+#    |   +- upload/ ... アップロードされたファイル(MIDIなど)
+#    |   +- music_data/ ... パーズ後の音楽データ
+#    |   +- log/ ... ログディレクトリ
+#    |
+#    +- env1/  ... python3 Virtualenv(venv) 【ユーザが作成する】
+#        |
+#        +- musicbox/ ... musicboxプロジェクトの gitリポジトリ
+#        |
+#        | 【以下、インストールに必要なライブラリなど】
+#        |
+#        +- ServoPCA9685/
+#        +- StepperMotor/
+#        +- MIDI-lib/
+# 
+############################################################
 MYNAME=`basename $0`
 MYDIR=`dirname $0`
 
+PKG_NAME="musicbox"
+
 BINDIR="$HOME/bin"
+WORKDIR="$HOME/${PKG_NAME}_work"
+UPLOAD_DIR="$WORKDIR/upload"
+MUSICDATA_DIR="$WORKDIR/music_data"
+LOG_DIR="$WORKDIR/log/"
 
 WRAPPER_SCRIPT="MusicBox"
 BOOT_SCRIPT="boot-musicbox.sh"
 BIN_FILES="$WRAPPER_SCRIPT $BOOT_SCRIPT"
 
 PKGS_TXT="pkgs.txt"
+
 ENV_FILE="musicbox-env"
 SERVO_CONF="musicbox-servo.conf"
 
@@ -32,8 +77,6 @@ STEPMTR_GIT="${GITHUB_TOP}/${STEPMTR_DIR}.git"
 SERVO_PKG="servoPCA9685"
 SERVO_DIR="ServoPCA9685"
 SERVO_GIT="${GITHUB_TOP}/${SERVO_DIR}.git"
-
-MUSICBOX_PKG="musicbox"
 
 #
 # fuctions
@@ -100,8 +143,16 @@ fi
 cd_echo $VIRTUAL_ENV
 
 echo "### create $HOME/$ENV_FILE"
-echo "MUSICBOX_DIR=$MYDIR" > $HOME/$ENV_FILE
-echo "VENVDIR=$VIRTUAL_ENV" >> $HOME/$ENV_FILE
+echo "export MUSICBOX_DIR=$MYDIR" > $HOME/$ENV_FILE
+echo "export MUSICBOX_WORK=$WORKDIR" >> $HOME/$ENV_FILE
+echo "export VENVDIR=$VIRTUAL_ENV" >> $HOME/$ENV_FILE
+
+echo "export MUSICBOX_WAV_DIR=\$MUSICBOX_DIR/wav" >> $HOME/$ENV_FILE
+echo "export MUSICBOX_WEB_DIR=\$MUSICBOX_DIR/web-root" >> $HOME/$ENV_FILE
+
+echo "export MUSICBOX_UPLOAD_DIR=\$MUSICBOX_WORK/upload" >> $HOME/$ENV_FILE
+echo "export MUSICBOX_MUSICDATA_DIR=\$MUSICBOX_WORK/music_data" >> $HOME/$ENV_FILE
+echo "export MUSICBOX_LOG_DIR=\$MUSICBOX_WORK/log" >> $HOME/$ENV_FILE
 echo
 cat $HOME/$ENV_FILE
 echo
@@ -183,6 +234,14 @@ fi
 cp -fv $BIN_FILES $BINDIR
 echo
 
+#
+# make work directories
+#
+mkdir -pv $WORKDIR $UPLOAD_DIR $MUSICDATA_DIR $LOG_DIR
+
+#
+# display usage
+#
 echo "### usage"
 echo
 $WRAPPER_SCRIPT

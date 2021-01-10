@@ -12,6 +12,7 @@ import os
 import tornado.ioloop
 import tornado.web
 from .calibration import CalibrationWebHandler
+from .upload import UploadWebHandler
 from .my_logger import get_logger
 
 
@@ -20,9 +21,13 @@ class WebServer:
     Web application server
     """
     DEF_PORT = 10080
-    DEF_WEBDIR = './web-root'
+    DEF_WEBDIR = './web-root/'
+    DEF_UPDIR = '/tmp'
+    DEF_MUSICDATA_DIR = '/tmp'
 
-    def __init__(self, port=DEF_PORT, webdir=DEF_WEBDIR, debug=False):
+    def __init__(self, port=DEF_PORT,
+                 webdir=DEF_WEBDIR, musicdata_dir=DEF_MUSICDATA_DIR,
+                 debug=False):
         """ Constructor
 
         Parameters
@@ -36,16 +41,20 @@ class WebServer:
 
         self._port = port
         self._webdir = webdir
+        self._musicdata_dir = musicdata_dir
 
         self._app = tornado.web.Application(
             [
                 (r"/", CalibrationWebHandler),
                 (r"/calibration.*", CalibrationWebHandler),
+                (r"/upload.*", UploadWebHandler)
             ],
-            autoreload=True,
-            debug=self._dbg,
             static_path=os.path.join(self._webdir, "static"),
-            template_path=os.path.join(self._webdir, "templates")
+            template_path=os.path.join(self._webdir, "templates"),
+
+            autoreload=True,
+            xsrf_cookies=False,
+            debug=self._dbg
         )
 
     def main(self):
