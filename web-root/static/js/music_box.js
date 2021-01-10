@@ -16,6 +16,17 @@ const get_url = function (port) {
 };
 
 /**
+ * 
+ */
+const get_port = function () {
+    const el = document.getElementById('svr_port');
+    if ( el == null ) {
+        return DefWsPort;
+    }
+    return el.value;
+};
+
+/**
  * @param {object} msg
  * @param {number} port
  */
@@ -24,7 +35,10 @@ const ws_send = function (msg, port) {
     console.log(`ws_send(${msg_str}, ${port})`);
 
     if ( port === undefined ) {
-        port = DefWsPort;
+        port = get_port();
+        if ( port === undefined ) {
+            port = DefWsPort;
+        }
     }
 
     let url = get_url(port);
@@ -50,6 +64,46 @@ const single_play = function (ch_list, port) {
     console.log(`single_play([${ch_list}], ${port})`);
 
     let msg = {cmd: "single_play", ch: ch_list};
+    ws_send(msg, port);
+};
+
+/**
+ *
+ */
+const music_play = function (port) {
+    console.log(`music_play(${port})`);
+
+    let msg = {cmd: "music_play"};
+    ws_send(msg, port);
+};
+
+/**
+ *
+ */
+const music_stop = function (port) {
+    console.log(`music_stop(${port})`);
+
+    let msg = {cmd: "music_stop"};
+    ws_send(msg, port);
+};
+
+/**
+ *
+ */
+const music_pause = function (port) {
+    console.log(`music_pause(${port})`);
+
+    let msg = {cmd: "music_pause"};
+    ws_send(msg, port);
+};
+
+/**
+ *
+ */
+const music_rewind = function (port) {
+    console.log(`music_rewind(${port})`);
+
+    let msg = {cmd: "music_rewind"};
     ws_send(msg, port);
 };
 

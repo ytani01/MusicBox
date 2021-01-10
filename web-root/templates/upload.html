@@ -15,11 +15,22 @@
   </head>
   <body style="background-color: lightgrey;">
     <header>
-      <h1 class="text-center">{{ title }}</h1>
     </header>
     <main>
-      <hr />
       <div class="container-fluid">
+        <div class="row">
+          <div class="col">
+            <a href="/calibration">[Calibration]</a>
+            <strong>[Upload]</strong>
+          </div>
+        </div>
+        <hr />
+        <div class="row">
+          <div class="col">
+            <h1 class="text-center">{{ title }}</h1>
+          </div>
+        </div>
+        <hr />
         <div class="row">
           <div class = "col">
             <h3 class="text-center">{{ msg }} </h3>
@@ -30,37 +41,35 @@
             <form enctype="multipart/form-data"
                   action="/upload"
                   method="post">
-              <input type="file" name="file1">
+              <input type="file" name="file1" required>
               <input type="submit" value="Upload" />
+              <hr />
+              <select id="svr_port" name="svr_port"
+                      style="font-size: xx-large;">
+                <option value="8880">Music Box</option>
+                <option value="8881">Wav File</option>
+                <option value="8882">Piano</option>
+                <option value="8883">Full MIDI notes</option>
+              </select>
             </form>
           </div> <!-- col -->
         </div> <!-- row -->
         <hr />
         <div class="row">
-          <div class = "col-12 text-left">
-            <select id="svr_port" name="svr_port"
-                    style="font-size: xx-large;">
-              <option value="8880">8880</option>
-              <option value="8881">8881</option>
-              <option value="8882">8882</option>
-              <option value="8883">8883</option>
-            </select>
-          </div> <!-- col -->
-        </div> <!-- row -->
-        <hr />
-        <div class="row">
           <div class = "col-12 text-center">
-            <button id="music_rewind">
+            <button id="music_rewind" onclick="music_rewind();">
               <i class="fas fa-step-backward fa-2x"></i></button>
-            <button id="music_backward">
+            <button id="music_backward" onclick="music_backward();"
+                    style="opacity:0.3;">
               <i class="fas fa-backward fa-2x"></i></button>
-            <button id="music_stop">
+            <button id="music_stop" onclick="music_stop();">
               <i class="fas fa-stop fa-2x"></i></button>
-            <button id="music_play">
+            <button id="music_play" onclick="music_play();">
               <i class="fas fa-play fa-2x"></i></button>
-            <button id="music_pause">
+            <button id="music_pause" onclick="music_pause();">
               <i class="fas fa-pause fa-2x"></i></button>
-            <button id="music_forward">
+            <button id="music_forward" onclick="music_forward();"
+                    style="opacity:0.3;">
               <i class="fas fa-forward fa-2x"></i></button>
           </div> <!-- col -->
         </div> <!-- row -->

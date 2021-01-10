@@ -10,7 +10,9 @@ __date__ = '2021/01'
 __version__ = '0.1'
 
 import time
+import json
 import tornado.web
+from . import WsClient, Midi, PaperTape
 from .my_logger import get_logger
 
 
@@ -26,6 +28,12 @@ class UploadWebHandler(tornado.web.RequestHandler):
         self._mylog = get_logger(__class__.__name__, self._dbg)
         self._mylog.debug('debug=%s', self._dbg)
         self._mylog.debug('req=%s', req)
+
+        self._upload_dir = app.settings.get('upload_dir')
+        self._musicdata_dir = app.settings.get('musicdata_dir')
+
+        self._mylog.debug('upload_dir=%s, musicdata_dir=%s',
+                          self._upload_dir, self._musicdata_dir)
 
         super().__init__(app, req)
 
@@ -46,9 +54,17 @@ class UploadWebHandler(tornado.web.RequestHandler):
 
     def post(self):
         """
+        [TBD] ``wav_mode``の判断
+
         POST method
         """
-        self._mylog.debug('request=%s', self.request)
+        self._mylog.debug('request=%s', self.request.__dict__)
+
+        svr_port = int(self.request.body_arguments['svr_port'][0])
+        self._mylog.debug('svr_port=%s', svr_port)
+
+        ws_url = 'ws://localhost:%d/' % svr_port
+        self._mylog.debug('ws_url=%s', ws_url)
 
         try:
             upfile = self.request.files['file1'][0]
@@ -60,11 +76,34 @@ class UploadWebHandler(tornado.web.RequestHandler):
         upfilename = upfile['filename']
         self._mylog.debug('upfilename=%s', upfilename)
 
-        with open('/tmp/' + upfilename, mode='wb') as f:
+        upload_path_name = '%s/%s' % (self._upload_dir, upfilename)
+        musicdata_path = '%s/%s.%s' % (
+            self._musicdata_dir, upfilename, 'musicdata')
+
+        with open(upload_path_name, mode='wb') as f:
             f.write(upfile['body'])
 
-        self.get(msg='File: %s' % (upfilename))
+        ws = WsClient(url=ws_url, debug=self._dbg)
 
-        #self.write('Content-Type: text/html\n')
-        #self.finish('「%s」をアップロードしました' % (upfilename))
-        #self.redirect('/')
+        if str.lower(upfilename[-4:]) in ('.mid', 'midi'):
+            parser = Midi(debug=self._dbg)
+
+            note_origin = -1
+            note_offset = Midi.NOTE_OFFSET
+            if svr_port in (8882, 8883):
+                note_origin = 0
+                note_offset = []
+
+            parsed_data = parser.parse(upload_path_name,
+                                       note_origin=note_origin,
+                                       note_offset=note_offset)
+ 
+            with open(musicdata_path, mode='w') as f:
+                json.dump(parsed_data, f, indent=4)
+
+            ws.send_music_file(musicdata_path)
+
+        else:
+            self.get(msg='対応してないファイルです')
+
+        self.get(msg='File: %s' % (upfilename))

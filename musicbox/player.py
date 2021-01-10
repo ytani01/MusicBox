@@ -347,6 +347,9 @@ class Player:
 
     def music_seek(self, idx=0):
         """ seek music """
+        if self._music_data is None:
+            self._music_data = []
+            
         self._log.debug('idx=%s/%s', idx, len(self._music_data) - 1)
 
         if self._music_data is None:

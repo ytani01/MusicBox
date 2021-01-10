@@ -54,9 +54,11 @@ class WebServer:
             ],
             static_path=os.path.join(self._webdir, "static"),
             template_path=os.path.join(self._webdir, "templates"),
-
             autoreload=True,
             xsrf_cookies=False,
+
+            upload_dir=self._upload_dir,
+            musicdata_dir=self._musicdata_dir,
             debug=self._dbg
         )
 

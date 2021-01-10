@@ -23,6 +23,7 @@ class WsClient:
         """ Constructor """
         self._dbg = debug
         self._log = get_logger(self.__class__.__name__, self._dbg)
+        self._log.debug('url=%s', url)
 
         self._url = url
 

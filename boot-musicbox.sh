@@ -14,6 +14,7 @@ ENV_FILE=$HOME/musicbox-env
 LOGDIR=$MUSICBOX_LOG_DIR
 
 BOOT_FLAG=1
+DEBUG_FLAG=
 
 #
 # functions
@@ -29,9 +30,10 @@ usage() {
     echo
     echo "  Music Box boot script"
     echo
-    echo "  Usage: $MYNAME [-h] [-k]"
+    echo "  Usage: $MYNAME [-h] [-k] [-d]"
     echo
     echo "    -k   kill only"
+    echo "    -d   debug flag"
     echo "    -h   show this usage"
     echo
 }
@@ -43,10 +45,11 @@ get_musicbox_pid() {
 #
 # main
 #
-while getopts hk OPT; do
+while getopts hkd OPT; do
     case $OPT in
         h) usage; exit 0;;
         k) BOOT_FLAG=0;;
+        d) DEBUG_FLAG="-d";;
         *) usage; exit 1;;
     esac
     shift
@@ -77,16 +80,16 @@ fi
 echo_do "sudo pigpiod"
 sleep 1
 
-echo_do "${MUSICBOX_CMD} webapp >> $LOGDIR/webapp.log 2>&1 &"
+echo_do "${MUSICBOX_CMD} webapp $DEBUG_FLAG >> $LOGDIR/webapp.log 2>&1 &"
 sleep 1
 
-echo_do "${MUSICBOX_CMD} server -w 0 -p 8880 >> $LOGDIR/server0.log 2>&1 &"
+echo_do "${MUSICBOX_CMD} server -w 0 -p 8880 $DEBUG_FLAG >> $LOGDIR/server0.log 2>&1 &"
 sleep 2
-echo_do "${MUSICBOX_CMD} server -w 1 -p 8881 >> $LOGDIR/server1.log 2>&1 &"
+echo_do "${MUSICBOX_CMD} server -w 1 -p 8881 $DEBUG_FLAG >> $LOGDIR/server1.log 2>&1 &"
 sleep 2
-echo_do "${MUSICBOX_CMD} server -w 2 -p 8882 >> $LOGDIR/server2.log 2>&1 &"
+echo_do "${MUSICBOX_CMD} server -w 2 -p 8882 $DEBUG_FLAG >> $LOGDIR/server2.log 2>&1 &"
 sleep 2
-echo_do "${MUSICBOX_CMD} server -w 3 -p 8883 >> $LOGDIR/server3.log 2>&1 &"
+echo_do "${MUSICBOX_CMD} server -w 3 -p 8883 $DEBUG_FLAG >> $LOGDIR/server3.log 2>&1 &"
 
 sleep 5
 
