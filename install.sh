@@ -5,41 +5,47 @@
 #   (c) 2021 Yoichi Tanibayashi
 #
 ############################################################
-# インストール後のディレクトリ構造
-#
-# $HOME/ ... ホームディレクトリ
-#    |
-#    +- bin/ ... シェルスクリプトなど
-#    |   |
-#    |   +- MusicBox ... メイン・コマンド・スクリプト (wrapper script)
-#    |   +- boot-musicbox.sh ... 起動スクリプト
-#    |
-#    +- musicbox-env ... 環境変数設定ファイル【インストール時に作成】
-#    |    【環境変数】
-#    |    MUSICBOX_DIR ... git clone されたディレクトリ
-#    |    MUSICBOX_WORK ... 作業用ディレクトリ ($HOME/msucibox_work/)
-#    |    VENVDIR ... python3 Virtualenv ディレクトリ ($HOME/env1/ など)
-#    |    (etc.)
-#    |
-#    +- musicbox-servo.conf ... サーボ調整パラメータ保存ファイル
-#    |
-#    +- musicbox_work/ ... 作業用ディレクトリ
-#    |   |
-#    |   +- upload/ ... アップロードされたファイル(MIDIなど)
-#    |   +- music_data/ ... パーズ後の音楽データ
-#    |   +- log/ ... ログディレクトリ
-#    |
-#    +- env1/  ... python3 Virtualenv(venv) 【ユーザが作成する】
-#        |
-#        +- musicbox/ ... musicboxプロジェクトの gitリポジトリ
-#        |
-#        | 【以下、インストールに必要なライブラリなど】
-#        |
-#        +- ServoPCA9685/
-#        +- StepperMotor/
-#        +- MIDI-lib/
-#        :
-# 
+help() {
+    cat <<'END'
+
+[インストール後のディレクトリ構造]
+
+ $HOME/ ... ホームディレクトリ
+    |
+    +- bin/ ... シェルスクリプトなど
+    |   |
+    |   +- MusicBox ... メイン・コマンド・スクリプト (wrapper script)
+    |   +- boot-musicbox.sh ... 起動スクリプト
+    |
+    +- musicbox-env ... 環境変数設定ファイル【インストール時に作成】
+    |    【環境変数】
+    |    MUSICBOX_DIR ... git clone されたディレクトリ
+    |    MUSICBOX_WORK ... 作業用ディレクトリ ($HOME/msucibox_work/)
+    |    VENVDIR ... python3 Virtualenv ディレクトリ ($HOME/env1/ など)
+    |    (etc.)
+    |
+    +- musicbox-servo.conf ... サーボ調整パラメータ保存ファイル
+    |
+    +- musicbox_work/ ... 作業用ディレクトリ
+    |   |
+    |   +- upload/ ... アップロードされたファイル(MIDIなど)
+    |   +- music_data/ ... パーズ後の音楽データ
+    |   +- log/ ... ログディレクトリ
+    |
+    +- env1/  ... python3 Virtualenv(venv) 【ユーザが作成する】
+        |
+        +- musicbox/ ... musicboxプロジェクトの gitリポジトリ
+        |
+        | 【以下、インストールに必要なライブラリなど】
+        |
+        +- ServoPCA9685/
+        +- StepperMotor/
+        +- MIDI-lib/
+        :
+
+END
+}
+
 ############################################################
 MYNAME=`basename $0`
 MYDIR=`dirname $0`
@@ -82,6 +88,7 @@ SERVO_GIT="${GITHUB_TOP}/${SERVO_DIR}.git"
 #
 # fuctions
 #
+
 cd_echo() {
     cd $1
     echo "### [ `pwd` ]"
@@ -111,6 +118,11 @@ install_my_python_pkg() {
 #
 # main
 #
+if [ ! -z $1 ];then
+    help
+    exit 0
+fi
+
 cd_echo $MYDIR
 MYDIR=`pwd`
 echo "MYDIR=$MYDIR"

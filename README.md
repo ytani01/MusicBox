@@ -96,6 +96,49 @@ $ MusicBox サブコマンド名 -h
 
 ## 1. 少し解説
 
+### 1.0 インストール後のディレクトリ構造
+
+```bash
+$ install.sh help
+````
+
+```
+[インストール後のディレクトリ構造]
+
+ $HOME/ ... ホームディレクトリ
+    |
+    +- bin/ ... シェルスクリプトなど
+    |   |
+    |   +- MusicBox ... メイン・コマンド・スクリプト (wrapper script)
+    |   +- boot-musicbox.sh ... 起動スクリプト
+    |
+    +- musicbox-env ... 環境変数設定ファイル【インストール時に作成】
+    |    【環境変数】
+    |    MUSICBOX_DIR ... git clone されたディレクトリ
+    |    MUSICBOX_WORK ... 作業用ディレクトリ ($HOME/msucibox_work/)
+    |    VENVDIR ... python3 Virtualenv ディレクトリ ($HOME/env1/ など)
+    |    (etc.)
+    |
+    +- musicbox-servo.conf ... サーボ調整パラメータ保存ファイル
+    |
+    +- musicbox_work/ ... 作業用ディレクトリ
+    |   |
+    |   +- upload/ ... アップロードされたファイル(MIDIなど)
+    |   +- music_data/ ... パーズ後の音楽データ
+    |   +- log/ ... ログディレクトリ
+    |
+    +- env1/  ... python3 Virtualenv(venv) 【ユーザが作成する】
+        |
+        +- musicbox/ ... musicboxプロジェクトの gitリポジトリ
+        |
+        | 【以下、インストールに必要なライブラリなど】
+        |
+        +- ServoPCA9685/
+        +- StepperMotor/
+        +- MIDI-lib/
+        :
+
+```
 
 ### 1.1 Music Box メイン・サーバ
 
@@ -214,6 +257,7 @@ ___o___o_____o_
 --o---o--------
 --*-O-o--------      # 'o', 'O', '*'は、どれも紙テープの穴とみなす
 ```
+
 
 
 ## 9 MIDIに関するメモ
