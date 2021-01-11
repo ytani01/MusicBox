@@ -9,6 +9,7 @@ __author__ = 'Yoichi Tanibayashi'
 __date__ = '2021/01'
 __version__ = '0.1'
 
+import os
 import time
 import json
 import tornado.web
@@ -21,6 +22,13 @@ class UploadWebHandler(tornado.web.RequestHandler):
     Web handler
     """
     HTML_FILE = 'upload.html'
+
+    SVR_LIST={
+        8880: 'Music Box',
+        8881: 'Wav File Mode',
+        8882: 'Piano',
+        8883: 'Full MIDI notes'
+    }
 
     def __init__(self, app, req):
         """ Constructor """
@@ -37,7 +45,7 @@ class UploadWebHandler(tornado.web.RequestHandler):
 
         super().__init__(app, req)
 
-    def get(self, msg=''):
+    def get(self, svr_port=8880, msg=''):
         """
         GET method and rendering
         """
@@ -50,6 +58,8 @@ class UploadWebHandler(tornado.web.RequestHandler):
                     title="Robot Music Box <Upload>",
                     author="FabLab Kannai",
                     version=__version__,
+                    svr_port=svr_port,
+                    svr_list=self.SVR_LIST,
                     msg=msg )
 
     def post(self):
@@ -74,7 +84,9 @@ class UploadWebHandler(tornado.web.RequestHandler):
             return
 
         upfilename = upfile['filename']
-        self._mylog.debug('upfilename=%s', upfilename)
+        upfile_ext = str.lower(os.path.splitext(upfilename)[-1][1:])
+        self._mylog.debug('upfilename=%s, upfile_ext=%s',
+                          upfilename, upfile_ext)
 
         upload_path_name = '%s/%s' % (self._upload_dir, upfilename)
         musicdata_path = '%s/%s-%s.%s' % (
@@ -87,7 +99,9 @@ class UploadWebHandler(tornado.web.RequestHandler):
 
         ws = WsClient(url=ws_url, debug=self._dbg)
 
-        if str.lower(upfilename[-4:]) in ('.mid', 'midi'):
+        parsed_data = None
+        
+        if upfile_ext in ('mid', 'midi'):
             parser = Midi(debug=self._dbg)
 
             note_origin = -1
@@ -100,12 +114,30 @@ class UploadWebHandler(tornado.web.RequestHandler):
                                        note_origin=note_origin,
                                        note_offset=note_offset)
  
-            with open(musicdata_path, mode='w') as f:
-                json.dump(parsed_data, f, indent=4)
+        if upfile_ext in ('txt',):
+            parser = PaperTape(debug=self._dbg)
+            parsed_data = parser.parse(upload_path_name)
+            
+        if parsed_data is None:
+            self.get(svr_port=svr_port,
+                     msg='対応してないファイルです')
+            return
 
+        if parsed_data == []:
+            self.get(svr_port=svr_port,
+                     msg='データがありません')
+            return
+
+        # save parsed data and send it to Music Box server
+        with open(musicdata_path, mode='w') as f:
+            json.dump(parsed_data, f, indent=4)
+
+        try:
             ws.send_music_file(musicdata_path)
+        except ConnectionRefusedError:
+            self.get(svr_port=svr_port,
+                     msg='メイン・サーバと通信できません')
+            return
 
-        else:
-            self.get(msg='対応してないファイルです')
-
-        self.get(msg='File: %s' % (upfilename))
+        self.get(svr_port=svr_port,
+                 msg='%s' % (upfilename))
