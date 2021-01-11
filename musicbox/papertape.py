@@ -15,6 +15,9 @@ class PaperTape(Parser):
     """
     PaperTape parser for Music Box
     """
+    NOTE_OFFSET = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24]
+    NOTE_ORIGIN = 60
+
     COMMENT_CHR = '#'
 
     ON_CHR = 'oO*'
@@ -27,11 +30,12 @@ class PaperTape(Parser):
 
         super().__init__(debug=self._dbg)
 
-    def parse(self, infile):
+    def parse(self, infile, note_origin=0):
         """
         Parameters
         ----------
         infile: str
+        note_origin: int
 
         Returns
         -------
@@ -74,6 +78,9 @@ class PaperTape(Parser):
             ch = []
             for i, c in enumerate(list(word[0])):
                 if c in self.ON_CHR:
+                    offset = 0
+                    if note_origin > 0:
+                        i = note_origin + self.NOTE_OFFSET[i]
                     ch.append(i)
 
             if ch:

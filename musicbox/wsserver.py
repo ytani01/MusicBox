@@ -208,6 +208,11 @@ class WsServer:
             self._player.music_seek_percent(data['pos'])
             return
 
+        if cmd in ('music_shift', 'shift'):
+            self._player.music_shift_percent(data['pos'])
+            print('AAA')
+            return
+
         if cmd in ('music_stop', 'stop', 'S'):
             self._player.music_stop()
             return

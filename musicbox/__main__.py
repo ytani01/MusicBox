@@ -518,6 +518,7 @@ class WsCmdApp:
             return
 
         cmd_name = self._cmd[0]
+        self._log.debug('cmd_name=%a', cmd_name)
 
         msg = {'cmd': cmd_name}
 
@@ -531,10 +532,11 @@ class WsCmdApp:
             self._client.send_music_file(music_data_file)
             return
 
-        if cmd_name == 'music_seek':
+        if cmd_name in ('music_seek', 'music_shift'):
             msg['pos'] = float(self._cmd[1])
             self._log.debug('msg=%s', msg)
             self._client.send(msg)
+            return
 
         self._client.send(msg)
 

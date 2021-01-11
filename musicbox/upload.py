@@ -10,7 +10,6 @@ __date__ = '2021/01'
 __version__ = '0.1'
 
 import os
-import time
 import json
 import tornado.web
 from . import WsClient, Midi, PaperTape
@@ -23,7 +22,7 @@ class UploadWebHandler(tornado.web.RequestHandler):
     """
     HTML_FILE = 'upload.html'
 
-    SVR_LIST={
+    SVR_LIST = {
         8880: 'Music Box',
         8881: 'Wav File Mode',
         8882: 'Piano',
@@ -92,36 +91,50 @@ class UploadWebHandler(tornado.web.RequestHandler):
         musicdata_path = '%s/%s-%s.%s' % (
             self._musicdata_dir, upfilename, svr_port, 'json')
 
-        # [TBD] musicdata_pathの存在を確認し、パージング処理を省略？
-
-        with open(upload_path_name, mode='wb') as f:
-            f.write(upfile['body'])
-
         ws = WsClient(url=ws_url, debug=self._dbg)
 
         parsed_data = None
-        
-        if upfile_ext in ('mid', 'midi'):
-            parser = Midi(debug=self._dbg)
 
-            note_origin = -1
-            note_offset = Midi.NOTE_OFFSET
-            if svr_port in (8882, 8883):
-                note_origin = 0
-                note_offset = []
+        if os.path.exists(musicdata_path):
+            self._mylog.info('%s found ! .. load parsed data',
+                             musicdata_path)
+            with open(musicdata_path) as f:
+                parsed_data = json.load(f)
 
-            parsed_data = parser.parse(upload_path_name,
-                                       note_origin=note_origin,
-                                       note_offset=note_offset)
- 
-        if upfile_ext in ('txt',):
-            parser = PaperTape(debug=self._dbg)
-            parsed_data = parser.parse(upload_path_name)
-            
         if parsed_data is None:
-            self.get(svr_port=svr_port,
-                     msg='対応してないファイルです')
-            return
+
+            with open(upload_path_name, mode='wb') as f:
+                f.write(upfile['body'])
+
+            if upfile_ext in ('mid', 'midi'):
+                parser = Midi(debug=self._dbg)
+
+                note_origin = -1
+                note_offset = Midi.NOTE_OFFSET
+
+                if svr_port in (8882, 8883):
+                    note_origin = 0
+                    note_offset = []
+
+                parsed_data = parser.parse(upload_path_name,
+                                           note_origin=note_origin,
+                                           note_offset=note_offset)
+
+            if upfile_ext in ('txt',):
+                parser = PaperTape(debug=self._dbg)
+
+                note_origin = 0
+
+                if svr_port in (8882, 8883):
+                    note_origin = PaperTape.NOTE_ORIGIN
+
+                parsed_data = parser.parse(upload_path_name,
+                                           note_origin)
+
+            if parsed_data is None:
+                self.get(svr_port=svr_port,
+                         msg='対応してないファイルです')
+                return
 
         if parsed_data == []:
             self.get(svr_port=svr_port,
@@ -140,4 +153,4 @@ class UploadWebHandler(tornado.web.RequestHandler):
             return
 
         self.get(svr_port=svr_port,
-                 msg='%s' % (upfilename))
+                 msg='[%s]' % (upfilename))

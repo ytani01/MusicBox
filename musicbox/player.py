@@ -273,39 +273,67 @@ class Player:
         self._music_active = True
 
         while True:
-            while self._music_active and self._music_data_i < len(
-                    self._music_data):
+            while self._music_active:
+                if self._music_data_i >= len(self._music_data):
+                    self._music_data_i = 0
+                    break
 
                 data1 = self._music_data[self._music_data_i]
-                self.sleep_and_single_play(data1['ch'], data1['delay'])
+                self.sleep_and_single_play(data1['ch'],
+                                           data1['delay'])
                 self._music_data_i += 1
-
-            if self._music_data_i >= len(self._music_data):
-                self._music_data_i = 0
 
             if not self._music_active:
                 break
 
-            if repeat:
-                time.sleep(1)
-                continue
-            else:
+            if not repeat:
                 break
+
+            time.sleep(1)
 
         self._msuci_active = False
 
         self._log.debug('done')
+
+    def get_music_length_sec(self):
+        """
+        """
+        length_sec = 0
+
+        if self._music_data:
+            length_sec = self._music_data[-1]['abs_time']
+
+        self._log.debug('length_sec=%s', length_sec)
+        return length_sec
+
+    def get_music_pos_sec(self):
+        """
+        music position in sec
+
+        Returns
+        -------
+        pos_sec: float
+            -1: not playing
+        """
+        if not self._music_active:
+            pos_sec = -1
+        else:
+            pos_sec = self._music_data[self._music_data_i]['abs_time']
+
+        self._log.debug('pos_sec_=%s', pos_sec)
+        return pos_sec
 
     def music_play(self):
         """ start music
 
         This function starts sub-thread and returns immidiately
         """
-        self._log.debug('')
+        self._log.debug('music_th=%s', self._music_th)
 
-        if self._music_th is not None:
+        if self._music_th:
             if self._music_th.is_alive():
-                self.music_stop()
+                self._log.debug('music is playing .. do nothing')
+                return
 
         self._log.debug('music_data_i=%s', self._music_data_i)
         self._music_th = threading.Thread(target=self.music_th,
@@ -347,9 +375,11 @@ class Player:
 
     def music_seek(self, idx=0):
         """ seek music """
+        self._log.debug('idx=%s', idx)
+
         if self._music_data is None:
             self._music_data = []
-            
+
         self._log.debug('idx=%s/%s', idx, len(self._music_data) - 1)
 
         if self._music_data is None:
@@ -369,7 +399,7 @@ class Player:
         if active:
             self.music_play()
 
-    def music_seek_percent(self, percent: float =0):
+    def music_seek_percent(self, percent: float = 0):
         """ seek percent
 
         Parameters
@@ -383,13 +413,11 @@ class Player:
             return
 
         if percent > 100:
-            self._log.error('invalid percent: %s', percent)
+            percent = 100
+            self._log.error('[fix] percent: %s', percent)
             return
-        
-        music_length = self._music_data[-1]['abs_time']
-        self._log.debug('music_length=%s sec', music_length)
 
-        pos_sec = music_length * percent / 100.0
+        pos_sec = self.get_music_length_sec() * percent / 100.0
         self._log.debug('pos_sec=%s sec', pos_sec)
 
         idx = -1
@@ -404,9 +432,25 @@ class Player:
         idx = int(len(self._music_data) * percent / 100.0)
         self.music_seek(idx)
 
+    def music_shift_percent(self, d_percent):
+        """
+        incremental seek
+        """
+        self._log.debug('d_percent=%s', d_percent)
+
+        length_sec = self.get_music_length_sec()
+        if length_sec == 0:
+            return
+
+        cur_sec = self.get_music_pos_sec()
+        cur_percent = cur_sec / length_sec * 100
+        new_percent = cur_percent + d_percent
+        self.music_seek_percent(new_percent)
+
     def music_rewind(self):
         """ rewind music
         """
+        self._log.debug('')
         self.music_seek(0)
 
     def music_stop(self):

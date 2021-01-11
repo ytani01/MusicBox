@@ -80,6 +80,16 @@ const music_play = function (port) {
 /**
  *
  */
+const music_shift = function (pos, port) {
+    console.log(`music_shift(${pos})`);
+
+    let msg = {cmd: "music_shift", pos: pos};
+    ws_send(msg, port);
+};
+
+/**
+ *
+ */
 const music_stop = function (port) {
     console.log(`music_stop(${port})`);
 

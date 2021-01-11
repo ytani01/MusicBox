@@ -45,7 +45,7 @@ class WsClient:
         """
         self._log.debug('msg.keys()=%s', list(msg.keys()))
         self._log.debug('msg[\'cmd\']=%s', msg['cmd'])
-        
+
         msg_json = json.dumps(msg)
 
         ws = create_connection(self._url)
