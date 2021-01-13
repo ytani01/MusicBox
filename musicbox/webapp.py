@@ -49,6 +49,8 @@ class WebServer:
         self._app = tornado.web.Application(
             [
                 (r"/", CalibrationWebHandler),
+                (r"/musicbox", CalibrationWebHandler),
+                (r"/musicbox/", CalibrationWebHandler),
                 (r"/calibration.*", CalibrationWebHandler),
                 (r"/upload.*", UploadWebHandler),
                 (r"/musicbox/calibration.*", CalibrationWebHandler),

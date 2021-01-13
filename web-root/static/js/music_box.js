@@ -11,7 +11,14 @@ console.log(`WsHost:DefWsPort=${WsHost}:${DefWsPort}`);
  * @param {number} port
  */
 const get_url = function (port) {
-    let url = `ws://${WsHost}:${port}/`;
+    console.log(`protocol=${location.protocol}`);
+
+    let protocol = 'ws';
+    if ( location.protocol == 'https:' ) {
+        protocol = 'wss';
+    }
+    
+    let url = `${protocol}://${WsHost}:${port}/`;
     return url;
 };
 

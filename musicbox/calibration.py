@@ -18,6 +18,7 @@ class CalibrationWebHandler(tornado.web.RequestHandler):
     Web handler
     """
     HTML_FILE = 'calibration.html'
+    URL_PATH = '/musicbox/calibration/'
 
     CH_N = 15
     CH_CENTER = 7
@@ -37,6 +38,10 @@ class CalibrationWebHandler(tornado.web.RequestHandler):
         """
         self._mylog.debug('request=%s', self.request)
 
+        if self.request.uri != self.URL_PATH:
+            self.redirect(self.URL_PATH, permanent=True)
+            return
+        
         self.render(self.HTML_FILE,
                     title="Robot Music Box <Calibration>",
                     author="FabLab Kannai",

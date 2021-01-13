@@ -21,6 +21,7 @@ class UploadWebHandler(tornado.web.RequestHandler):
     Web handler
     """
     HTML_FILE = 'upload.html'
+    URL_PATH = '/musicbox/upload/'  # 末尾の``/``の有無:HTMLにあわせる
 
     SVR_LIST = {
         8880: 'Music Box',
@@ -48,7 +49,12 @@ class UploadWebHandler(tornado.web.RequestHandler):
         """
         GET method and rendering
         """
+        self._mylog.debug('svr_port=%s', svr_port)
         self._mylog.debug('request=%s', self.request)
+
+        if self.request.uri != self.URL_PATH:
+            self.redirect(self.URL_PATH, permanent=True)
+            return
 
         if msg == '':
             msg = 'ファイルを選択して下さい'
@@ -79,7 +85,7 @@ class UploadWebHandler(tornado.web.RequestHandler):
             upfile = self.request.files['file1'][0]
         except KeyError:
             self._mylog.warning('no file')
-            self.get(msg='ファイルを指定して下さい')
+            self.get(svr_port=svr_port, msg='ファイルを指定して下さい')
             return
 
         upfilename = upfile['filename']
@@ -152,5 +158,6 @@ class UploadWebHandler(tornado.web.RequestHandler):
                      msg='メイン・サーバと通信できません')
             return
 
+        self._mylog.debug('svr_port=%s', svr_port)
         self.get(svr_port=svr_port,
                  msg='[%s]' % (upfilename))
