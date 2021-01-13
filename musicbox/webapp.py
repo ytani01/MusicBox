@@ -50,9 +50,12 @@ class WebServer:
             [
                 (r"/", CalibrationWebHandler),
                 (r"/calibration.*", CalibrationWebHandler),
-                (r"/upload.*", UploadWebHandler)
+                (r"/upload.*", UploadWebHandler),
+                (r"/musicbox/calibration.*", CalibrationWebHandler),
+                (r"/musicbox/upload.*", UploadWebHandler)
             ],
             static_path=os.path.join(self._webdir, "static"),
+            static_url_prefix='/musicbox/static/',
             template_path=os.path.join(self._webdir, "templates"),
             autoreload=True,
             xsrf_cookies=False,
