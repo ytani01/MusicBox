@@ -1,1 +1,2 @@
 libsdl2-mixer-dev
+libatlas-base-dev
